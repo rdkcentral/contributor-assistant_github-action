@@ -14,6 +14,9 @@ inputs:
   allowlist:
     description: "users in the allow list don't have to sign the CLA document"
     default: ""
+  domain-allow-list:
+    description: "email domains in the allow list don't have to sign the CLA document"
+    default: ""
   remote-repository-name:
     description: "provide the remote repository name where all the signatures should be stored"
   remote-organization-name:

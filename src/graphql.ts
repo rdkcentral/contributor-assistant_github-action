@@ -56,6 +56,7 @@ export default async function getCommitters(): Promise<CommittersDetails[]> {
             let user = {
                 name: committer.login || committer.name,
                 id: committer.databaseId || '',
+                email: edge.node.commit.author.email || '',
                 pullRequestNo: context.issue.number
             }
             if (committers.length === 0 || committers.map((c) => {

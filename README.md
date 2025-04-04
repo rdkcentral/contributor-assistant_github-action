@@ -52,6 +52,7 @@ jobs:
           allowlist: user1,bot*
 
          # the followings are the optional inputs - If the optional inputs are not given, then default values will be taken
+          #domain-allow-list: email domains in the allow list don't have to sign the CLA document
           #remote-organization-name: enter the remote organization name where the signatures should be stored (Default is storing the signatures in the same repository)
           #remote-repository-name: enter the  remote repository name where the signatures should be stored (Default is storing the signatures in the same repository)
           #create-file-commit-message: 'For example: Creating file for storing CLA Signatures'
@@ -100,6 +101,8 @@ and `remote-repository-name`: `<your repo name>` in your CLA workflow file.
 #### 5. Users and bots in allowlist
 
 If a GitHub username is included in the allowlist, they will not be required to sign a CLA. You can make use of this feature If you don't want your colleagues working in the same team/organisation to sign a CLA. And also, since there's no way for bot users (such as Dependabot or Greenkeeper) to sign a CLA, you may want to add them in `allowlist`. You can do so by adding their names in a comma separated string to the `allowlist` input in the CLA  workflow file(in this case `dependabot[bot],greenkeeper[bot]`). You can also use wildcard symbol in case you want to allow all bot users something like `bot*`.
+
+The `domain-allow-list` input in the CLA workflow file allows you to configure email domains that don't have to sign the CLA document. For example, if you want to allow all users with `@example.com` email domain, you can set the `domain-allow-list` input to `example.com`. This will allow all users with `@example.com` email domain to skip signing the CLA document.
 
 ##### Demo for step 5
 

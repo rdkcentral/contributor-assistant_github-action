@@ -10,7 +10,7 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+    desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
@@ -34,18 +34,29 @@ exports.checkAllowList = void 0;
 const _ = __importStar(__nccwpck_require__(250));
 const input = __importStar(__nccwpck_require__(3611));
 function isUserNotInAllowList(committer) {
-    const allowListPatterns = input.getAllowListItem().split(',');
-    return allowListPatterns.filter(function (pattern) {
+    const usernameAllowListPatterns = input.getUsernameAllowList().split(',');
+    const domainAllowList = input.getDomainAllowList().split(',');
+    for (let pattern of domainAllowList) {
+        pattern = pattern.trim();
+        if (!pattern)
+            continue;
+        if (!pattern.startsWith('@'))
+            pattern = '@' + pattern;
+        if (committer.email.endsWith(pattern)) {
+            return true;
+        }
+    }
+    return usernameAllowListPatterns.filter(function (pattern) {
         pattern = pattern.trim();
         if (pattern.includes('*')) {
             const regex = _.escapeRegExp(pattern).split('\\*').join('.*');
-            return new RegExp(regex).test(committer);
+            return new RegExp(regex).test(committer.name);
         }
         return pattern === committer;
     }).length > 0;
 }
 function checkAllowList(committers) {
-    const committersAfterAllowListCheck = committers.filter(committer => committer && !(isUserNotInAllowList !== undefined && isUserNotInAllowList(committer.name)));
+    const committersAfterAllowListCheck = committers.filter(committer => committer && !(isUserNotInAllowList !== undefined && isUserNotInAllowList(committer)));
     return committersAfterAllowListCheck;
 }
 exports.checkAllowList = checkAllowList;
@@ -123,6 +134,7 @@ function getCommitters() {
                 let user = {
                     name: committer.login || committer.name,
                     id: committer.databaseId || '',
+                    email: edge.node.commit.author.email || '',
                     pullRequestNo: github_1.context.issue.number
                 };
                 if (committers.length === 0 || committers.map((c) => {
@@ -156,7 +168,7 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+    desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
@@ -196,8 +208,8 @@ function run() {
         try {
             core.info(`CLA Assistant GitHub Action bot has started the process`);
             /*
-             * using a `string` true or false purposely as github action input cannot have a boolean value
-             */
+            * using a `string` true or false purposely as github action input cannot have a boolean value
+            */
             if (github_1.context.payload.action === 'closed' &&
                 input.lockPullRequestAfterMerge() == 'true') {
                 return (0, pullRequestLock_1.lockPullRequest)();
@@ -227,7 +239,7 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+    desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
@@ -281,7 +293,7 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+    desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
@@ -391,7 +403,7 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+    desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
@@ -612,7 +624,7 @@ function prepareCommiterMap(committerMap, reactedCommitters) {
 function prepareAllSignedCommitters(committerMap, signedInPrCommitters, committers) {
     let allSignedCommitters = [];
     /*
-     * 1) already signed committers in the file 2) signed committers in the PR comment
+    * 1) already signed committers in the file 2) signed committers in the PR comment
     */
     const ids = new Set(signedInPrCommitters.map(committer => committer.id));
     allSignedCommitters = [...signedInPrCommitters, ...committerMap.signed.filter(signedCommitter => !ids.has(signedCommitter.id))];
@@ -635,7 +647,7 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+    desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
@@ -681,10 +693,10 @@ function dco(signed, committerMap) {
     let you = committersCount > 1 ? `you all` : `you`;
     let lineOne = (input.getCustomNotSignedPrComment() || `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Developer Certificate of Origin](${input.getPathToDocument()}) before we can accept your contribution. You can sign the DCO by just posting a Pull Request Comment same as the below format.<br/>`).replace('$you', you);
     let text = `${lineOne}
-   - - -
-   ${input.getCustomPrSignComment() || "I have read the DCO Document and I hereby sign the DCO"}
-   - - -
-   `;
+    - - -
+    ${input.getCustomPrSignComment() || "I have read the DCO Document and I hereby sign the DCO"}
+    - - -
+    `;
     if (committersCount > 1 && committerMap && committerMap.signed && committerMap.notSigned) {
         text += `**${committerMap.signed.length}** out of **${committerMap.signed.length + committerMap.notSigned.length}** committers have signed the DCO.`;
         committerMap.signed.forEach(signedCommitter => { text += `<br/>:white_check_mark: (${signedCommitter.name})[https://github.com/${signedCommitter.name}]`; });
@@ -718,10 +730,10 @@ function cla(signed, committerMap) {
     let you = committersCount > 1 ? `you all` : `you`;
     let lineOne = (input.getCustomNotSignedPrComment() || `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Contributor License Agreement](${input.getPathToDocument()}) before we can accept your contribution. You can sign the CLA by just posting a Pull Request Comment same as the below format.<br/>`).replace('$you', you);
     let text = `${lineOne}
-   - - -
-   ${(0, pr_sign_comment_1.getPrSignComment)()}
-   - - -
-   `;
+    - - -
+    ${(0, pr_sign_comment_1.getPrSignComment)()}
+    - - -
+    `;
     if (committersCount > 1 && committerMap && committerMap.signed && committerMap.notSigned) {
         text += `**${committerMap.signed.length}** out of **${committerMap.signed.length + committerMap.notSigned.length}** committers have signed the CLA.`;
         committerMap.signed.forEach(signedCommitter => { text += `<br/>:white_check_mark: (${signedCommitter.name})[https://github.com/${signedCommitter.name}]`; });
@@ -755,7 +767,7 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+    desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
@@ -904,7 +916,7 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+    desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
@@ -1040,7 +1052,7 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+    desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
@@ -1060,7 +1072,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.suggestRecheck = exports.lockPullRequestAfterMerge = exports.getCustomPrSignComment = exports.getUseDcoFlag = exports.getCustomAllSignedPrComment = exports.getCustomNotSignedPrComment = exports.getCreateFileCommitMessage = exports.getSignedCommitMessage = exports.getEmptyCommitFlag = exports.getAllowListItem = exports.getBranch = exports.getPathToDocument = exports.getPathToSignatures = exports.getRemoteOrgName = exports.getRemoteRepoName = void 0;
+exports.suggestRecheck = exports.lockPullRequestAfterMerge = exports.getCustomPrSignComment = exports.getUseDcoFlag = exports.getCustomAllSignedPrComment = exports.getCustomNotSignedPrComment = exports.getCreateFileCommitMessage = exports.getSignedCommitMessage = exports.getEmptyCommitFlag = exports.getDomainAllowList = exports.getUsernameAllowList = exports.getBranch = exports.getPathToDocument = exports.getPathToSignatures = exports.getRemoteOrgName = exports.getRemoteRepoName = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const getRemoteRepoName = () => {
     return core.getInput('remote-repository-name', { required: false });
@@ -1076,8 +1088,10 @@ const getPathToDocument = () => core.getInput('path-to-document', { required: fa
 exports.getPathToDocument = getPathToDocument;
 const getBranch = () => core.getInput('branch', { required: false });
 exports.getBranch = getBranch;
-const getAllowListItem = () => core.getInput('allowlist', { required: false });
-exports.getAllowListItem = getAllowListItem;
+const getUsernameAllowList = () => core.getInput('allowlist', { required: false });
+exports.getUsernameAllowList = getUsernameAllowList;
+const getDomainAllowList = () => core.getInput('domain-allow-list', { required: false });
+exports.getDomainAllowList = getDomainAllowList;
 const getEmptyCommitFlag = () => core.getInput('empty-commit-flag', { required: false });
 exports.getEmptyCommitFlag = getEmptyCommitFlag;
 const getSignedCommitMessage = () => core.getInput('signed-commit-message', { required: false });
@@ -1109,7 +1123,7 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+    desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
@@ -1694,8 +1708,8 @@ class OidcClient {
             const res = yield httpclient
                 .getJson(id_token_url)
                 .catch(error => {
-                throw new Error(`Failed to get ID Token. \n 
-        Error Code : ${error.statusCode}\n 
+                throw new Error(`Failed to get ID Token. \n
+        Error Code : ${error.statusCode}\n
         Error Message: ${error.result.message}`);
             });
             const id_token = (_a = res.result) === null || _a === void 0 ? void 0 : _a.value;
@@ -3725,12 +3739,12 @@ exports.checkBypass = checkBypass;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 async function auth(token) {
-  const tokenType = token.split(/\./).length === 3 ? "app" : /^v\d+\./.test(token) ? "installation" : "oauth";
-  return {
+const tokenType = token.split(/\./).length === 3 ? "app" : /^v\d+\./.test(token) ? "installation" : "oauth";
+return {
     type: "token",
     token: token,
     tokenType
-  };
+};
 }
 
 /**
@@ -3739,32 +3753,32 @@ async function auth(token) {
  * @param token OAuth token or JSON Web Token
  */
 function withAuthorizationPrefix(token) {
-  if (token.split(/\./).length === 3) {
+if (token.split(/\./).length === 3) {
     return `bearer ${token}`;
-  }
+}
 
-  return `token ${token}`;
+return `token ${token}`;
 }
 
 async function hook(token, request, route, parameters) {
-  const endpoint = request.endpoint.merge(route, parameters);
-  endpoint.headers.authorization = withAuthorizationPrefix(token);
-  return request(endpoint);
+const endpoint = request.endpoint.merge(route, parameters);
+endpoint.headers.authorization = withAuthorizationPrefix(token);
+return request(endpoint);
 }
 
 const createTokenAuth = function createTokenAuth(token) {
-  if (!token) {
+if (!token) {
     throw new Error("[@octokit/auth-token] No token passed to createTokenAuth");
-  }
+}
 
-  if (typeof token !== "string") {
+if (typeof token !== "string") {
     throw new Error("[@octokit/auth-token] Token passed to createTokenAuth is not a string");
-  }
+}
 
-  token = token.replace(/^(token|bearer) +/i, "");
-  return Object.assign(auth.bind(null, token), {
+token = token.replace(/^(token|bearer) +/i, "");
+return Object.assign(auth.bind(null, token), {
     hook: hook.bind(null, token)
-  });
+});
 };
 
 exports.createTokenAuth = createTokenAuth;
@@ -3788,94 +3802,94 @@ var graphql = __nccwpck_require__(6442);
 var authToken = __nccwpck_require__(334);
 
 function _defineProperty(obj, key, value) {
-  if (key in obj) {
+if (key in obj) {
     Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
+    value: value,
+    enumerable: true,
+    configurable: true,
+    writable: true
     });
-  } else {
+} else {
     obj[key] = value;
-  }
+}
 
-  return obj;
+return obj;
 }
 
 function ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
+var keys = Object.keys(object);
 
-  if (Object.getOwnPropertySymbols) {
+if (Object.getOwnPropertySymbols) {
     var symbols = Object.getOwnPropertySymbols(object);
     if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    return Object.getOwnPropertyDescriptor(object, sym).enumerable;
     });
     keys.push.apply(keys, symbols);
-  }
+}
 
-  return keys;
+return keys;
 }
 
 function _objectSpread2(target) {
-  for (var i = 1; i < arguments.length; i++) {
+for (var i = 1; i < arguments.length; i++) {
     var source = arguments[i] != null ? arguments[i] : {};
 
     if (i % 2) {
-      ownKeys(Object(source), true).forEach(function (key) {
+    ownKeys(Object(source), true).forEach(function (key) {
         _defineProperty(target, key, source[key]);
-      });
+    });
     } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
     } else {
-      ownKeys(Object(source)).forEach(function (key) {
+    ownKeys(Object(source)).forEach(function (key) {
         Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
+    });
     }
-  }
+}
 
-  return target;
+return target;
 }
 
 const VERSION = "3.1.2";
 
 class Octokit {
-  constructor(options = {}) {
+constructor(options = {}) {
     const hook = new beforeAfterHook.Collection();
     const requestDefaults = {
-      baseUrl: request.request.endpoint.DEFAULTS.baseUrl,
-      headers: {},
-      request: Object.assign({}, options.request, {
+    baseUrl: request.request.endpoint.DEFAULTS.baseUrl,
+    headers: {},
+    request: Object.assign({}, options.request, {
         hook: hook.bind(null, "request")
-      }),
-      mediaType: {
+    }),
+    mediaType: {
         previews: [],
         format: ""
-      }
+    }
     }; // prepend default user agent with `options.userAgent` if set
 
     requestDefaults.headers["user-agent"] = [options.userAgent, `octokit-core.js/${VERSION} ${universalUserAgent.getUserAgent()}`].filter(Boolean).join(" ");
 
     if (options.baseUrl) {
-      requestDefaults.baseUrl = options.baseUrl;
+    requestDefaults.baseUrl = options.baseUrl;
     }
 
     if (options.previews) {
-      requestDefaults.mediaType.previews = options.previews;
+    requestDefaults.mediaType.previews = options.previews;
     }
 
     if (options.timeZone) {
-      requestDefaults.headers["time-zone"] = options.timeZone;
+    requestDefaults.headers["time-zone"] = options.timeZone;
     }
 
     this.request = request.request.defaults(requestDefaults);
     this.graphql = graphql.withCustomRequest(this.request).defaults(_objectSpread2(_objectSpread2({}, requestDefaults), {}, {
-      baseUrl: requestDefaults.baseUrl.replace(/\/api\/v3$/, "/api")
+    baseUrl: requestDefaults.baseUrl.replace(/\/api\/v3$/, "/api")
     }));
     this.log = Object.assign({
-      debug: () => {},
-      info: () => {},
-      warn: console.warn.bind(console),
-      error: console.error.bind(console)
+    debug: () => {},
+    info: () => {},
+    warn: console.warn.bind(console),
+    error: console.error.bind(console)
     }, options.log);
     this.hook = hook; // (1) If neither `options.authStrategy` nor `options.auth` are set, the `octokit` instance
     //     is unauthenticated. The `this.auth()` method is a no-op and no request hook is registred.
@@ -3884,68 +3898,68 @@ class Octokit {
     // TODO: type `options.auth` based on `options.authStrategy`.
 
     if (!options.authStrategy) {
-      if (!options.auth) {
+    if (!options.auth) {
         // (1)
         this.auth = async () => ({
-          type: "unauthenticated"
+        type: "unauthenticated"
         });
-      } else {
+    } else {
         // (2)
         const auth = authToken.createTokenAuth(options.auth); // @ts-ignore  ¯\_(ツ)_/¯
 
         hook.wrap("request", auth.hook);
         this.auth = auth;
-      }
+    }
     } else {
-      const auth = options.authStrategy(Object.assign({
+    const auth = options.authStrategy(Object.assign({
         request: this.request
-      }, options.auth)); // @ts-ignore  ¯\_(ツ)_/¯
+    }, options.auth)); // @ts-ignore  ¯\_(ツ)_/¯
 
-      hook.wrap("request", auth.hook);
-      this.auth = auth;
+    hook.wrap("request", auth.hook);
+    this.auth = auth;
     } // apply plugins
     // https://stackoverflow.com/a/16345172
 
 
     const classConstructor = this.constructor;
     classConstructor.plugins.forEach(plugin => {
-      Object.assign(this, plugin(this, options));
+    Object.assign(this, plugin(this, options));
     });
-  }
+}
 
-  static defaults(defaults) {
+static defaults(defaults) {
     const OctokitWithDefaults = class extends this {
-      constructor(...args) {
+    constructor(...args) {
         const options = args[0] || {};
 
         if (typeof defaults === "function") {
-          super(defaults(options));
-          return;
+        super(defaults(options));
+        return;
         }
 
         super(Object.assign({}, defaults, options, options.userAgent && defaults.userAgent ? {
-          userAgent: `${options.userAgent} ${defaults.userAgent}`
+        userAgent: `${options.userAgent} ${defaults.userAgent}`
         } : null));
-      }
+    }
 
     };
     return OctokitWithDefaults;
-  }
-  /**
-   * Attach a plugin (or many) to your Octokit instance.
-   *
-   * @example
-   * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
-   */
+}
+/**
+ * Attach a plugin (or many) to your Octokit instance.
+ *
+ * @example
+ * const API = Octokit.plugin(plugin1, plugin2, plugin3, ...)
+ */
 
 
-  static plugin(...newPlugins) {
+static plugin(...newPlugins) {
     var _a;
 
     const currentPlugins = this.plugins;
     const NewOctokit = (_a = class extends this {}, _a.plugins = currentPlugins.concat(newPlugins.filter(plugin => !currentPlugins.includes(plugin))), _a);
     return NewOctokit;
-  }
+}
 
 }
 Octokit.VERSION = VERSION;
@@ -3971,95 +3985,95 @@ var isPlainObject = _interopDefault(__nccwpck_require__(8289));
 var universalUserAgent = __nccwpck_require__(7540);
 
 function lowercaseKeys(object) {
-  if (!object) {
+if (!object) {
     return {};
-  }
+}
 
-  return Object.keys(object).reduce((newObj, key) => {
+return Object.keys(object).reduce((newObj, key) => {
     newObj[key.toLowerCase()] = object[key];
     return newObj;
-  }, {});
+}, {});
 }
 
 function mergeDeep(defaults, options) {
-  const result = Object.assign({}, defaults);
-  Object.keys(options).forEach(key => {
+const result = Object.assign({}, defaults);
+Object.keys(options).forEach(key => {
     if (isPlainObject(options[key])) {
-      if (!(key in defaults)) Object.assign(result, {
+    if (!(key in defaults)) Object.assign(result, {
         [key]: options[key]
-      });else result[key] = mergeDeep(defaults[key], options[key]);
+    });else result[key] = mergeDeep(defaults[key], options[key]);
     } else {
-      Object.assign(result, {
+    Object.assign(result, {
         [key]: options[key]
-      });
+    });
     }
-  });
-  return result;
+});
+return result;
 }
 
 function merge(defaults, route, options) {
-  if (typeof route === "string") {
+if (typeof route === "string") {
     let [method, url] = route.split(" ");
     options = Object.assign(url ? {
-      method,
-      url
+    method,
+    url
     } : {
-      url: method
+    url: method
     }, options);
-  } else {
+} else {
     options = Object.assign({}, route);
-  } // lowercase header names before merging with defaults to avoid duplicates
+} // lowercase header names before merging with defaults to avoid duplicates
 
 
-  options.headers = lowercaseKeys(options.headers);
-  const mergedOptions = mergeDeep(defaults || {}, options); // mediaType.previews arrays are merged, instead of overwritten
+options.headers = lowercaseKeys(options.headers);
+const mergedOptions = mergeDeep(defaults || {}, options); // mediaType.previews arrays are merged, instead of overwritten
 
-  if (defaults && defaults.mediaType.previews.length) {
+if (defaults && defaults.mediaType.previews.length) {
     mergedOptions.mediaType.previews = defaults.mediaType.previews.filter(preview => !mergedOptions.mediaType.previews.includes(preview)).concat(mergedOptions.mediaType.previews);
-  }
+}
 
-  mergedOptions.mediaType.previews = mergedOptions.mediaType.previews.map(preview => preview.replace(/-preview/, ""));
-  return mergedOptions;
+mergedOptions.mediaType.previews = mergedOptions.mediaType.previews.map(preview => preview.replace(/-preview/, ""));
+return mergedOptions;
 }
 
 function addQueryParameters(url, parameters) {
-  const separator = /\?/.test(url) ? "&" : "?";
-  const names = Object.keys(parameters);
+const separator = /\?/.test(url) ? "&" : "?";
+const names = Object.keys(parameters);
 
-  if (names.length === 0) {
+if (names.length === 0) {
     return url;
-  }
+}
 
-  return url + separator + names.map(name => {
+return url + separator + names.map(name => {
     if (name === "q") {
-      return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
+    return "q=" + parameters.q.split("+").map(encodeURIComponent).join("+");
     }
 
     return `${name}=${encodeURIComponent(parameters[name])}`;
-  }).join("&");
+}).join("&");
 }
 
 const urlVariableRegex = /\{[^}]+\}/g;
 
 function removeNonChars(variableName) {
-  return variableName.replace(/^\W+|\W+$/g, "").split(/,/);
+return variableName.replace(/^\W+|\W+$/g, "").split(/,/);
 }
 
 function extractUrlVariableNames(url) {
-  const matches = url.match(urlVariableRegex);
+const matches = url.match(urlVariableRegex);
 
-  if (!matches) {
+if (!matches) {
     return [];
-  }
+}
 
-  return matches.map(removeNonChars).reduce((a, b) => a.concat(b), []);
+return matches.map(removeNonChars).reduce((a, b) => a.concat(b), []);
 }
 
 function omit(object, keysToOmit) {
-  return Object.keys(object).filter(option => !keysToOmit.includes(option)).reduce((obj, key) => {
+return Object.keys(object).filter(option => !keysToOmit.includes(option)).reduce((obj, key) => {
     obj[key] = object[key];
     return obj;
-  }, {});
+}, {});
 }
 
 // Based on https://github.com/bramstein/url-template, licensed under BSD
@@ -4090,232 +4104,232 @@ function omit(object, keysToOmit) {
 
 /* istanbul ignore file */
 function encodeReserved(str) {
-  return str.split(/(%[0-9A-Fa-f]{2})/g).map(function (part) {
+return str.split(/(%[0-9A-Fa-f]{2})/g).map(function (part) {
     if (!/%[0-9A-Fa-f]/.test(part)) {
-      part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    part = encodeURI(part).replace(/%5B/g, "[").replace(/%5D/g, "]");
     }
 
     return part;
-  }).join("");
+}).join("");
 }
 
 function encodeUnreserved(str) {
-  return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
+return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
     return "%" + c.charCodeAt(0).toString(16).toUpperCase();
-  });
+});
 }
 
 function encodeValue(operator, value, key) {
-  value = operator === "+" || operator === "#" ? encodeReserved(value) : encodeUnreserved(value);
+value = operator === "+" || operator === "#" ? encodeReserved(value) : encodeUnreserved(value);
 
-  if (key) {
+if (key) {
     return encodeUnreserved(key) + "=" + value;
-  } else {
+} else {
     return value;
-  }
+}
 }
 
 function isDefined(value) {
-  return value !== undefined && value !== null;
+return value !== undefined && value !== null;
 }
 
 function isKeyOperator(operator) {
-  return operator === ";" || operator === "&" || operator === "?";
+return operator === ";" || operator === "&" || operator === "?";
 }
 
 function getValues(context, operator, key, modifier) {
-  var value = context[key],
-      result = [];
+var value = context[key],
+    result = [];
 
-  if (isDefined(value) && value !== "") {
+if (isDefined(value) && value !== "") {
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-      value = value.toString();
+    value = value.toString();
 
-      if (modifier && modifier !== "*") {
+    if (modifier && modifier !== "*") {
         value = value.substring(0, parseInt(modifier, 10));
-      }
+    }
 
-      result.push(encodeValue(operator, value, isKeyOperator(operator) ? key : ""));
+    result.push(encodeValue(operator, value, isKeyOperator(operator) ? key : ""));
     } else {
-      if (modifier === "*") {
+    if (modifier === "*") {
         if (Array.isArray(value)) {
-          value.filter(isDefined).forEach(function (value) {
+        value.filter(isDefined).forEach(function (value) {
             result.push(encodeValue(operator, value, isKeyOperator(operator) ? key : ""));
-          });
+        });
         } else {
-          Object.keys(value).forEach(function (k) {
+        Object.keys(value).forEach(function (k) {
             if (isDefined(value[k])) {
-              result.push(encodeValue(operator, value[k], k));
+            result.push(encodeValue(operator, value[k], k));
             }
-          });
+        });
         }
-      } else {
+    } else {
         const tmp = [];
 
         if (Array.isArray(value)) {
-          value.filter(isDefined).forEach(function (value) {
+        value.filter(isDefined).forEach(function (value) {
             tmp.push(encodeValue(operator, value));
-          });
+        });
         } else {
-          Object.keys(value).forEach(function (k) {
+        Object.keys(value).forEach(function (k) {
             if (isDefined(value[k])) {
-              tmp.push(encodeUnreserved(k));
-              tmp.push(encodeValue(operator, value[k].toString()));
+            tmp.push(encodeUnreserved(k));
+            tmp.push(encodeValue(operator, value[k].toString()));
             }
-          });
+        });
         }
 
         if (isKeyOperator(operator)) {
-          result.push(encodeUnreserved(key) + "=" + tmp.join(","));
+        result.push(encodeUnreserved(key) + "=" + tmp.join(","));
         } else if (tmp.length !== 0) {
-          result.push(tmp.join(","));
+        result.push(tmp.join(","));
         }
-      }
     }
-  } else {
+    }
+} else {
     if (operator === ";") {
-      if (isDefined(value)) {
+    if (isDefined(value)) {
         result.push(encodeUnreserved(key));
-      }
-    } else if (value === "" && (operator === "&" || operator === "?")) {
-      result.push(encodeUnreserved(key) + "=");
-    } else if (value === "") {
-      result.push("");
     }
-  }
+    } else if (value === "" && (operator === "&" || operator === "?")) {
+    result.push(encodeUnreserved(key) + "=");
+    } else if (value === "") {
+    result.push("");
+    }
+}
 
-  return result;
+return result;
 }
 
 function parseUrl(template) {
-  return {
+return {
     expand: expand.bind(null, template)
-  };
+};
 }
 
 function expand(template, context) {
-  var operators = ["+", "#", ".", "/", ";", "?", "&"];
-  return template.replace(/\{([^\{\}]+)\}|([^\{\}]+)/g, function (_, expression, literal) {
+var operators = ["+", "#", ".", "/", ";", "?", "&"];
+return template.replace(/\{([^\{\}]+)\}|([^\{\}]+)/g, function (_, expression, literal) {
     if (expression) {
-      let operator = "";
-      const values = [];
+    let operator = "";
+    const values = [];
 
-      if (operators.indexOf(expression.charAt(0)) !== -1) {
+    if (operators.indexOf(expression.charAt(0)) !== -1) {
         operator = expression.charAt(0);
         expression = expression.substr(1);
-      }
+    }
 
-      expression.split(/,/g).forEach(function (variable) {
+    expression.split(/,/g).forEach(function (variable) {
         var tmp = /([^:\*]*)(?::(\d+)|(\*))?/.exec(variable);
         values.push(getValues(context, operator, tmp[1], tmp[2] || tmp[3]));
-      });
+    });
 
-      if (operator && operator !== "+") {
+    if (operator && operator !== "+") {
         var separator = ",";
 
         if (operator === "?") {
-          separator = "&";
+        separator = "&";
         } else if (operator !== "#") {
-          separator = operator;
+        separator = operator;
         }
 
         return (values.length !== 0 ? operator : "") + values.join(separator);
-      } else {
-        return values.join(",");
-      }
     } else {
-      return encodeReserved(literal);
+        return values.join(",");
     }
-  });
+    } else {
+    return encodeReserved(literal);
+    }
+});
 }
 
 function parse(options) {
-  // https://fetch.spec.whatwg.org/#methods
-  let method = options.method.toUpperCase(); // replace :varname with {varname} to make it RFC 6570 compatible
+// https://fetch.spec.whatwg.org/#methods
+let method = options.method.toUpperCase(); // replace :varname with {varname} to make it RFC 6570 compatible
 
-  let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{+$1}");
-  let headers = Object.assign({}, options.headers);
-  let body;
-  let parameters = omit(options, ["method", "baseUrl", "url", "headers", "request", "mediaType"]); // extract variable names from URL to calculate remaining variables later
+let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{+$1}");
+let headers = Object.assign({}, options.headers);
+let body;
+let parameters = omit(options, ["method", "baseUrl", "url", "headers", "request", "mediaType"]); // extract variable names from URL to calculate remaining variables later
 
-  const urlVariableNames = extractUrlVariableNames(url);
-  url = parseUrl(url).expand(parameters);
+const urlVariableNames = extractUrlVariableNames(url);
+url = parseUrl(url).expand(parameters);
 
-  if (!/^http/.test(url)) {
+if (!/^http/.test(url)) {
     url = options.baseUrl + url;
-  }
+}
 
-  const omittedParameters = Object.keys(options).filter(option => urlVariableNames.includes(option)).concat("baseUrl");
-  const remainingParameters = omit(parameters, omittedParameters);
-  const isBinaryRequset = /application\/octet-stream/i.test(headers.accept);
+const omittedParameters = Object.keys(options).filter(option => urlVariableNames.includes(option)).concat("baseUrl");
+const remainingParameters = omit(parameters, omittedParameters);
+const isBinaryRequset = /application\/octet-stream/i.test(headers.accept);
 
-  if (!isBinaryRequset) {
+if (!isBinaryRequset) {
     if (options.mediaType.format) {
-      // e.g. application/vnd.github.v3+json => application/vnd.github.v3.raw
-      headers.accept = headers.accept.split(/,/).map(preview => preview.replace(/application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/, `application/vnd$1$2.${options.mediaType.format}`)).join(",");
+    // e.g. application/vnd.github.v3+json => application/vnd.github.v3.raw
+    headers.accept = headers.accept.split(/,/).map(preview => preview.replace(/application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/, `application/vnd$1$2.${options.mediaType.format}`)).join(",");
     }
 
     if (options.mediaType.previews.length) {
-      const previewsFromAcceptHeader = headers.accept.match(/[\w-]+(?=-preview)/g) || [];
-      headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map(preview => {
+    const previewsFromAcceptHeader = headers.accept.match(/[\w-]+(?=-preview)/g) || [];
+    headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map(preview => {
         const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
         return `application/vnd.github.${preview}-preview${format}`;
-      }).join(",");
+    }).join(",");
     }
-  } // for GET/HEAD requests, set URL query parameters from remaining parameters
-  // for PATCH/POST/PUT/DELETE requests, set request body from remaining parameters
+} // for GET/HEAD requests, set URL query parameters from remaining parameters
+// for PATCH/POST/PUT/DELETE requests, set request body from remaining parameters
 
 
-  if (["GET", "HEAD"].includes(method)) {
+if (["GET", "HEAD"].includes(method)) {
     url = addQueryParameters(url, remainingParameters);
-  } else {
+} else {
     if ("data" in remainingParameters) {
-      body = remainingParameters.data;
+    body = remainingParameters.data;
     } else {
-      if (Object.keys(remainingParameters).length) {
+    if (Object.keys(remainingParameters).length) {
         body = remainingParameters;
-      } else {
+    } else {
         headers["content-length"] = 0;
-      }
     }
-  } // default content-type for JSON if body is set
+    }
+} // default content-type for JSON if body is set
 
 
-  if (!headers["content-type"] && typeof body !== "undefined") {
+if (!headers["content-type"] && typeof body !== "undefined") {
     headers["content-type"] = "application/json; charset=utf-8";
-  } // GitHub expects 'content-length: 0' header for PUT/PATCH requests without body.
-  // fetch does not allow to set `content-length` header, but we can set body to an empty string
+} // GitHub expects 'content-length: 0' header for PUT/PATCH requests without body.
+// fetch does not allow to set `content-length` header, but we can set body to an empty string
 
 
-  if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
+if (["PATCH", "PUT"].includes(method) && typeof body === "undefined") {
     body = "";
-  } // Only return body/request keys if present
+} // Only return body/request keys if present
 
 
-  return Object.assign({
+return Object.assign({
     method,
     url,
     headers
-  }, typeof body !== "undefined" ? {
+}, typeof body !== "undefined" ? {
     body
-  } : null, options.request ? {
+} : null, options.request ? {
     request: options.request
-  } : null);
+} : null);
 }
 
 function endpointWithDefaults(defaults, route, options) {
-  return parse(merge(defaults, route, options));
+return parse(merge(defaults, route, options));
 }
 
 function withDefaults(oldDefaults, newDefaults) {
-  const DEFAULTS = merge(oldDefaults, newDefaults);
-  const endpoint = endpointWithDefaults.bind(null, DEFAULTS);
-  return Object.assign(endpoint, {
+const DEFAULTS = merge(oldDefaults, newDefaults);
+const endpoint = endpointWithDefaults.bind(null, DEFAULTS);
+return Object.assign(endpoint, {
     DEFAULTS,
     defaults: withDefaults.bind(null, DEFAULTS),
     merge: merge.bind(null, DEFAULTS),
     parse
-  });
+});
 }
 
 const VERSION = "6.0.5";
@@ -4324,16 +4338,16 @@ const userAgent = `octokit-endpoint.js/${VERSION} ${universalUserAgent.getUserAg
 // So we use RequestParameters and add method as additional required property.
 
 const DEFAULTS = {
-  method: "GET",
-  baseUrl: "https://api.github.com",
-  headers: {
+method: "GET",
+baseUrl: "https://api.github.com",
+headers: {
     accept: "application/vnd.github.v3+json",
     "user-agent": userAgent
-  },
-  mediaType: {
+},
+mediaType: {
     format: "",
     previews: []
-  }
+}
 };
 
 const endpoint = withDefaults(null, DEFAULTS);
@@ -4358,12 +4372,12 @@ var universalUserAgent = __nccwpck_require__(7540);
 const VERSION = "4.5.3";
 
 class GraphqlError extends Error {
-  constructor(request, response) {
+constructor(request, response) {
     const message = response.data.errors[0].message;
     super(message);
     Object.assign(this, response.data);
     Object.assign(this, {
-      headers: response.headers
+    headers: response.headers
     });
     this.name = "GraphqlError";
     this.request = request; // Maintains proper stack trace (only available on V8)
@@ -4371,73 +4385,73 @@ class GraphqlError extends Error {
     /* istanbul ignore next */
 
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
+    Error.captureStackTrace(this, this.constructor);
     }
-  }
+}
 
 }
 
 const NON_VARIABLE_OPTIONS = ["method", "baseUrl", "url", "headers", "request", "query", "mediaType"];
 function graphql(request, query, options) {
-  options = typeof query === "string" ? options = Object.assign({
+options = typeof query === "string" ? options = Object.assign({
     query
-  }, options) : options = query;
-  const requestOptions = Object.keys(options).reduce((result, key) => {
+}, options) : options = query;
+const requestOptions = Object.keys(options).reduce((result, key) => {
     if (NON_VARIABLE_OPTIONS.includes(key)) {
-      result[key] = options[key];
-      return result;
+    result[key] = options[key];
+    return result;
     }
 
     if (!result.variables) {
-      result.variables = {};
+    result.variables = {};
     }
 
     result.variables[key] = options[key];
     return result;
-  }, {});
-  return request(requestOptions).then(response => {
+}, {});
+return request(requestOptions).then(response => {
     if (response.data.errors) {
-      const headers = {};
+    const headers = {};
 
-      for (const key of Object.keys(response.headers)) {
+    for (const key of Object.keys(response.headers)) {
         headers[key] = response.headers[key];
-      }
+    }
 
-      throw new GraphqlError(requestOptions, {
+    throw new GraphqlError(requestOptions, {
         headers,
         data: response.data
-      });
+    });
     }
 
     return response.data.data;
-  });
+});
 }
 
 function withDefaults(request$1, newDefaults) {
-  const newRequest = request$1.defaults(newDefaults);
+const newRequest = request$1.defaults(newDefaults);
 
-  const newApi = (query, options) => {
+const newApi = (query, options) => {
     return graphql(newRequest, query, options);
-  };
+};
 
-  return Object.assign(newApi, {
+return Object.assign(newApi, {
     defaults: withDefaults.bind(null, newRequest),
     endpoint: request.request.endpoint
-  });
+});
 }
 
 const graphql$1 = withDefaults(request.request, {
-  headers: {
+headers: {
     "user-agent": `octokit-graphql.js/${VERSION} ${universalUserAgent.getUserAgent()}`
-  },
-  method: "POST",
-  url: "/graphql"
+},
+method: "POST",
+url: "/graphql"
 });
 function withCustomRequest(customRequest) {
-  return withDefaults(customRequest, {
+return withDefaults(customRequest, {
     method: "POST",
     url: "/graphql"
-  });
+});
 }
 
 exports.graphql = graphql$1;
@@ -4466,22 +4480,22 @@ const logOnce = once(deprecation => console.warn(deprecation));
  */
 
 class RequestError extends Error {
-  constructor(message, statusCode, options) {
+constructor(message, statusCode, options) {
     super(message); // Maintains proper stack trace (only available on V8)
 
     /* istanbul ignore next */
 
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
+    Error.captureStackTrace(this, this.constructor);
     }
 
     this.name = "HttpError";
     this.status = statusCode;
     Object.defineProperty(this, "code", {
-      get() {
+    get() {
         logOnce(new deprecation.Deprecation("[@octokit/request-error] `error.code` is deprecated, use `error.status`."));
         return statusCode;
-      }
+    }
 
     });
     this.headers = options.headers || {}; // redact request credentials without mutating original request options
@@ -4489,9 +4503,9 @@ class RequestError extends Error {
     const requestCopy = Object.assign({}, options.request);
 
     if (options.request.headers.authorization) {
-      requestCopy.headers = Object.assign({}, options.request.headers, {
+    requestCopy.headers = Object.assign({}, options.request.headers, {
         authorization: options.request.headers.authorization.replace(/ .*$/, " [REDACTED]")
-      });
+    });
     }
 
     requestCopy.url = requestCopy.url // client_id & client_secret can be passed as URL query parameters to increase rate limit
@@ -4500,7 +4514,7 @@ class RequestError extends Error {
     // see https://developer.github.com/v3/#oauth2-token-sent-in-a-header
     .replace(/\baccess_token=\w+/g, "access_token=[REDACTED]");
     this.request = requestCopy;
-  }
+}
 
 }
 
@@ -4529,135 +4543,135 @@ var requestError = __nccwpck_require__(9910);
 const VERSION = "5.4.7";
 
 function getBufferResponse(response) {
-  return response.arrayBuffer();
+return response.arrayBuffer();
 }
 
 function fetchWrapper(requestOptions) {
-  if (isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body)) {
+if (isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body)) {
     requestOptions.body = JSON.stringify(requestOptions.body);
-  }
+}
 
-  let headers = {};
-  let status;
-  let url;
-  const fetch = requestOptions.request && requestOptions.request.fetch || nodeFetch;
-  return fetch(requestOptions.url, Object.assign({
+let headers = {};
+let status;
+let url;
+const fetch = requestOptions.request && requestOptions.request.fetch || nodeFetch;
+return fetch(requestOptions.url, Object.assign({
     method: requestOptions.method,
     body: requestOptions.body,
     headers: requestOptions.headers,
     redirect: requestOptions.redirect
-  }, requestOptions.request)).then(response => {
+}, requestOptions.request)).then(response => {
     url = response.url;
     status = response.status;
 
     for (const keyAndValue of response.headers) {
-      headers[keyAndValue[0]] = keyAndValue[1];
+    headers[keyAndValue[0]] = keyAndValue[1];
     }
 
     if (status === 204 || status === 205) {
-      return;
+    return;
     } // GitHub API returns 200 for HEAD requests
 
 
     if (requestOptions.method === "HEAD") {
-      if (status < 400) {
+    if (status < 400) {
         return;
-      }
+    }
 
-      throw new requestError.RequestError(response.statusText, status, {
+    throw new requestError.RequestError(response.statusText, status, {
         headers,
         request: requestOptions
-      });
+    });
     }
 
     if (status === 304) {
-      throw new requestError.RequestError("Not modified", status, {
+    throw new requestError.RequestError("Not modified", status, {
         headers,
         request: requestOptions
-      });
+    });
     }
 
     if (status >= 400) {
-      return response.text().then(message => {
+    return response.text().then(message => {
         const error = new requestError.RequestError(message, status, {
-          headers,
-          request: requestOptions
+        headers,
+        request: requestOptions
         });
 
         try {
-          let responseBody = JSON.parse(error.message);
-          Object.assign(error, responseBody);
-          let errors = responseBody.errors; // Assumption `errors` would always be in Array format
+        let responseBody = JSON.parse(error.message);
+        Object.assign(error, responseBody);
+        let errors = responseBody.errors; // Assumption `errors` would always be in Array format
 
-          error.message = error.message + ": " + errors.map(JSON.stringify).join(", ");
+        error.message = error.message + ": " + errors.map(JSON.stringify).join(", ");
         } catch (e) {// ignore, see octokit/rest.js#684
         }
 
         throw error;
-      });
+    });
     }
 
     const contentType = response.headers.get("content-type");
 
     if (/application\/json/.test(contentType)) {
-      return response.json();
+    return response.json();
     }
 
     if (!contentType || /^text\/|charset=utf-8$/.test(contentType)) {
-      return response.text();
+    return response.text();
     }
 
     return getBufferResponse(response);
-  }).then(data => {
+}).then(data => {
     return {
-      status,
-      url,
-      headers,
-      data
+    status,
+    url,
+    headers,
+    data
     };
-  }).catch(error => {
+}).catch(error => {
     if (error instanceof requestError.RequestError) {
-      throw error;
+    throw error;
     }
 
     throw new requestError.RequestError(error.message, 500, {
-      headers,
-      request: requestOptions
+    headers,
+    request: requestOptions
     });
-  });
+});
 }
 
 function withDefaults(oldEndpoint, newDefaults) {
-  const endpoint = oldEndpoint.defaults(newDefaults);
+const endpoint = oldEndpoint.defaults(newDefaults);
 
-  const newApi = function (route, parameters) {
+const newApi = function (route, parameters) {
     const endpointOptions = endpoint.merge(route, parameters);
 
     if (!endpointOptions.request || !endpointOptions.request.hook) {
-      return fetchWrapper(endpoint.parse(endpointOptions));
+    return fetchWrapper(endpoint.parse(endpointOptions));
     }
 
     const request = (route, parameters) => {
-      return fetchWrapper(endpoint.parse(endpoint.merge(route, parameters)));
+    return fetchWrapper(endpoint.parse(endpoint.merge(route, parameters)));
     };
 
     Object.assign(request, {
-      endpoint,
-      defaults: withDefaults.bind(null, endpoint)
-    });
-    return endpointOptions.request.hook(request, endpointOptions);
-  };
-
-  return Object.assign(newApi, {
     endpoint,
     defaults: withDefaults.bind(null, endpoint)
-  });
+    });
+    return endpointOptions.request.hook(request, endpointOptions);
+};
+
+return Object.assign(newApi, {
+    endpoint,
+    defaults: withDefaults.bind(null, endpoint)
+});
 }
 
 const request = withDefaults(endpoint.endpoint, {
-  headers: {
+headers: {
     "user-agent": `octokit-request.js/${VERSION} ${universalUserAgent.getUserAgent()}`
-  }
+}
 });
 
 exports.request = request;
@@ -4692,109 +4706,109 @@ const BUFFER = Symbol('buffer');
 const TYPE = Symbol('type');
 
 class Blob {
-	constructor() {
-		this[TYPE] = '';
+constructor() {
+    this[TYPE] = '';
 
-		const blobParts = arguments[0];
-		const options = arguments[1];
+    const blobParts = arguments[0];
+    const options = arguments[1];
 
-		const buffers = [];
-		let size = 0;
+    const buffers = [];
+    let size = 0;
 
-		if (blobParts) {
-			const a = blobParts;
-			const length = Number(a.length);
-			for (let i = 0; i < length; i++) {
-				const element = a[i];
-				let buffer;
-				if (element instanceof Buffer) {
-					buffer = element;
-				} else if (ArrayBuffer.isView(element)) {
-					buffer = Buffer.from(element.buffer, element.byteOffset, element.byteLength);
-				} else if (element instanceof ArrayBuffer) {
-					buffer = Buffer.from(element);
-				} else if (element instanceof Blob) {
-					buffer = element[BUFFER];
-				} else {
-					buffer = Buffer.from(typeof element === 'string' ? element : String(element));
-				}
-				size += buffer.length;
-				buffers.push(buffer);
-			}
-		}
+    if (blobParts) {
+    const a = blobParts;
+    const length = Number(a.length);
+    for (let i = 0; i < length; i++) {
+        const element = a[i];
+        let buffer;
+        if (element instanceof Buffer) {
+        buffer = element;
+        } else if (ArrayBuffer.isView(element)) {
+        buffer = Buffer.from(element.buffer, element.byteOffset, element.byteLength);
+        } else if (element instanceof ArrayBuffer) {
+        buffer = Buffer.from(element);
+        } else if (element instanceof Blob) {
+        buffer = element[BUFFER];
+        } else {
+        buffer = Buffer.from(typeof element === 'string' ? element : String(element));
+        }
+        size += buffer.length;
+        buffers.push(buffer);
+    }
+    }
 
-		this[BUFFER] = Buffer.concat(buffers);
+    this[BUFFER] = Buffer.concat(buffers);
 
-		let type = options && options.type !== undefined && String(options.type).toLowerCase();
-		if (type && !/[^\u0020-\u007E]/.test(type)) {
-			this[TYPE] = type;
-		}
-	}
-	get size() {
-		return this[BUFFER].length;
-	}
-	get type() {
-		return this[TYPE];
-	}
-	text() {
-		return Promise.resolve(this[BUFFER].toString());
-	}
-	arrayBuffer() {
-		const buf = this[BUFFER];
-		const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-		return Promise.resolve(ab);
-	}
-	stream() {
-		const readable = new Readable();
-		readable._read = function () {};
-		readable.push(this[BUFFER]);
-		readable.push(null);
-		return readable;
-	}
-	toString() {
-		return '[object Blob]';
-	}
-	slice() {
-		const size = this.size;
+    let type = options && options.type !== undefined && String(options.type).toLowerCase();
+    if (type && !/[^\u0020-\u007E]/.test(type)) {
+    this[TYPE] = type;
+    }
+}
+get size() {
+    return this[BUFFER].length;
+}
+get type() {
+    return this[TYPE];
+}
+text() {
+    return Promise.resolve(this[BUFFER].toString());
+}
+arrayBuffer() {
+    const buf = this[BUFFER];
+    const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    return Promise.resolve(ab);
+}
+stream() {
+    const readable = new Readable();
+    readable._read = function () {};
+    readable.push(this[BUFFER]);
+    readable.push(null);
+    return readable;
+}
+toString() {
+    return '[object Blob]';
+}
+slice() {
+    const size = this.size;
 
-		const start = arguments[0];
-		const end = arguments[1];
-		let relativeStart, relativeEnd;
-		if (start === undefined) {
-			relativeStart = 0;
-		} else if (start < 0) {
-			relativeStart = Math.max(size + start, 0);
-		} else {
-			relativeStart = Math.min(start, size);
-		}
-		if (end === undefined) {
-			relativeEnd = size;
-		} else if (end < 0) {
-			relativeEnd = Math.max(size + end, 0);
-		} else {
-			relativeEnd = Math.min(end, size);
-		}
-		const span = Math.max(relativeEnd - relativeStart, 0);
+    const start = arguments[0];
+    const end = arguments[1];
+    let relativeStart, relativeEnd;
+    if (start === undefined) {
+    relativeStart = 0;
+    } else if (start < 0) {
+    relativeStart = Math.max(size + start, 0);
+    } else {
+    relativeStart = Math.min(start, size);
+    }
+    if (end === undefined) {
+    relativeEnd = size;
+    } else if (end < 0) {
+    relativeEnd = Math.max(size + end, 0);
+    } else {
+    relativeEnd = Math.min(end, size);
+    }
+    const span = Math.max(relativeEnd - relativeStart, 0);
 
-		const buffer = this[BUFFER];
-		const slicedBuffer = buffer.slice(relativeStart, relativeStart + span);
-		const blob = new Blob([], { type: arguments[2] });
-		blob[BUFFER] = slicedBuffer;
-		return blob;
-	}
+    const buffer = this[BUFFER];
+    const slicedBuffer = buffer.slice(relativeStart, relativeStart + span);
+    const blob = new Blob([], { type: arguments[2] });
+    blob[BUFFER] = slicedBuffer;
+    return blob;
+}
 }
 
 Object.defineProperties(Blob.prototype, {
-	size: { enumerable: true },
-	type: { enumerable: true },
-	slice: { enumerable: true }
+size: { enumerable: true },
+type: { enumerable: true },
+slice: { enumerable: true }
 });
 
 Object.defineProperty(Blob.prototype, Symbol.toStringTag, {
-	value: 'Blob',
-	writable: false,
-	enumerable: false,
-	configurable: true
+value: 'Blob',
+writable: false,
+enumerable: false,
+configurable: true
 });
 
 /**
@@ -4812,18 +4826,18 @@ Object.defineProperty(Blob.prototype, Symbol.toStringTag, {
  * @return  FetchError
  */
 function FetchError(message, type, systemError) {
-  Error.call(this, message);
+Error.call(this, message);
 
-  this.message = message;
-  this.type = type;
+this.message = message;
+this.type = type;
 
-  // when err.type is `system`, err.code contains system error code
-  if (systemError) {
+// when err.type is `system`, err.code contains system error code
+if (systemError) {
     this.code = this.errno = systemError.code;
-  }
+}
 
-  // hide custom error implementation details from end-users
-  Error.captureStackTrace(this, this.constructor);
+// hide custom error implementation details from end-users
+Error.captureStackTrace(this, this.constructor);
 }
 
 FetchError.prototype = Object.create(Error.prototype);
@@ -4832,7 +4846,7 @@ FetchError.prototype.name = 'FetchError';
 
 let convert;
 try {
-	convert = (__nccwpck_require__(2877).convert);
+convert = (__nccwpck_require__(2877).convert);
 } catch (e) {}
 
 const INTERNALS = Symbol('Body internals');
@@ -4850,156 +4864,156 @@ const PassThrough = Stream.PassThrough;
  * @return  Void
  */
 function Body(body) {
-	var _this = this;
+var _this = this;
 
-	var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-	    _ref$size = _ref.size;
+var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+    _ref$size = _ref.size;
 
-	let size = _ref$size === undefined ? 0 : _ref$size;
-	var _ref$timeout = _ref.timeout;
-	let timeout = _ref$timeout === undefined ? 0 : _ref$timeout;
+let size = _ref$size === undefined ? 0 : _ref$size;
+var _ref$timeout = _ref.timeout;
+let timeout = _ref$timeout === undefined ? 0 : _ref$timeout;
 
-	if (body == null) {
-		// body is undefined or null
-		body = null;
-	} else if (isURLSearchParams(body)) {
-		// body is a URLSearchParams
-		body = Buffer.from(body.toString());
-	} else if (isBlob(body)) ; else if (Buffer.isBuffer(body)) ; else if (Object.prototype.toString.call(body) === '[object ArrayBuffer]') {
-		// body is ArrayBuffer
-		body = Buffer.from(body);
-	} else if (ArrayBuffer.isView(body)) {
-		// body is ArrayBufferView
-		body = Buffer.from(body.buffer, body.byteOffset, body.byteLength);
-	} else if (body instanceof Stream) ; else {
-		// none of the above
-		// coerce to string then buffer
-		body = Buffer.from(String(body));
-	}
-	this[INTERNALS] = {
-		body,
-		disturbed: false,
-		error: null
-	};
-	this.size = size;
-	this.timeout = timeout;
+if (body == null) {
+    // body is undefined or null
+    body = null;
+} else if (isURLSearchParams(body)) {
+    // body is a URLSearchParams
+    body = Buffer.from(body.toString());
+} else if (isBlob(body)) ; else if (Buffer.isBuffer(body)) ; else if (Object.prototype.toString.call(body) === '[object ArrayBuffer]') {
+    // body is ArrayBuffer
+    body = Buffer.from(body);
+} else if (ArrayBuffer.isView(body)) {
+    // body is ArrayBufferView
+    body = Buffer.from(body.buffer, body.byteOffset, body.byteLength);
+} else if (body instanceof Stream) ; else {
+    // none of the above
+    // coerce to string then buffer
+    body = Buffer.from(String(body));
+}
+this[INTERNALS] = {
+    body,
+    disturbed: false,
+    error: null
+};
+this.size = size;
+this.timeout = timeout;
 
-	if (body instanceof Stream) {
-		body.on('error', function (err) {
-			const error = err.name === 'AbortError' ? err : new FetchError(`Invalid response body while trying to fetch ${_this.url}: ${err.message}`, 'system', err);
-			_this[INTERNALS].error = error;
-		});
-	}
+if (body instanceof Stream) {
+    body.on('error', function (err) {
+    const error = err.name === 'AbortError' ? err : new FetchError(`Invalid response body while trying to fetch ${_this.url}: ${err.message}`, 'system', err);
+    _this[INTERNALS].error = error;
+    });
+}
 }
 
 Body.prototype = {
-	get body() {
-		return this[INTERNALS].body;
-	},
+get body() {
+    return this[INTERNALS].body;
+},
 
-	get bodyUsed() {
-		return this[INTERNALS].disturbed;
-	},
+get bodyUsed() {
+    return this[INTERNALS].disturbed;
+},
 
-	/**
-  * Decode response as ArrayBuffer
-  *
-  * @return  Promise
-  */
-	arrayBuffer() {
-		return consumeBody.call(this).then(function (buf) {
-			return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-		});
-	},
+/**
+* Decode response as ArrayBuffer
+*
+* @return  Promise
+*/
+arrayBuffer() {
+    return consumeBody.call(this).then(function (buf) {
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    });
+},
 
-	/**
-  * Return raw response as Blob
-  *
-  * @return Promise
-  */
-	blob() {
-		let ct = this.headers && this.headers.get('content-type') || '';
-		return consumeBody.call(this).then(function (buf) {
-			return Object.assign(
-			// Prevent copying
-			new Blob([], {
-				type: ct.toLowerCase()
-			}), {
-				[BUFFER]: buf
-			});
-		});
-	},
+/**
+* Return raw response as Blob
+*
+* @return Promise
+*/
+blob() {
+    let ct = this.headers && this.headers.get('content-type') || '';
+    return consumeBody.call(this).then(function (buf) {
+    return Object.assign(
+    // Prevent copying
+    new Blob([], {
+        type: ct.toLowerCase()
+    }), {
+        [BUFFER]: buf
+    });
+    });
+},
 
-	/**
-  * Decode response as json
-  *
-  * @return  Promise
-  */
-	json() {
-		var _this2 = this;
+/**
+* Decode response as json
+*
+* @return  Promise
+*/
+json() {
+    var _this2 = this;
 
-		return consumeBody.call(this).then(function (buffer) {
-			try {
-				return JSON.parse(buffer.toString());
-			} catch (err) {
-				return Body.Promise.reject(new FetchError(`invalid json response body at ${_this2.url} reason: ${err.message}`, 'invalid-json'));
-			}
-		});
-	},
+    return consumeBody.call(this).then(function (buffer) {
+    try {
+        return JSON.parse(buffer.toString());
+    } catch (err) {
+        return Body.Promise.reject(new FetchError(`invalid json response body at ${_this2.url} reason: ${err.message}`, 'invalid-json'));
+    }
+    });
+},
 
-	/**
-  * Decode response as text
-  *
-  * @return  Promise
-  */
-	text() {
-		return consumeBody.call(this).then(function (buffer) {
-			return buffer.toString();
-		});
-	},
+/**
+* Decode response as text
+*
+* @return  Promise
+*/
+text() {
+    return consumeBody.call(this).then(function (buffer) {
+    return buffer.toString();
+    });
+},
 
-	/**
-  * Decode response as buffer (non-spec api)
-  *
-  * @return  Promise
-  */
-	buffer() {
-		return consumeBody.call(this);
-	},
+/**
+* Decode response as buffer (non-spec api)
+*
+* @return  Promise
+*/
+buffer() {
+    return consumeBody.call(this);
+},
 
-	/**
-  * Decode response as text, while automatically detecting the encoding and
-  * trying to decode to UTF-8 (non-spec api)
-  *
-  * @return  Promise
-  */
-	textConverted() {
-		var _this3 = this;
+/**
+* Decode response as text, while automatically detecting the encoding and
+* trying to decode to UTF-8 (non-spec api)
+*
+* @return  Promise
+*/
+textConverted() {
+    var _this3 = this;
 
-		return consumeBody.call(this).then(function (buffer) {
-			return convertBody(buffer, _this3.headers);
-		});
-	}
+    return consumeBody.call(this).then(function (buffer) {
+    return convertBody(buffer, _this3.headers);
+    });
+}
 };
 
 // In browsers, all properties are enumerable.
 Object.defineProperties(Body.prototype, {
-	body: { enumerable: true },
-	bodyUsed: { enumerable: true },
-	arrayBuffer: { enumerable: true },
-	blob: { enumerable: true },
-	json: { enumerable: true },
-	text: { enumerable: true }
+body: { enumerable: true },
+bodyUsed: { enumerable: true },
+arrayBuffer: { enumerable: true },
+blob: { enumerable: true },
+json: { enumerable: true },
+text: { enumerable: true }
 });
 
 Body.mixIn = function (proto) {
-	for (const name of Object.getOwnPropertyNames(Body.prototype)) {
-		// istanbul ignore else: future proof
-		if (!(name in proto)) {
-			const desc = Object.getOwnPropertyDescriptor(Body.prototype, name);
-			Object.defineProperty(proto, name, desc);
-		}
-	}
+for (const name of Object.getOwnPropertyNames(Body.prototype)) {
+    // istanbul ignore else: future proof
+    if (!(name in proto)) {
+    const desc = Object.getOwnPropertyDescriptor(Body.prototype, name);
+    Object.defineProperty(proto, name, desc);
+    }
+}
 };
 
 /**
@@ -5010,99 +5024,99 @@ Body.mixIn = function (proto) {
  * @return  Promise
  */
 function consumeBody() {
-	var _this4 = this;
+var _this4 = this;
 
-	if (this[INTERNALS].disturbed) {
-		return Body.Promise.reject(new TypeError(`body used already for: ${this.url}`));
-	}
+if (this[INTERNALS].disturbed) {
+    return Body.Promise.reject(new TypeError(`body used already for: ${this.url}`));
+}
 
-	this[INTERNALS].disturbed = true;
+this[INTERNALS].disturbed = true;
 
-	if (this[INTERNALS].error) {
-		return Body.Promise.reject(this[INTERNALS].error);
-	}
+if (this[INTERNALS].error) {
+    return Body.Promise.reject(this[INTERNALS].error);
+}
 
-	let body = this.body;
+let body = this.body;
 
-	// body is null
-	if (body === null) {
-		return Body.Promise.resolve(Buffer.alloc(0));
-	}
+// body is null
+if (body === null) {
+    return Body.Promise.resolve(Buffer.alloc(0));
+}
 
-	// body is blob
-	if (isBlob(body)) {
-		body = body.stream();
-	}
+// body is blob
+if (isBlob(body)) {
+    body = body.stream();
+}
 
-	// body is buffer
-	if (Buffer.isBuffer(body)) {
-		return Body.Promise.resolve(body);
-	}
+// body is buffer
+if (Buffer.isBuffer(body)) {
+    return Body.Promise.resolve(body);
+}
 
-	// istanbul ignore if: should never happen
-	if (!(body instanceof Stream)) {
-		return Body.Promise.resolve(Buffer.alloc(0));
-	}
+// istanbul ignore if: should never happen
+if (!(body instanceof Stream)) {
+    return Body.Promise.resolve(Buffer.alloc(0));
+}
 
-	// body is stream
-	// get ready to actually consume the body
-	let accum = [];
-	let accumBytes = 0;
-	let abort = false;
+// body is stream
+// get ready to actually consume the body
+let accum = [];
+let accumBytes = 0;
+let abort = false;
 
-	return new Body.Promise(function (resolve, reject) {
-		let resTimeout;
+return new Body.Promise(function (resolve, reject) {
+    let resTimeout;
 
-		// allow timeout on slow response body
-		if (_this4.timeout) {
-			resTimeout = setTimeout(function () {
-				abort = true;
-				reject(new FetchError(`Response timeout while trying to fetch ${_this4.url} (over ${_this4.timeout}ms)`, 'body-timeout'));
-			}, _this4.timeout);
-		}
+    // allow timeout on slow response body
+    if (_this4.timeout) {
+    resTimeout = setTimeout(function () {
+        abort = true;
+        reject(new FetchError(`Response timeout while trying to fetch ${_this4.url} (over ${_this4.timeout}ms)`, 'body-timeout'));
+    }, _this4.timeout);
+    }
 
-		// handle stream errors
-		body.on('error', function (err) {
-			if (err.name === 'AbortError') {
-				// if the request was aborted, reject with this Error
-				abort = true;
-				reject(err);
-			} else {
-				// other errors, such as incorrect content-encoding
-				reject(new FetchError(`Invalid response body while trying to fetch ${_this4.url}: ${err.message}`, 'system', err));
-			}
-		});
+    // handle stream errors
+    body.on('error', function (err) {
+    if (err.name === 'AbortError') {
+        // if the request was aborted, reject with this Error
+        abort = true;
+        reject(err);
+    } else {
+        // other errors, such as incorrect content-encoding
+        reject(new FetchError(`Invalid response body while trying to fetch ${_this4.url}: ${err.message}`, 'system', err));
+    }
+    });
 
-		body.on('data', function (chunk) {
-			if (abort || chunk === null) {
-				return;
-			}
+    body.on('data', function (chunk) {
+    if (abort || chunk === null) {
+        return;
+    }
 
-			if (_this4.size && accumBytes + chunk.length > _this4.size) {
-				abort = true;
-				reject(new FetchError(`content size at ${_this4.url} over limit: ${_this4.size}`, 'max-size'));
-				return;
-			}
+    if (_this4.size && accumBytes + chunk.length > _this4.size) {
+        abort = true;
+        reject(new FetchError(`content size at ${_this4.url} over limit: ${_this4.size}`, 'max-size'));
+        return;
+    }
 
-			accumBytes += chunk.length;
-			accum.push(chunk);
-		});
+    accumBytes += chunk.length;
+    accum.push(chunk);
+    });
 
-		body.on('end', function () {
-			if (abort) {
-				return;
-			}
+    body.on('end', function () {
+    if (abort) {
+        return;
+    }
 
-			clearTimeout(resTimeout);
+    clearTimeout(resTimeout);
 
-			try {
-				resolve(Buffer.concat(accum, accumBytes));
-			} catch (err) {
-				// handle streams that have accumulated too much data (issue #414)
-				reject(new FetchError(`Could not create Buffer from response body for ${_this4.url}: ${err.message}`, 'system', err));
-			}
-		});
-	});
+    try {
+        resolve(Buffer.concat(accum, accumBytes));
+    } catch (err) {
+        // handle streams that have accumulated too much data (issue #414)
+        reject(new FetchError(`Could not create Buffer from response body for ${_this4.url}: ${err.message}`, 'system', err));
+    }
+    });
+});
 }
 
 /**
@@ -5114,60 +5128,60 @@ function consumeBody() {
  * @return  String
  */
 function convertBody(buffer, headers) {
-	if (typeof convert !== 'function') {
-		throw new Error('The package `encoding` must be installed to use the textConverted() function');
-	}
+if (typeof convert !== 'function') {
+    throw new Error('The package `encoding` must be installed to use the textConverted() function');
+}
 
-	const ct = headers.get('content-type');
-	let charset = 'utf-8';
-	let res, str;
+const ct = headers.get('content-type');
+let charset = 'utf-8';
+let res, str;
 
-	// header
-	if (ct) {
-		res = /charset=([^;]*)/i.exec(ct);
-	}
+// header
+if (ct) {
+    res = /charset=([^;]*)/i.exec(ct);
+}
 
-	// no charset in content type, peek at response body for at most 1024 bytes
-	str = buffer.slice(0, 1024).toString();
+// no charset in content type, peek at response body for at most 1024 bytes
+str = buffer.slice(0, 1024).toString();
 
-	// html5
-	if (!res && str) {
-		res = /<meta.+?charset=(['"])(.+?)\1/i.exec(str);
-	}
+// html5
+if (!res && str) {
+    res = /<meta.+?charset=(['"])(.+?)\1/i.exec(str);
+}
 
-	// html4
-	if (!res && str) {
-		res = /<meta[\s]+?http-equiv=(['"])content-type\1[\s]+?content=(['"])(.+?)\2/i.exec(str);
-		if (!res) {
-			res = /<meta[\s]+?content=(['"])(.+?)\1[\s]+?http-equiv=(['"])content-type\3/i.exec(str);
-			if (res) {
-				res.pop(); // drop last quote
-			}
-		}
+// html4
+if (!res && str) {
+    res = /<meta[\s]+?http-equiv=(['"])content-type\1[\s]+?content=(['"])(.+?)\2/i.exec(str);
+    if (!res) {
+    res = /<meta[\s]+?content=(['"])(.+?)\1[\s]+?http-equiv=(['"])content-type\3/i.exec(str);
+    if (res) {
+        res.pop(); // drop last quote
+    }
+    }
 
-		if (res) {
-			res = /charset=(.*)/i.exec(res.pop());
-		}
-	}
+    if (res) {
+    res = /charset=(.*)/i.exec(res.pop());
+    }
+}
 
-	// xml
-	if (!res && str) {
-		res = /<\?xml.+?encoding=(['"])(.+?)\1/i.exec(str);
-	}
+// xml
+if (!res && str) {
+    res = /<\?xml.+?encoding=(['"])(.+?)\1/i.exec(str);
+}
 
-	// found charset
-	if (res) {
-		charset = res.pop();
+// found charset
+if (res) {
+    charset = res.pop();
 
-		// prevent decode issues when sites use incorrect encoding
-		// ref: https://hsivonen.fi/encoding-menu/
-		if (charset === 'gb2312' || charset === 'gbk') {
-			charset = 'gb18030';
-		}
-	}
+    // prevent decode issues when sites use incorrect encoding
+    // ref: https://hsivonen.fi/encoding-menu/
+    if (charset === 'gb2312' || charset === 'gbk') {
+    charset = 'gb18030';
+    }
+}
 
-	// turn raw buffers into a single utf-8 buffer
-	return convert(buffer, 'UTF-8', charset).toString();
+// turn raw buffers into a single utf-8 buffer
+return convert(buffer, 'UTF-8', charset).toString();
 }
 
 /**
@@ -5178,13 +5192,13 @@ function convertBody(buffer, headers) {
  * @return  String
  */
 function isURLSearchParams(obj) {
-	// Duck-typing as a necessary condition.
-	if (typeof obj !== 'object' || typeof obj.append !== 'function' || typeof obj.delete !== 'function' || typeof obj.get !== 'function' || typeof obj.getAll !== 'function' || typeof obj.has !== 'function' || typeof obj.set !== 'function') {
-		return false;
-	}
+// Duck-typing as a necessary condition.
+if (typeof obj !== 'object' || typeof obj.append !== 'function' || typeof obj.delete !== 'function' || typeof obj.get !== 'function' || typeof obj.getAll !== 'function' || typeof obj.has !== 'function' || typeof obj.set !== 'function') {
+    return false;
+}
 
-	// Brand-checking and more duck-typing as optional condition.
-	return obj.constructor.name === 'URLSearchParams' || Object.prototype.toString.call(obj) === '[object URLSearchParams]' || typeof obj.sort === 'function';
+// Brand-checking and more duck-typing as optional condition.
+return obj.constructor.name === 'URLSearchParams' || Object.prototype.toString.call(obj) === '[object URLSearchParams]' || typeof obj.sort === 'function';
 }
 
 /**
@@ -5193,7 +5207,7 @@ function isURLSearchParams(obj) {
  * @return {boolean}
  */
 function isBlob(obj) {
-	return typeof obj === 'object' && typeof obj.arrayBuffer === 'function' && typeof obj.type === 'string' && typeof obj.stream === 'function' && typeof obj.constructor === 'function' && typeof obj.constructor.name === 'string' && /^(Blob|File)$/.test(obj.constructor.name) && /^(Blob|File)$/.test(obj[Symbol.toStringTag]);
+return typeof obj === 'object' && typeof obj.arrayBuffer === 'function' && typeof obj.type === 'string' && typeof obj.stream === 'function' && typeof obj.constructor === 'function' && typeof obj.constructor.name === 'string' && /^(Blob|File)$/.test(obj.constructor.name) && /^(Blob|File)$/.test(obj[Symbol.toStringTag]);
 }
 
 /**
@@ -5203,28 +5217,28 @@ function isBlob(obj) {
  * @return  Mixed
  */
 function clone(instance) {
-	let p1, p2;
-	let body = instance.body;
+let p1, p2;
+let body = instance.body;
 
-	// don't allow cloning a used body
-	if (instance.bodyUsed) {
-		throw new Error('cannot clone body after it is used');
-	}
+// don't allow cloning a used body
+if (instance.bodyUsed) {
+    throw new Error('cannot clone body after it is used');
+}
 
-	// check that body is a stream and not form-data object
-	// note: we can't clone the form-data object without having it as a dependency
-	if (body instanceof Stream && typeof body.getBoundary !== 'function') {
-		// tee instance body
-		p1 = new PassThrough();
-		p2 = new PassThrough();
-		body.pipe(p1);
-		body.pipe(p2);
-		// set instance body to teed body and return the other teed body
-		instance[INTERNALS].body = p1;
-		body = p2;
-	}
+// check that body is a stream and not form-data object
+// note: we can't clone the form-data object without having it as a dependency
+if (body instanceof Stream && typeof body.getBoundary !== 'function') {
+    // tee instance body
+    p1 = new PassThrough();
+    p2 = new PassThrough();
+    body.pipe(p1);
+    body.pipe(p2);
+    // set instance body to teed body and return the other teed body
+    instance[INTERNALS].body = p1;
+    body = p2;
+}
 
-	return body;
+return body;
 }
 
 /**
@@ -5237,38 +5251,38 @@ function clone(instance) {
  * @param   Mixed  instance  Any options.body input
  */
 function extractContentType(body) {
-	if (body === null) {
-		// body is null
-		return null;
-	} else if (typeof body === 'string') {
-		// body is string
-		return 'text/plain;charset=UTF-8';
-	} else if (isURLSearchParams(body)) {
-		// body is a URLSearchParams
-		return 'application/x-www-form-urlencoded;charset=UTF-8';
-	} else if (isBlob(body)) {
-		// body is blob
-		return body.type || null;
-	} else if (Buffer.isBuffer(body)) {
-		// body is buffer
-		return null;
-	} else if (Object.prototype.toString.call(body) === '[object ArrayBuffer]') {
-		// body is ArrayBuffer
-		return null;
-	} else if (ArrayBuffer.isView(body)) {
-		// body is ArrayBufferView
-		return null;
-	} else if (typeof body.getBoundary === 'function') {
-		// detect form data input from form-data module
-		return `multipart/form-data;boundary=${body.getBoundary()}`;
-	} else if (body instanceof Stream) {
-		// body is stream
-		// can't really do much about this
-		return null;
-	} else {
-		// Body constructor defaults other things to string
-		return 'text/plain;charset=UTF-8';
-	}
+if (body === null) {
+    // body is null
+    return null;
+} else if (typeof body === 'string') {
+    // body is string
+    return 'text/plain;charset=UTF-8';
+} else if (isURLSearchParams(body)) {
+    // body is a URLSearchParams
+    return 'application/x-www-form-urlencoded;charset=UTF-8';
+} else if (isBlob(body)) {
+    // body is blob
+    return body.type || null;
+} else if (Buffer.isBuffer(body)) {
+    // body is buffer
+    return null;
+} else if (Object.prototype.toString.call(body) === '[object ArrayBuffer]') {
+    // body is ArrayBuffer
+    return null;
+} else if (ArrayBuffer.isView(body)) {
+    // body is ArrayBufferView
+    return null;
+} else if (typeof body.getBoundary === 'function') {
+    // detect form data input from form-data module
+    return `multipart/form-data;boundary=${body.getBoundary()}`;
+} else if (body instanceof Stream) {
+    // body is stream
+    // can't really do much about this
+    return null;
+} else {
+    // Body constructor defaults other things to string
+    return 'text/plain;charset=UTF-8';
+}
 }
 
 /**
@@ -5281,29 +5295,29 @@ function extractContentType(body) {
  * @return  Number?            Number of bytes, or null if not possible
  */
 function getTotalBytes(instance) {
-	const body = instance.body;
+const body = instance.body;
 
 
-	if (body === null) {
-		// body is null
-		return 0;
-	} else if (isBlob(body)) {
-		return body.size;
-	} else if (Buffer.isBuffer(body)) {
-		// body is buffer
-		return body.length;
-	} else if (body && typeof body.getLengthSync === 'function') {
-		// detect form data input from form-data module
-		if (body._lengthRetrievers && body._lengthRetrievers.length == 0 || // 1.x
-		body.hasKnownLength && body.hasKnownLength()) {
-			// 2.x
-			return body.getLengthSync();
-		}
-		return null;
-	} else {
-		// body is stream
-		return null;
-	}
+if (body === null) {
+    // body is null
+    return 0;
+} else if (isBlob(body)) {
+    return body.size;
+} else if (Buffer.isBuffer(body)) {
+    // body is buffer
+    return body.length;
+} else if (body && typeof body.getLengthSync === 'function') {
+    // detect form data input from form-data module
+    if (body._lengthRetrievers && body._lengthRetrievers.length == 0 || // 1.x
+    body.hasKnownLength && body.hasKnownLength()) {
+    // 2.x
+    return body.getLengthSync();
+    }
+    return null;
+} else {
+    // body is stream
+    return null;
+}
 }
 
 /**
@@ -5313,22 +5327,22 @@ function getTotalBytes(instance) {
  * @return  Void
  */
 function writeToStream(dest, instance) {
-	const body = instance.body;
+const body = instance.body;
 
 
-	if (body === null) {
-		// body is null
-		dest.end();
-	} else if (isBlob(body)) {
-		body.stream().pipe(dest);
-	} else if (Buffer.isBuffer(body)) {
-		// body is buffer
-		dest.write(body);
-		dest.end();
-	} else {
-		// body is stream
-		body.pipe(dest);
-	}
+if (body === null) {
+    // body is null
+    dest.end();
+} else if (isBlob(body)) {
+    body.stream().pipe(dest);
+} else if (Buffer.isBuffer(body)) {
+    // body is buffer
+    dest.write(body);
+    dest.end();
+} else {
+    // body is stream
+    body.pipe(dest);
+}
 }
 
 // expose Promise
@@ -5344,17 +5358,17 @@ const invalidTokenRegex = /[^\^_`a-zA-Z\-0-9!#$%&'*+.|~]/;
 const invalidHeaderCharRegex = /[^\t\x20-\x7e\x80-\xff]/;
 
 function validateName(name) {
-	name = `${name}`;
-	if (invalidTokenRegex.test(name) || name === '') {
-		throw new TypeError(`${name} is not a legal HTTP header name`);
-	}
+name = `${name}`;
+if (invalidTokenRegex.test(name) || name === '') {
+    throw new TypeError(`${name} is not a legal HTTP header name`);
+}
 }
 
 function validateValue(value) {
-	value = `${value}`;
-	if (invalidHeaderCharRegex.test(value)) {
-		throw new TypeError(`${value} is not a legal HTTP header value`);
-	}
+value = `${value}`;
+if (invalidHeaderCharRegex.test(value)) {
+    throw new TypeError(`${value} is not a legal HTTP header value`);
+}
 }
 
 /**
@@ -5366,300 +5380,300 @@ function validateValue(value) {
  * @return  String|Undefined
  */
 function find(map, name) {
-	name = name.toLowerCase();
-	for (const key in map) {
-		if (key.toLowerCase() === name) {
-			return key;
-		}
-	}
-	return undefined;
+name = name.toLowerCase();
+for (const key in map) {
+    if (key.toLowerCase() === name) {
+    return key;
+    }
+}
+return undefined;
 }
 
 const MAP = Symbol('map');
 class Headers {
-	/**
-  * Headers class
-  *
-  * @param   Object  headers  Response headers
-  * @return  Void
-  */
-	constructor() {
-		let init = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
+/**
+* Headers class
+*
+* @param   Object  headers  Response headers
+* @return  Void
+*/
+constructor() {
+    let init = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
 
-		this[MAP] = Object.create(null);
+    this[MAP] = Object.create(null);
 
-		if (init instanceof Headers) {
-			const rawHeaders = init.raw();
-			const headerNames = Object.keys(rawHeaders);
+    if (init instanceof Headers) {
+    const rawHeaders = init.raw();
+    const headerNames = Object.keys(rawHeaders);
 
-			for (const headerName of headerNames) {
-				for (const value of rawHeaders[headerName]) {
-					this.append(headerName, value);
-				}
-			}
+    for (const headerName of headerNames) {
+        for (const value of rawHeaders[headerName]) {
+        this.append(headerName, value);
+        }
+    }
 
-			return;
-		}
+    return;
+    }
 
-		// We don't worry about converting prop to ByteString here as append()
-		// will handle it.
-		if (init == null) ; else if (typeof init === 'object') {
-			const method = init[Symbol.iterator];
-			if (method != null) {
-				if (typeof method !== 'function') {
-					throw new TypeError('Header pairs must be iterable');
-				}
+    // We don't worry about converting prop to ByteString here as append()
+    // will handle it.
+    if (init == null) ; else if (typeof init === 'object') {
+    const method = init[Symbol.iterator];
+    if (method != null) {
+        if (typeof method !== 'function') {
+        throw new TypeError('Header pairs must be iterable');
+        }
 
-				// sequence<sequence<ByteString>>
-				// Note: per spec we have to first exhaust the lists then process them
-				const pairs = [];
-				for (const pair of init) {
-					if (typeof pair !== 'object' || typeof pair[Symbol.iterator] !== 'function') {
-						throw new TypeError('Each header pair must be iterable');
-					}
-					pairs.push(Array.from(pair));
-				}
+        // sequence<sequence<ByteString>>
+        // Note: per spec we have to first exhaust the lists then process them
+        const pairs = [];
+        for (const pair of init) {
+        if (typeof pair !== 'object' || typeof pair[Symbol.iterator] !== 'function') {
+            throw new TypeError('Each header pair must be iterable');
+        }
+        pairs.push(Array.from(pair));
+        }
 
-				for (const pair of pairs) {
-					if (pair.length !== 2) {
-						throw new TypeError('Each header pair must be a name/value tuple');
-					}
-					this.append(pair[0], pair[1]);
-				}
-			} else {
-				// record<ByteString, ByteString>
-				for (const key of Object.keys(init)) {
-					const value = init[key];
-					this.append(key, value);
-				}
-			}
-		} else {
-			throw new TypeError('Provided initializer must be an object');
-		}
-	}
+        for (const pair of pairs) {
+        if (pair.length !== 2) {
+            throw new TypeError('Each header pair must be a name/value tuple');
+        }
+        this.append(pair[0], pair[1]);
+        }
+    } else {
+        // record<ByteString, ByteString>
+        for (const key of Object.keys(init)) {
+        const value = init[key];
+        this.append(key, value);
+        }
+    }
+    } else {
+    throw new TypeError('Provided initializer must be an object');
+    }
+}
 
-	/**
-  * Return combined header value given name
-  *
-  * @param   String  name  Header name
-  * @return  Mixed
-  */
-	get(name) {
-		name = `${name}`;
-		validateName(name);
-		const key = find(this[MAP], name);
-		if (key === undefined) {
-			return null;
-		}
+/**
+* Return combined header value given name
+*
+* @param   String  name  Header name
+* @return  Mixed
+*/
+get(name) {
+    name = `${name}`;
+    validateName(name);
+    const key = find(this[MAP], name);
+    if (key === undefined) {
+    return null;
+    }
 
-		return this[MAP][key].join(', ');
-	}
+    return this[MAP][key].join(', ');
+}
 
-	/**
-  * Iterate over all headers
-  *
-  * @param   Function  callback  Executed for each item with parameters (value, name, thisArg)
-  * @param   Boolean   thisArg   `this` context for callback function
-  * @return  Void
-  */
-	forEach(callback) {
-		let thisArg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
+/**
+* Iterate over all headers
+*
+* @param   Function  callback  Executed for each item with parameters (value, name, thisArg)
+* @param   Boolean   thisArg   `this` context for callback function
+* @return  Void
+*/
+forEach(callback) {
+    let thisArg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
 
-		let pairs = getHeaders(this);
-		let i = 0;
-		while (i < pairs.length) {
-			var _pairs$i = pairs[i];
-			const name = _pairs$i[0],
-			      value = _pairs$i[1];
+    let pairs = getHeaders(this);
+    let i = 0;
+    while (i < pairs.length) {
+    var _pairs$i = pairs[i];
+    const name = _pairs$i[0],
+            value = _pairs$i[1];
 
-			callback.call(thisArg, value, name, this);
-			pairs = getHeaders(this);
-			i++;
-		}
-	}
+    callback.call(thisArg, value, name, this);
+    pairs = getHeaders(this);
+    i++;
+    }
+}
 
-	/**
-  * Overwrite header values given name
-  *
-  * @param   String  name   Header name
-  * @param   String  value  Header value
-  * @return  Void
-  */
-	set(name, value) {
-		name = `${name}`;
-		value = `${value}`;
-		validateName(name);
-		validateValue(value);
-		const key = find(this[MAP], name);
-		this[MAP][key !== undefined ? key : name] = [value];
-	}
+/**
+* Overwrite header values given name
+*
+* @param   String  name   Header name
+* @param   String  value  Header value
+* @return  Void
+*/
+set(name, value) {
+    name = `${name}`;
+    value = `${value}`;
+    validateName(name);
+    validateValue(value);
+    const key = find(this[MAP], name);
+    this[MAP][key !== undefined ? key : name] = [value];
+}
 
-	/**
-  * Append a value onto existing header
-  *
-  * @param   String  name   Header name
-  * @param   String  value  Header value
-  * @return  Void
-  */
-	append(name, value) {
-		name = `${name}`;
-		value = `${value}`;
-		validateName(name);
-		validateValue(value);
-		const key = find(this[MAP], name);
-		if (key !== undefined) {
-			this[MAP][key].push(value);
-		} else {
-			this[MAP][name] = [value];
-		}
-	}
+/**
+* Append a value onto existing header
+*
+* @param   String  name   Header name
+* @param   String  value  Header value
+* @return  Void
+*/
+append(name, value) {
+    name = `${name}`;
+    value = `${value}`;
+    validateName(name);
+    validateValue(value);
+    const key = find(this[MAP], name);
+    if (key !== undefined) {
+    this[MAP][key].push(value);
+    } else {
+    this[MAP][name] = [value];
+    }
+}
 
-	/**
-  * Check for header name existence
-  *
-  * @param   String   name  Header name
-  * @return  Boolean
-  */
-	has(name) {
-		name = `${name}`;
-		validateName(name);
-		return find(this[MAP], name) !== undefined;
-	}
+/**
+* Check for header name existence
+*
+* @param   String   name  Header name
+* @return  Boolean
+*/
+has(name) {
+    name = `${name}`;
+    validateName(name);
+    return find(this[MAP], name) !== undefined;
+}
 
-	/**
-  * Delete all header values given name
-  *
-  * @param   String  name  Header name
-  * @return  Void
-  */
-	delete(name) {
-		name = `${name}`;
-		validateName(name);
-		const key = find(this[MAP], name);
-		if (key !== undefined) {
-			delete this[MAP][key];
-		}
-	}
+/**
+* Delete all header values given name
+*
+* @param   String  name  Header name
+* @return  Void
+*/
+delete(name) {
+    name = `${name}`;
+    validateName(name);
+    const key = find(this[MAP], name);
+    if (key !== undefined) {
+    delete this[MAP][key];
+    }
+}
 
-	/**
-  * Return raw headers (non-spec api)
-  *
-  * @return  Object
-  */
-	raw() {
-		return this[MAP];
-	}
+/**
+* Return raw headers (non-spec api)
+*
+* @return  Object
+*/
+raw() {
+    return this[MAP];
+}
 
-	/**
-  * Get an iterator on keys.
-  *
-  * @return  Iterator
-  */
-	keys() {
-		return createHeadersIterator(this, 'key');
-	}
+/**
+* Get an iterator on keys.
+*
+* @return  Iterator
+*/
+keys() {
+    return createHeadersIterator(this, 'key');
+}
 
-	/**
-  * Get an iterator on values.
-  *
-  * @return  Iterator
-  */
-	values() {
-		return createHeadersIterator(this, 'value');
-	}
+/**
+* Get an iterator on values.
+*
+* @return  Iterator
+*/
+values() {
+    return createHeadersIterator(this, 'value');
+}
 
-	/**
-  * Get an iterator on entries.
-  *
-  * This is the default iterator of the Headers object.
-  *
-  * @return  Iterator
-  */
-	[Symbol.iterator]() {
-		return createHeadersIterator(this, 'key+value');
-	}
+/**
+* Get an iterator on entries.
+*
+* This is the default iterator of the Headers object.
+*
+* @return  Iterator
+*/
+[Symbol.iterator]() {
+    return createHeadersIterator(this, 'key+value');
+}
 }
 Headers.prototype.entries = Headers.prototype[Symbol.iterator];
 
 Object.defineProperty(Headers.prototype, Symbol.toStringTag, {
-	value: 'Headers',
-	writable: false,
-	enumerable: false,
-	configurable: true
+value: 'Headers',
+writable: false,
+enumerable: false,
+configurable: true
 });
 
 Object.defineProperties(Headers.prototype, {
-	get: { enumerable: true },
-	forEach: { enumerable: true },
-	set: { enumerable: true },
-	append: { enumerable: true },
-	has: { enumerable: true },
-	delete: { enumerable: true },
-	keys: { enumerable: true },
-	values: { enumerable: true },
-	entries: { enumerable: true }
+get: { enumerable: true },
+forEach: { enumerable: true },
+set: { enumerable: true },
+append: { enumerable: true },
+has: { enumerable: true },
+delete: { enumerable: true },
+keys: { enumerable: true },
+values: { enumerable: true },
+entries: { enumerable: true }
 });
 
 function getHeaders(headers) {
-	let kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'key+value';
+let kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'key+value';
 
-	const keys = Object.keys(headers[MAP]).sort();
-	return keys.map(kind === 'key' ? function (k) {
-		return k.toLowerCase();
-	} : kind === 'value' ? function (k) {
-		return headers[MAP][k].join(', ');
-	} : function (k) {
-		return [k.toLowerCase(), headers[MAP][k].join(', ')];
-	});
+const keys = Object.keys(headers[MAP]).sort();
+return keys.map(kind === 'key' ? function (k) {
+    return k.toLowerCase();
+} : kind === 'value' ? function (k) {
+    return headers[MAP][k].join(', ');
+} : function (k) {
+    return [k.toLowerCase(), headers[MAP][k].join(', ')];
+});
 }
 
 const INTERNAL = Symbol('internal');
 
 function createHeadersIterator(target, kind) {
-	const iterator = Object.create(HeadersIteratorPrototype);
-	iterator[INTERNAL] = {
-		target,
-		kind,
-		index: 0
-	};
-	return iterator;
+const iterator = Object.create(HeadersIteratorPrototype);
+iterator[INTERNAL] = {
+    target,
+    kind,
+    index: 0
+};
+return iterator;
 }
 
 const HeadersIteratorPrototype = Object.setPrototypeOf({
-	next() {
-		// istanbul ignore if
-		if (!this || Object.getPrototypeOf(this) !== HeadersIteratorPrototype) {
-			throw new TypeError('Value of `this` is not a HeadersIterator');
-		}
+next() {
+    // istanbul ignore if
+    if (!this || Object.getPrototypeOf(this) !== HeadersIteratorPrototype) {
+    throw new TypeError('Value of `this` is not a HeadersIterator');
+    }
 
-		var _INTERNAL = this[INTERNAL];
-		const target = _INTERNAL.target,
-		      kind = _INTERNAL.kind,
-		      index = _INTERNAL.index;
+    var _INTERNAL = this[INTERNAL];
+    const target = _INTERNAL.target,
+        kind = _INTERNAL.kind,
+        index = _INTERNAL.index;
 
-		const values = getHeaders(target, kind);
-		const len = values.length;
-		if (index >= len) {
-			return {
-				value: undefined,
-				done: true
-			};
-		}
+    const values = getHeaders(target, kind);
+    const len = values.length;
+    if (index >= len) {
+    return {
+        value: undefined,
+        done: true
+    };
+    }
 
-		this[INTERNAL].index = index + 1;
+    this[INTERNAL].index = index + 1;
 
-		return {
-			value: values[index],
-			done: false
-		};
-	}
+    return {
+    value: values[index],
+    done: false
+    };
+}
 }, Object.getPrototypeOf(Object.getPrototypeOf([][Symbol.iterator]())));
 
 Object.defineProperty(HeadersIteratorPrototype, Symbol.toStringTag, {
-	value: 'HeadersIterator',
-	writable: false,
-	enumerable: false,
-	configurable: true
+value: 'HeadersIterator',
+writable: false,
+enumerable: false,
+configurable: true
 });
 
 /**
@@ -5669,16 +5683,16 @@ Object.defineProperty(HeadersIteratorPrototype, Symbol.toStringTag, {
  * @return  Object
  */
 function exportNodeCompatibleHeaders(headers) {
-	const obj = Object.assign({ __proto__: null }, headers[MAP]);
+const obj = Object.assign({ __proto__: null }, headers[MAP]);
 
-	// http.request() only supports string as Host header. This hack makes
-	// specifying custom Host header possible.
-	const hostHeaderKey = find(headers[MAP], 'Host');
-	if (hostHeaderKey !== undefined) {
-		obj[hostHeaderKey] = obj[hostHeaderKey][0];
-	}
+// http.request() only supports string as Host header. This hack makes
+// specifying custom Host header possible.
+const hostHeaderKey = find(headers[MAP], 'Host');
+if (hostHeaderKey !== undefined) {
+    obj[hostHeaderKey] = obj[hostHeaderKey][0];
+}
 
-	return obj;
+return obj;
 }
 
 /**
@@ -5689,27 +5703,27 @@ function exportNodeCompatibleHeaders(headers) {
  * @return  Headers
  */
 function createHeadersLenient(obj) {
-	const headers = new Headers();
-	for (const name of Object.keys(obj)) {
-		if (invalidTokenRegex.test(name)) {
-			continue;
-		}
-		if (Array.isArray(obj[name])) {
-			for (const val of obj[name]) {
-				if (invalidHeaderCharRegex.test(val)) {
-					continue;
-				}
-				if (headers[MAP][name] === undefined) {
-					headers[MAP][name] = [val];
-				} else {
-					headers[MAP][name].push(val);
-				}
-			}
-		} else if (!invalidHeaderCharRegex.test(obj[name])) {
-			headers[MAP][name] = [obj[name]];
-		}
-	}
-	return headers;
+const headers = new Headers();
+for (const name of Object.keys(obj)) {
+    if (invalidTokenRegex.test(name)) {
+    continue;
+    }
+    if (Array.isArray(obj[name])) {
+    for (const val of obj[name]) {
+        if (invalidHeaderCharRegex.test(val)) {
+        continue;
+        }
+        if (headers[MAP][name] === undefined) {
+        headers[MAP][name] = [val];
+        } else {
+        headers[MAP][name].push(val);
+        }
+    }
+    } else if (!invalidHeaderCharRegex.test(obj[name])) {
+    headers[MAP][name] = [obj[name]];
+    }
+}
+return headers;
 }
 
 const INTERNALS$1 = Symbol('Response internals');
@@ -5725,92 +5739,92 @@ const STATUS_CODES = http.STATUS_CODES;
  * @return  Void
  */
 class Response {
-	constructor() {
-		let body = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-		let opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+constructor() {
+    let body = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    let opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-		Body.call(this, body, opts);
+    Body.call(this, body, opts);
 
-		const status = opts.status || 200;
-		const headers = new Headers(opts.headers);
+    const status = opts.status || 200;
+    const headers = new Headers(opts.headers);
 
-		if (body != null && !headers.has('Content-Type')) {
-			const contentType = extractContentType(body);
-			if (contentType) {
-				headers.append('Content-Type', contentType);
-			}
-		}
+    if (body != null && !headers.has('Content-Type')) {
+    const contentType = extractContentType(body);
+    if (contentType) {
+        headers.append('Content-Type', contentType);
+    }
+    }
 
-		this[INTERNALS$1] = {
-			url: opts.url,
-			status,
-			statusText: opts.statusText || STATUS_CODES[status],
-			headers,
-			counter: opts.counter
-		};
-	}
+    this[INTERNALS$1] = {
+    url: opts.url,
+    status,
+    statusText: opts.statusText || STATUS_CODES[status],
+    headers,
+    counter: opts.counter
+    };
+}
 
-	get url() {
-		return this[INTERNALS$1].url || '';
-	}
+get url() {
+    return this[INTERNALS$1].url || '';
+}
 
-	get status() {
-		return this[INTERNALS$1].status;
-	}
+get status() {
+    return this[INTERNALS$1].status;
+}
 
-	/**
-  * Convenience property representing if the request ended normally
-  */
-	get ok() {
-		return this[INTERNALS$1].status >= 200 && this[INTERNALS$1].status < 300;
-	}
+/**
+* Convenience property representing if the request ended normally
+*/
+get ok() {
+    return this[INTERNALS$1].status >= 200 && this[INTERNALS$1].status < 300;
+}
 
-	get redirected() {
-		return this[INTERNALS$1].counter > 0;
-	}
+get redirected() {
+    return this[INTERNALS$1].counter > 0;
+}
 
-	get statusText() {
-		return this[INTERNALS$1].statusText;
-	}
+get statusText() {
+    return this[INTERNALS$1].statusText;
+}
 
-	get headers() {
-		return this[INTERNALS$1].headers;
-	}
+get headers() {
+    return this[INTERNALS$1].headers;
+}
 
-	/**
-  * Clone this response
-  *
-  * @return  Response
-  */
-	clone() {
-		return new Response(clone(this), {
-			url: this.url,
-			status: this.status,
-			statusText: this.statusText,
-			headers: this.headers,
-			ok: this.ok,
-			redirected: this.redirected
-		});
-	}
+/**
+* Clone this response
+*
+* @return  Response
+*/
+clone() {
+    return new Response(clone(this), {
+    url: this.url,
+    status: this.status,
+    statusText: this.statusText,
+    headers: this.headers,
+    ok: this.ok,
+    redirected: this.redirected
+    });
+}
 }
 
 Body.mixIn(Response.prototype);
 
 Object.defineProperties(Response.prototype, {
-	url: { enumerable: true },
-	status: { enumerable: true },
-	ok: { enumerable: true },
-	redirected: { enumerable: true },
-	statusText: { enumerable: true },
-	headers: { enumerable: true },
-	clone: { enumerable: true }
+url: { enumerable: true },
+status: { enumerable: true },
+ok: { enumerable: true },
+redirected: { enumerable: true },
+statusText: { enumerable: true },
+headers: { enumerable: true },
+clone: { enumerable: true }
 });
 
 Object.defineProperty(Response.prototype, Symbol.toStringTag, {
-	value: 'Response',
-	writable: false,
-	enumerable: false,
-	configurable: true
+value: 'Response',
+writable: false,
+enumerable: false,
+configurable: true
 });
 
 const INTERNALS$2 = Symbol('Request internals');
@@ -5827,17 +5841,17 @@ const format_url = Url.format;
  * @return {void}
  */
 function parseURL(urlStr) {
-	/*
- 	Check whether the URL is absolute or not
- 		Scheme: https://tools.ietf.org/html/rfc3986#section-3.1
- 	Absolute URL: https://tools.ietf.org/html/rfc3986#section-4.3
- */
-	if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.exec(urlStr)) {
-		urlStr = new URL(urlStr).toString();
-	}
+/*
+    Check whether the URL is absolute or not
+    Scheme: https://tools.ietf.org/html/rfc3986#section-3.1
+    Absolute URL: https://tools.ietf.org/html/rfc3986#section-4.3
+*/
+if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.exec(urlStr)) {
+    urlStr = new URL(urlStr).toString();
+}
 
-	// Fallback to old implementation for arbitrary URLs
-	return parse_url(urlStr);
+// Fallback to old implementation for arbitrary URLs
+return parse_url(urlStr);
 }
 
 const streamDestructionSupported = 'destroy' in Stream.Readable.prototype;
@@ -5849,12 +5863,12 @@ const streamDestructionSupported = 'destroy' in Stream.Readable.prototype;
  * @return  Boolean
  */
 function isRequest(input) {
-	return typeof input === 'object' && typeof input[INTERNALS$2] === 'object';
+return typeof input === 'object' && typeof input[INTERNALS$2] === 'object';
 }
 
 function isAbortSignal(signal) {
-	const proto = signal && typeof signal === 'object' && Object.getPrototypeOf(signal);
-	return !!(proto && proto.constructor.name === 'AbortSignal');
+const proto = signal && typeof signal === 'object' && Object.getPrototypeOf(signal);
+return !!(proto && proto.constructor.name === 'AbortSignal');
 }
 
 /**
@@ -5865,118 +5879,118 @@ function isAbortSignal(signal) {
  * @return  Void
  */
 class Request {
-	constructor(input) {
-		let init = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+constructor(input) {
+    let init = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-		let parsedURL;
+    let parsedURL;
 
-		// normalize input
-		if (!isRequest(input)) {
-			if (input && input.href) {
-				// in order to support Node.js' Url objects; though WHATWG's URL objects
-				// will fall into this branch also (since their `toString()` will return
-				// `href` property anyway)
-				parsedURL = parseURL(input.href);
-			} else {
-				// coerce input to a string before attempting to parse
-				parsedURL = parseURL(`${input}`);
-			}
-			input = {};
-		} else {
-			parsedURL = parseURL(input.url);
-		}
+    // normalize input
+    if (!isRequest(input)) {
+    if (input && input.href) {
+        // in order to support Node.js' Url objects; though WHATWG's URL objects
+        // will fall into this branch also (since their `toString()` will return
+        // `href` property anyway)
+        parsedURL = parseURL(input.href);
+    } else {
+        // coerce input to a string before attempting to parse
+        parsedURL = parseURL(`${input}`);
+    }
+    input = {};
+    } else {
+    parsedURL = parseURL(input.url);
+    }
 
-		let method = init.method || input.method || 'GET';
-		method = method.toUpperCase();
+    let method = init.method || input.method || 'GET';
+    method = method.toUpperCase();
 
-		if ((init.body != null || isRequest(input) && input.body !== null) && (method === 'GET' || method === 'HEAD')) {
-			throw new TypeError('Request with GET/HEAD method cannot have body');
-		}
+    if ((init.body != null || isRequest(input) && input.body !== null) && (method === 'GET' || method === 'HEAD')) {
+    throw new TypeError('Request with GET/HEAD method cannot have body');
+    }
 
-		let inputBody = init.body != null ? init.body : isRequest(input) && input.body !== null ? clone(input) : null;
+    let inputBody = init.body != null ? init.body : isRequest(input) && input.body !== null ? clone(input) : null;
 
-		Body.call(this, inputBody, {
-			timeout: init.timeout || input.timeout || 0,
-			size: init.size || input.size || 0
-		});
+    Body.call(this, inputBody, {
+    timeout: init.timeout || input.timeout || 0,
+    size: init.size || input.size || 0
+    });
 
-		const headers = new Headers(init.headers || input.headers || {});
+    const headers = new Headers(init.headers || input.headers || {});
 
-		if (inputBody != null && !headers.has('Content-Type')) {
-			const contentType = extractContentType(inputBody);
-			if (contentType) {
-				headers.append('Content-Type', contentType);
-			}
-		}
+    if (inputBody != null && !headers.has('Content-Type')) {
+    const contentType = extractContentType(inputBody);
+    if (contentType) {
+        headers.append('Content-Type', contentType);
+    }
+    }
 
-		let signal = isRequest(input) ? input.signal : null;
-		if ('signal' in init) signal = init.signal;
+    let signal = isRequest(input) ? input.signal : null;
+    if ('signal' in init) signal = init.signal;
 
-		if (signal != null && !isAbortSignal(signal)) {
-			throw new TypeError('Expected signal to be an instanceof AbortSignal');
-		}
+    if (signal != null && !isAbortSignal(signal)) {
+    throw new TypeError('Expected signal to be an instanceof AbortSignal');
+    }
 
-		this[INTERNALS$2] = {
-			method,
-			redirect: init.redirect || input.redirect || 'follow',
-			headers,
-			parsedURL,
-			signal
-		};
+    this[INTERNALS$2] = {
+    method,
+    redirect: init.redirect || input.redirect || 'follow',
+    headers,
+    parsedURL,
+    signal
+    };
 
-		// node-fetch-only options
-		this.follow = init.follow !== undefined ? init.follow : input.follow !== undefined ? input.follow : 20;
-		this.compress = init.compress !== undefined ? init.compress : input.compress !== undefined ? input.compress : true;
-		this.counter = init.counter || input.counter || 0;
-		this.agent = init.agent || input.agent;
-	}
+    // node-fetch-only options
+    this.follow = init.follow !== undefined ? init.follow : input.follow !== undefined ? input.follow : 20;
+    this.compress = init.compress !== undefined ? init.compress : input.compress !== undefined ? input.compress : true;
+    this.counter = init.counter || input.counter || 0;
+    this.agent = init.agent || input.agent;
+}
 
-	get method() {
-		return this[INTERNALS$2].method;
-	}
+get method() {
+    return this[INTERNALS$2].method;
+}
 
-	get url() {
-		return format_url(this[INTERNALS$2].parsedURL);
-	}
+get url() {
+    return format_url(this[INTERNALS$2].parsedURL);
+}
 
-	get headers() {
-		return this[INTERNALS$2].headers;
-	}
+get headers() {
+    return this[INTERNALS$2].headers;
+}
 
-	get redirect() {
-		return this[INTERNALS$2].redirect;
-	}
+get redirect() {
+    return this[INTERNALS$2].redirect;
+}
 
-	get signal() {
-		return this[INTERNALS$2].signal;
-	}
+get signal() {
+    return this[INTERNALS$2].signal;
+}
 
-	/**
-  * Clone this request
-  *
-  * @return  Request
-  */
-	clone() {
-		return new Request(this);
-	}
+/**
+* Clone this request
+*
+* @return  Request
+*/
+clone() {
+    return new Request(this);
+}
 }
 
 Body.mixIn(Request.prototype);
 
 Object.defineProperty(Request.prototype, Symbol.toStringTag, {
-	value: 'Request',
-	writable: false,
-	enumerable: false,
-	configurable: true
+value: 'Request',
+writable: false,
+enumerable: false,
+configurable: true
 });
 
 Object.defineProperties(Request.prototype, {
-	method: { enumerable: true },
-	url: { enumerable: true },
-	headers: { enumerable: true },
-	redirect: { enumerable: true },
-	clone: { enumerable: true },
-	signal: { enumerable: true }
+method: { enumerable: true },
+url: { enumerable: true },
+headers: { enumerable: true },
+redirect: { enumerable: true },
+clone: { enumerable: true },
+signal: { enumerable: true }
 });
 
 /**
@@ -5986,69 +6000,69 @@ Object.defineProperties(Request.prototype, {
  * @return  Object   The options object to be passed to http.request
  */
 function getNodeRequestOptions(request) {
-	const parsedURL = request[INTERNALS$2].parsedURL;
-	const headers = new Headers(request[INTERNALS$2].headers);
+const parsedURL = request[INTERNALS$2].parsedURL;
+const headers = new Headers(request[INTERNALS$2].headers);
 
-	// fetch step 1.3
-	if (!headers.has('Accept')) {
-		headers.set('Accept', '*/*');
-	}
+// fetch step 1.3
+if (!headers.has('Accept')) {
+    headers.set('Accept', '*/*');
+}
 
-	// Basic fetch
-	if (!parsedURL.protocol || !parsedURL.hostname) {
-		throw new TypeError('Only absolute URLs are supported');
-	}
+// Basic fetch
+if (!parsedURL.protocol || !parsedURL.hostname) {
+    throw new TypeError('Only absolute URLs are supported');
+}
 
-	if (!/^https?:$/.test(parsedURL.protocol)) {
-		throw new TypeError('Only HTTP(S) protocols are supported');
-	}
+if (!/^https?:$/.test(parsedURL.protocol)) {
+    throw new TypeError('Only HTTP(S) protocols are supported');
+}
 
-	if (request.signal && request.body instanceof Stream.Readable && !streamDestructionSupported) {
-		throw new Error('Cancellation of streamed requests with AbortSignal is not supported in node < 8');
-	}
+if (request.signal && request.body instanceof Stream.Readable && !streamDestructionSupported) {
+    throw new Error('Cancellation of streamed requests with AbortSignal is not supported in node < 8');
+}
 
-	// HTTP-network-or-cache fetch steps 2.4-2.7
-	let contentLengthValue = null;
-	if (request.body == null && /^(POST|PUT)$/i.test(request.method)) {
-		contentLengthValue = '0';
-	}
-	if (request.body != null) {
-		const totalBytes = getTotalBytes(request);
-		if (typeof totalBytes === 'number') {
-			contentLengthValue = String(totalBytes);
-		}
-	}
-	if (contentLengthValue) {
-		headers.set('Content-Length', contentLengthValue);
-	}
+// HTTP-network-or-cache fetch steps 2.4-2.7
+let contentLengthValue = null;
+if (request.body == null && /^(POST|PUT)$/i.test(request.method)) {
+    contentLengthValue = '0';
+}
+if (request.body != null) {
+    const totalBytes = getTotalBytes(request);
+    if (typeof totalBytes === 'number') {
+    contentLengthValue = String(totalBytes);
+    }
+}
+if (contentLengthValue) {
+    headers.set('Content-Length', contentLengthValue);
+}
 
-	// HTTP-network-or-cache fetch step 2.11
-	if (!headers.has('User-Agent')) {
-		headers.set('User-Agent', 'node-fetch/1.0 (+https://github.com/bitinn/node-fetch)');
-	}
+// HTTP-network-or-cache fetch step 2.11
+if (!headers.has('User-Agent')) {
+    headers.set('User-Agent', 'node-fetch/1.0 (+https://github.com/bitinn/node-fetch)');
+}
 
-	// HTTP-network-or-cache fetch step 2.15
-	if (request.compress && !headers.has('Accept-Encoding')) {
-		headers.set('Accept-Encoding', 'gzip,deflate');
-	}
+// HTTP-network-or-cache fetch step 2.15
+if (request.compress && !headers.has('Accept-Encoding')) {
+    headers.set('Accept-Encoding', 'gzip,deflate');
+}
 
-	let agent = request.agent;
-	if (typeof agent === 'function') {
-		agent = agent(parsedURL);
-	}
+let agent = request.agent;
+if (typeof agent === 'function') {
+    agent = agent(parsedURL);
+}
 
-	if (!headers.has('Connection') && !agent) {
-		headers.set('Connection', 'close');
-	}
+if (!headers.has('Connection') && !agent) {
+    headers.set('Connection', 'close');
+}
 
-	// HTTP-network fetch step 4.2
-	// chunked encoding is handled by Node.js
+// HTTP-network fetch step 4.2
+// chunked encoding is handled by Node.js
 
-	return Object.assign({}, parsedURL, {
-		method: request.method,
-		headers: exportNodeCompatibleHeaders(headers),
-		agent
-	});
+return Object.assign({}, parsedURL, {
+    method: request.method,
+    headers: exportNodeCompatibleHeaders(headers),
+    agent
+});
 }
 
 /**
@@ -6064,13 +6078,13 @@ function getNodeRequestOptions(request) {
  * @return  AbortError
  */
 function AbortError(message) {
-  Error.call(this, message);
+Error.call(this, message);
 
-  this.type = 'aborted';
-  this.message = message;
+this.type = 'aborted';
+this.message = message;
 
-  // hide custom error implementation details from end-users
-  Error.captureStackTrace(this, this.constructor);
+// hide custom error implementation details from end-users
+Error.captureStackTrace(this, this.constructor);
 }
 
 AbortError.prototype = Object.create(Error.prototype);
@@ -6083,10 +6097,10 @@ const URL$1 = Url.URL || whatwgUrl.URL;
 const PassThrough$1 = Stream.PassThrough;
 
 const isDomainOrSubdomain = function isDomainOrSubdomain(destination, original) {
-	const orig = new URL$1(original).hostname;
-	const dest = new URL$1(destination).hostname;
+const orig = new URL$1(original).hostname;
+const dest = new URL$1(destination).hostname;
 
-	return orig === dest || orig[orig.length - dest.length - 1] === '.' && orig.endsWith(dest);
+return orig === dest || orig[orig.length - dest.length - 1] === '.' && orig.endsWith(dest);
 };
 
 /**
@@ -6098,254 +6112,254 @@ const isDomainOrSubdomain = function isDomainOrSubdomain(destination, original) 
  */
 function fetch(url, opts) {
 
-	// allow custom promise
-	if (!fetch.Promise) {
-		throw new Error('native promise missing, set fetch.Promise to your favorite alternative');
-	}
+// allow custom promise
+if (!fetch.Promise) {
+    throw new Error('native promise missing, set fetch.Promise to your favorite alternative');
+}
 
-	Body.Promise = fetch.Promise;
+Body.Promise = fetch.Promise;
 
-	// wrap http.request into fetch
-	return new fetch.Promise(function (resolve, reject) {
-		// build request object
-		const request = new Request(url, opts);
-		const options = getNodeRequestOptions(request);
+// wrap http.request into fetch
+return new fetch.Promise(function (resolve, reject) {
+    // build request object
+    const request = new Request(url, opts);
+    const options = getNodeRequestOptions(request);
 
-		const send = (options.protocol === 'https:' ? https : http).request;
-		const signal = request.signal;
+    const send = (options.protocol === 'https:' ? https : http).request;
+    const signal = request.signal;
 
-		let response = null;
+    let response = null;
 
-		const abort = function abort() {
-			let error = new AbortError('The user aborted a request.');
-			reject(error);
-			if (request.body && request.body instanceof Stream.Readable) {
-				request.body.destroy(error);
-			}
-			if (!response || !response.body) return;
-			response.body.emit('error', error);
-		};
+    const abort = function abort() {
+    let error = new AbortError('The user aborted a request.');
+    reject(error);
+    if (request.body && request.body instanceof Stream.Readable) {
+        request.body.destroy(error);
+    }
+    if (!response || !response.body) return;
+    response.body.emit('error', error);
+    };
 
-		if (signal && signal.aborted) {
-			abort();
-			return;
-		}
+    if (signal && signal.aborted) {
+    abort();
+    return;
+    }
 
-		const abortAndFinalize = function abortAndFinalize() {
-			abort();
-			finalize();
-		};
+    const abortAndFinalize = function abortAndFinalize() {
+    abort();
+    finalize();
+    };
 
-		// send request
-		const req = send(options);
-		let reqTimeout;
+    // send request
+    const req = send(options);
+    let reqTimeout;
 
-		if (signal) {
-			signal.addEventListener('abort', abortAndFinalize);
-		}
+    if (signal) {
+    signal.addEventListener('abort', abortAndFinalize);
+    }
 
-		function finalize() {
-			req.abort();
-			if (signal) signal.removeEventListener('abort', abortAndFinalize);
-			clearTimeout(reqTimeout);
-		}
+    function finalize() {
+    req.abort();
+    if (signal) signal.removeEventListener('abort', abortAndFinalize);
+    clearTimeout(reqTimeout);
+    }
 
-		if (request.timeout) {
-			req.once('socket', function (socket) {
-				reqTimeout = setTimeout(function () {
-					reject(new FetchError(`network timeout at: ${request.url}`, 'request-timeout'));
-					finalize();
-				}, request.timeout);
-			});
-		}
+    if (request.timeout) {
+    req.once('socket', function (socket) {
+        reqTimeout = setTimeout(function () {
+        reject(new FetchError(`network timeout at: ${request.url}`, 'request-timeout'));
+        finalize();
+        }, request.timeout);
+    });
+    }
 
-		req.on('error', function (err) {
-			reject(new FetchError(`request to ${request.url} failed, reason: ${err.message}`, 'system', err));
-			finalize();
-		});
+    req.on('error', function (err) {
+    reject(new FetchError(`request to ${request.url} failed, reason: ${err.message}`, 'system', err));
+    finalize();
+    });
 
-		req.on('response', function (res) {
-			clearTimeout(reqTimeout);
+    req.on('response', function (res) {
+    clearTimeout(reqTimeout);
 
-			const headers = createHeadersLenient(res.headers);
+    const headers = createHeadersLenient(res.headers);
 
-			// HTTP fetch step 5
-			if (fetch.isRedirect(res.statusCode)) {
-				// HTTP fetch step 5.2
-				const location = headers.get('Location');
+    // HTTP fetch step 5
+    if (fetch.isRedirect(res.statusCode)) {
+        // HTTP fetch step 5.2
+        const location = headers.get('Location');
 
-				// HTTP fetch step 5.3
-				let locationURL = null;
-				try {
-					locationURL = location === null ? null : new URL$1(location, request.url).toString();
-				} catch (err) {
-					// error here can only be invalid URL in Location: header
-					// do not throw when options.redirect == manual
-					// let the user extract the errorneous redirect URL
-					if (request.redirect !== 'manual') {
-						reject(new FetchError(`uri requested responds with an invalid redirect URL: ${location}`, 'invalid-redirect'));
-						finalize();
-						return;
-					}
-				}
+        // HTTP fetch step 5.3
+        let locationURL = null;
+        try {
+        locationURL = location === null ? null : new URL$1(location, request.url).toString();
+        } catch (err) {
+        // error here can only be invalid URL in Location: header
+        // do not throw when options.redirect == manual
+        // let the user extract the errorneous redirect URL
+        if (request.redirect !== 'manual') {
+            reject(new FetchError(`uri requested responds with an invalid redirect URL: ${location}`, 'invalid-redirect'));
+            finalize();
+            return;
+        }
+        }
 
-				// HTTP fetch step 5.5
-				switch (request.redirect) {
-					case 'error':
-						reject(new FetchError(`uri requested responds with a redirect, redirect mode is set to error: ${request.url}`, 'no-redirect'));
-						finalize();
-						return;
-					case 'manual':
-						// node-fetch-specific step: make manual redirect a bit easier to use by setting the Location header value to the resolved URL.
-						if (locationURL !== null) {
-							// handle corrupted header
-							try {
-								headers.set('Location', locationURL);
-							} catch (err) {
-								// istanbul ignore next: nodejs server prevent invalid response headers, we can't test this through normal request
-								reject(err);
-							}
-						}
-						break;
-					case 'follow':
-						// HTTP-redirect fetch step 2
-						if (locationURL === null) {
-							break;
-						}
+        // HTTP fetch step 5.5
+        switch (request.redirect) {
+        case 'error':
+            reject(new FetchError(`uri requested responds with a redirect, redirect mode is set to error: ${request.url}`, 'no-redirect'));
+            finalize();
+            return;
+        case 'manual':
+            // node-fetch-specific step: make manual redirect a bit easier to use by setting the Location header value to the resolved URL.
+            if (locationURL !== null) {
+            // handle corrupted header
+            try {
+                headers.set('Location', locationURL);
+            } catch (err) {
+                // istanbul ignore next: nodejs server prevent invalid response headers, we can't test this through normal request
+                reject(err);
+            }
+            }
+            break;
+        case 'follow':
+            // HTTP-redirect fetch step 2
+            if (locationURL === null) {
+            break;
+            }
 
-						// HTTP-redirect fetch step 5
-						if (request.counter >= request.follow) {
-							reject(new FetchError(`maximum redirect reached at: ${request.url}`, 'max-redirect'));
-							finalize();
-							return;
-						}
+            // HTTP-redirect fetch step 5
+            if (request.counter >= request.follow) {
+            reject(new FetchError(`maximum redirect reached at: ${request.url}`, 'max-redirect'));
+            finalize();
+            return;
+            }
 
-						// HTTP-redirect fetch step 6 (counter increment)
-						// Create a new Request object.
-						const requestOpts = {
-							headers: new Headers(request.headers),
-							follow: request.follow,
-							counter: request.counter + 1,
-							agent: request.agent,
-							compress: request.compress,
-							method: request.method,
-							body: request.body,
-							signal: request.signal,
-							timeout: request.timeout,
-							size: request.size
-						};
+            // HTTP-redirect fetch step 6 (counter increment)
+            // Create a new Request object.
+            const requestOpts = {
+            headers: new Headers(request.headers),
+            follow: request.follow,
+            counter: request.counter + 1,
+            agent: request.agent,
+            compress: request.compress,
+            method: request.method,
+            body: request.body,
+            signal: request.signal,
+            timeout: request.timeout,
+            size: request.size
+            };
 
-						if (!isDomainOrSubdomain(request.url, locationURL)) {
-							for (const name of ['authorization', 'www-authenticate', 'cookie', 'cookie2']) {
-								requestOpts.headers.delete(name);
-							}
-						}
+            if (!isDomainOrSubdomain(request.url, locationURL)) {
+            for (const name of ['authorization', 'www-authenticate', 'cookie', 'cookie2']) {
+                requestOpts.headers.delete(name);
+            }
+            }
 
-						// HTTP-redirect fetch step 9
-						if (res.statusCode !== 303 && request.body && getTotalBytes(request) === null) {
-							reject(new FetchError('Cannot follow redirect with body being a readable stream', 'unsupported-redirect'));
-							finalize();
-							return;
-						}
+            // HTTP-redirect fetch step 9
+            if (res.statusCode !== 303 && request.body && getTotalBytes(request) === null) {
+            reject(new FetchError('Cannot follow redirect with body being a readable stream', 'unsupported-redirect'));
+            finalize();
+            return;
+            }
 
-						// HTTP-redirect fetch step 11
-						if (res.statusCode === 303 || (res.statusCode === 301 || res.statusCode === 302) && request.method === 'POST') {
-							requestOpts.method = 'GET';
-							requestOpts.body = undefined;
-							requestOpts.headers.delete('content-length');
-						}
+            // HTTP-redirect fetch step 11
+            if (res.statusCode === 303 || (res.statusCode === 301 || res.statusCode === 302) && request.method === 'POST') {
+            requestOpts.method = 'GET';
+            requestOpts.body = undefined;
+            requestOpts.headers.delete('content-length');
+            }
 
-						// HTTP-redirect fetch step 15
-						resolve(fetch(new Request(locationURL, requestOpts)));
-						finalize();
-						return;
-				}
-			}
+            // HTTP-redirect fetch step 15
+            resolve(fetch(new Request(locationURL, requestOpts)));
+            finalize();
+            return;
+        }
+    }
 
-			// prepare response
-			res.once('end', function () {
-				if (signal) signal.removeEventListener('abort', abortAndFinalize);
-			});
-			let body = res.pipe(new PassThrough$1());
+    // prepare response
+    res.once('end', function () {
+        if (signal) signal.removeEventListener('abort', abortAndFinalize);
+    });
+    let body = res.pipe(new PassThrough$1());
 
-			const response_options = {
-				url: request.url,
-				status: res.statusCode,
-				statusText: res.statusMessage,
-				headers: headers,
-				size: request.size,
-				timeout: request.timeout,
-				counter: request.counter
-			};
+    const response_options = {
+        url: request.url,
+        status: res.statusCode,
+        statusText: res.statusMessage,
+        headers: headers,
+        size: request.size,
+        timeout: request.timeout,
+        counter: request.counter
+    };
 
-			// HTTP-network fetch step 12.1.1.3
-			const codings = headers.get('Content-Encoding');
+    // HTTP-network fetch step 12.1.1.3
+    const codings = headers.get('Content-Encoding');
 
-			// HTTP-network fetch step 12.1.1.4: handle content codings
+    // HTTP-network fetch step 12.1.1.4: handle content codings
 
-			// in following scenarios we ignore compression support
-			// 1. compression support is disabled
-			// 2. HEAD request
-			// 3. no Content-Encoding header
-			// 4. no content response (204)
-			// 5. content not modified response (304)
-			if (!request.compress || request.method === 'HEAD' || codings === null || res.statusCode === 204 || res.statusCode === 304) {
-				response = new Response(body, response_options);
-				resolve(response);
-				return;
-			}
+    // in following scenarios we ignore compression support
+    // 1. compression support is disabled
+    // 2. HEAD request
+    // 3. no Content-Encoding header
+    // 4. no content response (204)
+    // 5. content not modified response (304)
+    if (!request.compress || request.method === 'HEAD' || codings === null || res.statusCode === 204 || res.statusCode === 304) {
+        response = new Response(body, response_options);
+        resolve(response);
+        return;
+    }
 
-			// For Node v6+
-			// Be less strict when decoding compressed responses, since sometimes
-			// servers send slightly invalid responses that are still accepted
-			// by common browsers.
-			// Always using Z_SYNC_FLUSH is what cURL does.
-			const zlibOptions = {
-				flush: zlib.Z_SYNC_FLUSH,
-				finishFlush: zlib.Z_SYNC_FLUSH
-			};
+    // For Node v6+
+    // Be less strict when decoding compressed responses, since sometimes
+    // servers send slightly invalid responses that are still accepted
+    // by common browsers.
+    // Always using Z_SYNC_FLUSH is what cURL does.
+    const zlibOptions = {
+        flush: zlib.Z_SYNC_FLUSH,
+        finishFlush: zlib.Z_SYNC_FLUSH
+    };
 
-			// for gzip
-			if (codings == 'gzip' || codings == 'x-gzip') {
-				body = body.pipe(zlib.createGunzip(zlibOptions));
-				response = new Response(body, response_options);
-				resolve(response);
-				return;
-			}
+    // for gzip
+    if (codings == 'gzip' || codings == 'x-gzip') {
+        body = body.pipe(zlib.createGunzip(zlibOptions));
+        response = new Response(body, response_options);
+        resolve(response);
+        return;
+    }
 
-			// for deflate
-			if (codings == 'deflate' || codings == 'x-deflate') {
-				// handle the infamous raw deflate response from old servers
-				// a hack for old IIS and Apache servers
-				const raw = res.pipe(new PassThrough$1());
-				raw.once('data', function (chunk) {
-					// see http://stackoverflow.com/questions/37519828
-					if ((chunk[0] & 0x0F) === 0x08) {
-						body = body.pipe(zlib.createInflate());
-					} else {
-						body = body.pipe(zlib.createInflateRaw());
-					}
-					response = new Response(body, response_options);
-					resolve(response);
-				});
-				return;
-			}
+    // for deflate
+    if (codings == 'deflate' || codings == 'x-deflate') {
+        // handle the infamous raw deflate response from old servers
+        // a hack for old IIS and Apache servers
+        const raw = res.pipe(new PassThrough$1());
+        raw.once('data', function (chunk) {
+        // see http://stackoverflow.com/questions/37519828
+        if ((chunk[0] & 0x0F) === 0x08) {
+            body = body.pipe(zlib.createInflate());
+        } else {
+            body = body.pipe(zlib.createInflateRaw());
+        }
+        response = new Response(body, response_options);
+        resolve(response);
+        });
+        return;
+    }
 
-			// for br
-			if (codings == 'br' && typeof zlib.createBrotliDecompress === 'function') {
-				body = body.pipe(zlib.createBrotliDecompress());
-				response = new Response(body, response_options);
-				resolve(response);
-				return;
-			}
+    // for br
+    if (codings == 'br' && typeof zlib.createBrotliDecompress === 'function') {
+        body = body.pipe(zlib.createBrotliDecompress());
+        response = new Response(body, response_options);
+        resolve(response);
+        return;
+    }
 
-			// otherwise, use response as-is
-			response = new Response(body, response_options);
-			resolve(response);
-		});
+    // otherwise, use response as-is
+    response = new Response(body, response_options);
+    resolve(response);
+    });
 
-		writeToStream(req, request);
-	});
+    writeToStream(req, request);
+});
 }
 /**
  * Redirect code matching
@@ -6354,7 +6368,7 @@ function fetch(url, opts) {
  * @return  Boolean
  */
 fetch.isRedirect = function (code) {
-	return code === 301 || code === 302 || code === 303 || code === 307 || code === 308;
+return code === 301 || code === 302 || code === 303 || code === 307 || code === 308;
 };
 
 // expose Promise
@@ -6378,36 +6392,36 @@ exports.FetchError = FetchError;
 
 
 /*!
- * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
- *
- * Copyright (c) 2014-2017, Jon Schlinkert.
- * Released under the MIT License.
- */
+* is-plain-object <https://github.com/jonschlinkert/is-plain-object>
+*
+* Copyright (c) 2014-2017, Jon Schlinkert.
+* Released under the MIT License.
+*/
 
 function isObject(o) {
-  return Object.prototype.toString.call(o) === '[object Object]';
+return Object.prototype.toString.call(o) === '[object Object]';
 }
 
 function isPlainObject(o) {
-  var ctor,prot;
+var ctor,prot;
 
-  if (isObject(o) === false) return false;
+if (isObject(o) === false) return false;
 
-  // If has modified constructor
-  ctor = o.constructor;
-  if (ctor === undefined) return true;
+// If has modified constructor
+ctor = o.constructor;
+if (ctor === undefined) return true;
 
-  // If has modified prototype
-  prot = ctor.prototype;
-  if (isObject(prot) === false) return false;
+// If has modified prototype
+prot = ctor.prototype;
+if (isObject(prot) === false) return false;
 
-  // If constructor does not have an Object-specific method
-  if (prot.hasOwnProperty('isPrototypeOf') === false) {
+// If constructor does not have an Object-specific method
+if (prot.hasOwnProperty('isPrototypeOf') === false) {
     return false;
-  }
+}
 
-  // Most likely a plain Object
-  return true;
+// Most likely a plain Object
+return true;
 }
 
 module.exports = isPlainObject;
@@ -6424,15 +6438,15 @@ module.exports = isPlainObject;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 function getUserAgent() {
-  if (typeof navigator === "object" && "userAgent" in navigator) {
+if (typeof navigator === "object" && "userAgent" in navigator) {
     return navigator.userAgent;
-  }
+}
 
-  if (typeof process === "object" && "version" in process) {
+if (typeof process === "object" && "version" in process) {
     return `Node.js/${process.version.substr(1)} (${process.platform}; ${process.arch})`;
-  }
+}
 
-  return "<environment undetectable>";
+return "<environment undetectable>";
 }
 
 exports.getUserAgent = getUserAgent;
@@ -6468,95 +6482,95 @@ const VERSION = "2.3.0";
  * otherwise match: https://developer.github.com/v3/repos/statuses/#get-the-combined-status-for-a-specific-ref
  */
 function normalizePaginatedListResponse(response) {
-  const responseNeedsNormalization = "total_count" in response.data && !("url" in response.data);
-  if (!responseNeedsNormalization) return response; // keep the additional properties intact as there is currently no other way
-  // to retrieve the same information.
+const responseNeedsNormalization = "total_count" in response.data && !("url" in response.data);
+if (!responseNeedsNormalization) return response; // keep the additional properties intact as there is currently no other way
+// to retrieve the same information.
 
-  const incompleteResults = response.data.incomplete_results;
-  const repositorySelection = response.data.repository_selection;
-  const totalCount = response.data.total_count;
-  delete response.data.incomplete_results;
-  delete response.data.repository_selection;
-  delete response.data.total_count;
-  const namespaceKey = Object.keys(response.data)[0];
-  const data = response.data[namespaceKey];
-  response.data = data;
+const incompleteResults = response.data.incomplete_results;
+const repositorySelection = response.data.repository_selection;
+const totalCount = response.data.total_count;
+delete response.data.incomplete_results;
+delete response.data.repository_selection;
+delete response.data.total_count;
+const namespaceKey = Object.keys(response.data)[0];
+const data = response.data[namespaceKey];
+response.data = data;
 
-  if (typeof incompleteResults !== "undefined") {
+if (typeof incompleteResults !== "undefined") {
     response.data.incomplete_results = incompleteResults;
-  }
+}
 
-  if (typeof repositorySelection !== "undefined") {
+if (typeof repositorySelection !== "undefined") {
     response.data.repository_selection = repositorySelection;
-  }
+}
 
-  response.data.total_count = totalCount;
-  return response;
+response.data.total_count = totalCount;
+return response;
 }
 
 function iterator(octokit, route, parameters) {
-  const options = typeof route === "function" ? route.endpoint(parameters) : octokit.request.endpoint(route, parameters);
-  const requestMethod = typeof route === "function" ? route : octokit.request;
-  const method = options.method;
-  const headers = options.headers;
-  let url = options.url;
-  return {
+const options = typeof route === "function" ? route.endpoint(parameters) : octokit.request.endpoint(route, parameters);
+const requestMethod = typeof route === "function" ? route : octokit.request;
+const method = options.method;
+const headers = options.headers;
+let url = options.url;
+return {
     [Symbol.asyncIterator]: () => ({
-      next() {
+    next() {
         if (!url) {
-          return Promise.resolve({
+        return Promise.resolve({
             done: true
-          });
+        });
         }
 
         return requestMethod({
-          method,
-          url,
-          headers
+        method,
+        url,
+        headers
         }).then(normalizePaginatedListResponse).then(response => {
-          // `response.headers.link` format:
-          // '<https://api.github.com/users/aseemk/followers?page=2>; rel="next", <https://api.github.com/users/aseemk/followers?page=2>; rel="last"'
-          // sets `url` to undefined if "next" URL is not present or `link` header is not set
-          url = ((response.headers.link || "").match(/<([^>]+)>;\s*rel="next"/) || [])[1];
-          return {
+        // `response.headers.link` format:
+        // '<https://api.github.com/users/aseemk/followers?page=2>; rel="next", <https://api.github.com/users/aseemk/followers?page=2>; rel="last"'
+        // sets `url` to undefined if "next" URL is not present or `link` header is not set
+        url = ((response.headers.link || "").match(/<([^>]+)>;\s*rel="next"/) || [])[1];
+        return {
             value: response
-          };
+        };
         });
-      }
+    }
 
     })
-  };
+};
 }
 
 function paginate(octokit, route, parameters, mapFn) {
-  if (typeof parameters === "function") {
+if (typeof parameters === "function") {
     mapFn = parameters;
     parameters = undefined;
-  }
+}
 
-  return gather(octokit, [], iterator(octokit, route, parameters)[Symbol.asyncIterator](), mapFn);
+return gather(octokit, [], iterator(octokit, route, parameters)[Symbol.asyncIterator](), mapFn);
 }
 
 function gather(octokit, results, iterator, mapFn) {
-  return iterator.next().then(result => {
+return iterator.next().then(result => {
     if (result.done) {
-      return results;
+    return results;
     }
 
     let earlyExit = false;
 
     function done() {
-      earlyExit = true;
+    earlyExit = true;
     }
 
     results = results.concat(mapFn ? mapFn(result.value, done) : result.value.data);
 
     if (earlyExit) {
-      return results;
+    return results;
     }
 
     return gather(octokit, results, iterator, mapFn);
-  });
+});
 }
 
 /**
@@ -6565,11 +6579,11 @@ function gather(octokit, results, iterator, mapFn) {
  */
 
 function paginateRest(octokit) {
-  return {
+return {
     paginate: Object.assign(paginate.bind(null, octokit), {
-      iterator: iterator.bind(null, octokit)
+    iterator: iterator.bind(null, octokit)
     })
-  };
+};
 }
 paginateRest.VERSION = VERSION;
 
@@ -6588,7 +6602,7 @@ exports.paginateRest = paginateRest;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 const Endpoints = {
-  actions: {
+actions: {
     addSelectedRepoToOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"],
     cancelWorkflowRun: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/cancel"],
     createOrUpdateOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}"],
@@ -6636,8 +6650,8 @@ const Endpoints = {
     reRunWorkflow: ["POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun"],
     removeSelectedRepoFromOrgSecret: ["DELETE /orgs/{org}/actions/secrets/{secret_name}/repositories/{repository_id}"],
     setSelectedReposForOrgSecret: ["PUT /orgs/{org}/actions/secrets/{secret_name}/repositories"]
-  },
-  activity: {
+},
+activity: {
     checkRepoIsStarredByAuthenticatedUser: ["GET /user/starred/{owner}/{repo}"],
     deleteRepoSubscription: ["DELETE /repos/{owner}/{repo}/subscription"],
     deleteThreadSubscription: ["DELETE /notifications/threads/{thread_id}/subscription"],
@@ -6669,190 +6683,190 @@ const Endpoints = {
     setThreadSubscription: ["PUT /notifications/threads/{thread_id}/subscription"],
     starRepoForAuthenticatedUser: ["PUT /user/starred/{owner}/{repo}"],
     unstarRepoForAuthenticatedUser: ["DELETE /user/starred/{owner}/{repo}"]
-  },
-  apps: {
+},
+apps: {
     addRepoToInstallation: ["PUT /user/installations/{installation_id}/repositories/{repository_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     checkToken: ["POST /applications/{client_id}/token"],
     createContentAttachment: ["POST /content_references/{content_reference_id}/attachments", {
-      mediaType: {
+    mediaType: {
         previews: ["corsair"]
-      }
+    }
     }],
     createFromManifest: ["POST /app-manifests/{code}/conversions"],
     createInstallationAccessToken: ["POST /app/installations/{installation_id}/access_tokens", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     deleteAuthorization: ["DELETE /applications/{client_id}/grant"],
     deleteInstallation: ["DELETE /app/installations/{installation_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     deleteToken: ["DELETE /applications/{client_id}/token"],
     getAuthenticated: ["GET /app", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     getBySlug: ["GET /apps/{app_slug}", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     getInstallation: ["GET /app/installations/{installation_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     getOrgInstallation: ["GET /orgs/{org}/installation", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     getRepoInstallation: ["GET /repos/{owner}/{repo}/installation", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     getSubscriptionPlanForAccount: ["GET /marketplace_listing/accounts/{account_id}"],
     getSubscriptionPlanForAccountStubbed: ["GET /marketplace_listing/stubbed/accounts/{account_id}"],
     getUserInstallation: ["GET /users/{username}/installation", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     listAccountsForPlan: ["GET /marketplace_listing/plans/{plan_id}/accounts"],
     listAccountsForPlanStubbed: ["GET /marketplace_listing/stubbed/plans/{plan_id}/accounts"],
     listInstallationReposForAuthenticatedUser: ["GET /user/installations/{installation_id}/repositories", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     listInstallations: ["GET /app/installations", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     listInstallationsForAuthenticatedUser: ["GET /user/installations", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     listPlans: ["GET /marketplace_listing/plans"],
     listPlansStubbed: ["GET /marketplace_listing/stubbed/plans"],
     listReposAccessibleToInstallation: ["GET /installation/repositories", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     listSubscriptionsForAuthenticatedUser: ["GET /user/marketplace_purchases"],
     listSubscriptionsForAuthenticatedUserStubbed: ["GET /user/marketplace_purchases/stubbed"],
     removeRepoFromInstallation: ["DELETE /user/installations/{installation_id}/repositories/{repository_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     resetToken: ["PATCH /applications/{client_id}/token"],
     revokeInstallationAccessToken: ["DELETE /installation/token"],
     suspendInstallation: ["PUT /app/installations/{installation_id}/suspended"],
     unsuspendInstallation: ["DELETE /app/installations/{installation_id}/suspended"]
-  },
-  billing: {
+},
+billing: {
     getGithubActionsBillingOrg: ["GET /orgs/{org}/settings/billing/actions"],
     getGithubActionsBillingUser: ["GET /users/{username}/settings/billing/actions"],
     getGithubPackagesBillingOrg: ["GET /orgs/{org}/settings/billing/packages"],
     getGithubPackagesBillingUser: ["GET /users/{username}/settings/billing/packages"],
     getSharedStorageBillingOrg: ["GET /orgs/{org}/settings/billing/shared-storage"],
     getSharedStorageBillingUser: ["GET /users/{username}/settings/billing/shared-storage"]
-  },
-  checks: {
+},
+checks: {
     create: ["POST /repos/{owner}/{repo}/check-runs", {
-      mediaType: {
+    mediaType: {
         previews: ["antiope"]
-      }
+    }
     }],
     createSuite: ["POST /repos/{owner}/{repo}/check-suites", {
-      mediaType: {
+    mediaType: {
         previews: ["antiope"]
-      }
+    }
     }],
     get: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["antiope"]
-      }
+    }
     }],
     getSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["antiope"]
-      }
+    }
     }],
     listAnnotations: ["GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations", {
-      mediaType: {
+    mediaType: {
         previews: ["antiope"]
-      }
+    }
     }],
     listForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-runs", {
-      mediaType: {
+    mediaType: {
         previews: ["antiope"]
-      }
+    }
     }],
     listForSuite: ["GET /repos/{owner}/{repo}/check-suites/{check_suite_id}/check-runs", {
-      mediaType: {
+    mediaType: {
         previews: ["antiope"]
-      }
+    }
     }],
     listSuitesForRef: ["GET /repos/{owner}/{repo}/commits/{ref}/check-suites", {
-      mediaType: {
+    mediaType: {
         previews: ["antiope"]
-      }
+    }
     }],
     rerequestSuite: ["POST /repos/{owner}/{repo}/check-suites/{check_suite_id}/rerequest", {
-      mediaType: {
+    mediaType: {
         previews: ["antiope"]
-      }
+    }
     }],
     setSuitesPreferences: ["PATCH /repos/{owner}/{repo}/check-suites/preferences", {
-      mediaType: {
+    mediaType: {
         previews: ["antiope"]
-      }
+    }
     }],
     update: ["PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["antiope"]
-      }
+    }
     }]
-  },
-  codeScanning: {
+},
+codeScanning: {
     getAlert: ["GET /repos/{owner}/{repo}/code-scanning/alerts/{alert_id}"],
     listAlertsForRepo: ["GET /repos/{owner}/{repo}/code-scanning/alerts"]
-  },
-  codesOfConduct: {
+},
+codesOfConduct: {
     getAllCodesOfConduct: ["GET /codes_of_conduct", {
-      mediaType: {
+    mediaType: {
         previews: ["scarlet-witch"]
-      }
+    }
     }],
     getConductCode: ["GET /codes_of_conduct/{key}", {
-      mediaType: {
+    mediaType: {
         previews: ["scarlet-witch"]
-      }
+    }
     }],
     getForRepo: ["GET /repos/{owner}/{repo}/community/code_of_conduct", {
-      mediaType: {
+    mediaType: {
         previews: ["scarlet-witch"]
-      }
+    }
     }]
-  },
-  emojis: {
+},
+emojis: {
     get: ["GET /emojis"]
-  },
-  gists: {
+},
+gists: {
     checkIsStarred: ["GET /gists/{gist_id}/star"],
     create: ["POST /gists"],
     createComment: ["POST /gists/{gist_id}/comments"],
@@ -6873,8 +6887,8 @@ const Endpoints = {
     unstar: ["DELETE /gists/{gist_id}/star"],
     update: ["PATCH /gists/{gist_id}"],
     updateComment: ["PATCH /gists/{gist_id}/comments/{comment_id}"]
-  },
-  git: {
+},
+git: {
     createBlob: ["POST /repos/{owner}/{repo}/git/blobs"],
     createCommit: ["POST /repos/{owner}/{repo}/git/commits"],
     createRef: ["POST /repos/{owner}/{repo}/git/refs"],
@@ -6888,44 +6902,44 @@ const Endpoints = {
     getTree: ["GET /repos/{owner}/{repo}/git/trees/{tree_sha}"],
     listMatchingRefs: ["GET /repos/{owner}/{repo}/git/matching-refs/{ref}"],
     updateRef: ["PATCH /repos/{owner}/{repo}/git/refs/{ref}"]
-  },
-  gitignore: {
+},
+gitignore: {
     getAllTemplates: ["GET /gitignore/templates"],
     getTemplate: ["GET /gitignore/templates/{name}"]
-  },
-  interactions: {
+},
+interactions: {
     getRestrictionsForOrg: ["GET /orgs/{org}/interaction-limits", {
-      mediaType: {
+    mediaType: {
         previews: ["sombra"]
-      }
+    }
     }],
     getRestrictionsForRepo: ["GET /repos/{owner}/{repo}/interaction-limits", {
-      mediaType: {
+    mediaType: {
         previews: ["sombra"]
-      }
+    }
     }],
     removeRestrictionsForOrg: ["DELETE /orgs/{org}/interaction-limits", {
-      mediaType: {
+    mediaType: {
         previews: ["sombra"]
-      }
+    }
     }],
     removeRestrictionsForRepo: ["DELETE /repos/{owner}/{repo}/interaction-limits", {
-      mediaType: {
+    mediaType: {
         previews: ["sombra"]
-      }
+    }
     }],
     setRestrictionsForOrg: ["PUT /orgs/{org}/interaction-limits", {
-      mediaType: {
+    mediaType: {
         previews: ["sombra"]
-      }
+    }
     }],
     setRestrictionsForRepo: ["PUT /repos/{owner}/{repo}/interaction-limits", {
-      mediaType: {
+    mediaType: {
         previews: ["sombra"]
-      }
+    }
     }]
-  },
-  issues: {
+},
+issues: {
     addAssignees: ["POST /repos/{owner}/{repo}/issues/{issue_number}/assignees"],
     addLabels: ["POST /repos/{owner}/{repo}/issues/{issue_number}/labels"],
     checkUserCanBeAssigned: ["GET /repos/{owner}/{repo}/assignees/{assignee}"],
@@ -6948,9 +6962,9 @@ const Endpoints = {
     listEvents: ["GET /repos/{owner}/{repo}/issues/{issue_number}/events"],
     listEventsForRepo: ["GET /repos/{owner}/{repo}/issues/events"],
     listEventsForTimeline: ["GET /repos/{owner}/{repo}/issues/{issue_number}/timeline", {
-      mediaType: {
+    mediaType: {
         previews: ["mockingbird"]
-      }
+    }
     }],
     listForAuthenticatedUser: ["GET /user/issues"],
     listForOrg: ["GET /orgs/{org}/issues"],
@@ -6969,77 +6983,77 @@ const Endpoints = {
     updateComment: ["PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}"],
     updateLabel: ["PATCH /repos/{owner}/{repo}/labels/{name}"],
     updateMilestone: ["PATCH /repos/{owner}/{repo}/milestones/{milestone_number}"]
-  },
-  licenses: {
+},
+licenses: {
     get: ["GET /licenses/{license}"],
     getAllCommonlyUsed: ["GET /licenses"],
     getForRepo: ["GET /repos/{owner}/{repo}/license"]
-  },
-  markdown: {
+},
+markdown: {
     render: ["POST /markdown"],
     renderRaw: ["POST /markdown/raw", {
-      headers: {
+    headers: {
         "content-type": "text/plain; charset=utf-8"
-      }
+    }
     }]
-  },
-  meta: {
+},
+meta: {
     get: ["GET /meta"]
-  },
-  migrations: {
+},
+migrations: {
     cancelImport: ["DELETE /repos/{owner}/{repo}/import"],
     deleteArchiveForAuthenticatedUser: ["DELETE /user/migrations/{migration_id}/archive", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     deleteArchiveForOrg: ["DELETE /orgs/{org}/migrations/{migration_id}/archive", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     downloadArchiveForOrg: ["GET /orgs/{org}/migrations/{migration_id}/archive", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     getArchiveForAuthenticatedUser: ["GET /user/migrations/{migration_id}/archive", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     getCommitAuthors: ["GET /repos/{owner}/{repo}/import/authors"],
     getImportStatus: ["GET /repos/{owner}/{repo}/import"],
     getLargeFiles: ["GET /repos/{owner}/{repo}/import/large_files"],
     getStatusForAuthenticatedUser: ["GET /user/migrations/{migration_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     getStatusForOrg: ["GET /orgs/{org}/migrations/{migration_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     listForAuthenticatedUser: ["GET /user/migrations", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     listForOrg: ["GET /orgs/{org}/migrations", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     listReposForOrg: ["GET /orgs/{org}/migrations/{migration_id}/repositories", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     listReposForUser: ["GET /user/migrations/{migration_id}/repositories", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     mapCommitAuthor: ["PATCH /repos/{owner}/{repo}/import/authors/{author_id}"],
     setLfsPreference: ["PATCH /repos/{owner}/{repo}/import/lfs"],
@@ -7047,18 +7061,18 @@ const Endpoints = {
     startForOrg: ["POST /orgs/{org}/migrations"],
     startImport: ["PUT /repos/{owner}/{repo}/import"],
     unlockRepoForAuthenticatedUser: ["DELETE /user/migrations/{migration_id}/repos/{repo_name}/lock", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     unlockRepoForOrg: ["DELETE /orgs/{org}/migrations/{migration_id}/repos/{repo_name}/lock", {
-      mediaType: {
+    mediaType: {
         previews: ["wyandotte"]
-      }
+    }
     }],
     updateImport: ["PATCH /repos/{owner}/{repo}/import"]
-  },
-  orgs: {
+},
+orgs: {
     blockUser: ["PUT /orgs/{org}/blocks/{username}"],
     checkBlockedUser: ["GET /orgs/{org}/blocks/{username}"],
     checkMembershipForUser: ["GET /orgs/{org}/members/{username}"],
@@ -7073,9 +7087,9 @@ const Endpoints = {
     getWebhook: ["GET /orgs/{org}/hooks/{hook_id}"],
     list: ["GET /organizations"],
     listAppInstallations: ["GET /orgs/{org}/installations", {
-      mediaType: {
+    mediaType: {
         previews: ["machine-man"]
-      }
+    }
     }],
     listBlockedUsers: ["GET /orgs/{org}/blocks"],
     listForAuthenticatedUser: ["GET /user/orgs"],
@@ -7098,135 +7112,135 @@ const Endpoints = {
     update: ["PATCH /orgs/{org}"],
     updateMembershipForAuthenticatedUser: ["PATCH /user/memberships/orgs/{org}"],
     updateWebhook: ["PATCH /orgs/{org}/hooks/{hook_id}"]
-  },
-  projects: {
+},
+projects: {
     addCollaborator: ["PUT /projects/{project_id}/collaborators/{username}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     createCard: ["POST /projects/columns/{column_id}/cards", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     createColumn: ["POST /projects/{project_id}/columns", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     createForAuthenticatedUser: ["POST /user/projects", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     createForOrg: ["POST /orgs/{org}/projects", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     createForRepo: ["POST /repos/{owner}/{repo}/projects", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     delete: ["DELETE /projects/{project_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     deleteCard: ["DELETE /projects/columns/cards/{card_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     deleteColumn: ["DELETE /projects/columns/{column_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     get: ["GET /projects/{project_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     getCard: ["GET /projects/columns/cards/{card_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     getColumn: ["GET /projects/columns/{column_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     getPermissionForUser: ["GET /projects/{project_id}/collaborators/{username}/permission", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     listCards: ["GET /projects/columns/{column_id}/cards", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     listCollaborators: ["GET /projects/{project_id}/collaborators", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     listColumns: ["GET /projects/{project_id}/columns", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     listForOrg: ["GET /orgs/{org}/projects", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     listForRepo: ["GET /repos/{owner}/{repo}/projects", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     listForUser: ["GET /users/{username}/projects", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     moveCard: ["POST /projects/columns/cards/{card_id}/moves", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     moveColumn: ["POST /projects/columns/{column_id}/moves", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     removeCollaborator: ["DELETE /projects/{project_id}/collaborators/{username}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     update: ["PATCH /projects/{project_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     updateCard: ["PATCH /projects/columns/cards/{card_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     updateColumn: ["PATCH /projects/columns/{column_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }]
-  },
-  pulls: {
+},
+pulls: {
     checkIfMerged: ["GET /repos/{owner}/{repo}/pulls/{pull_number}/merge"],
     create: ["POST /repos/{owner}/{repo}/pulls"],
     createReplyForReviewComment: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies"],
@@ -7252,142 +7266,142 @@ const Endpoints = {
     submitReview: ["POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/events"],
     update: ["PATCH /repos/{owner}/{repo}/pulls/{pull_number}"],
     updateBranch: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/update-branch", {
-      mediaType: {
+    mediaType: {
         previews: ["lydian"]
-      }
+    }
     }],
     updateReview: ["PUT /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}"],
     updateReviewComment: ["PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}"]
-  },
-  rateLimit: {
+},
+rateLimit: {
     get: ["GET /rate_limit"]
-  },
-  reactions: {
+},
+reactions: {
     createForCommitComment: ["POST /repos/{owner}/{repo}/comments/{comment_id}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     createForIssue: ["POST /repos/{owner}/{repo}/issues/{issue_number}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     createForIssueComment: ["POST /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     createForPullRequestReviewComment: ["POST /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     createForTeamDiscussionCommentInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     createForTeamDiscussionInOrg: ["POST /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     deleteForCommitComment: ["DELETE /repos/{owner}/{repo}/comments/{comment_id}/reactions/{reaction_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     deleteForIssue: ["DELETE /repos/{owner}/{repo}/issues/{issue_number}/reactions/{reaction_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     deleteForIssueComment: ["DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     deleteForPullRequestComment: ["DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions/{reaction_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     deleteForTeamDiscussion: ["DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions/{reaction_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     deleteForTeamDiscussionComment: ["DELETE /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions/{reaction_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     deleteLegacy: ["DELETE /reactions/{reaction_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }, {
-      deprecated: "octokit.reactions.deleteLegacy() is deprecated, see https://developer.github.com/v3/reactions/#delete-a-reaction-legacy"
+    deprecated: "octokit.reactions.deleteLegacy() is deprecated, see https://developer.github.com/v3/reactions/#delete-a-reaction-legacy"
     }],
     listForCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     listForIssue: ["GET /repos/{owner}/{repo}/issues/{issue_number}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     listForIssueComment: ["GET /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     listForPullRequestReviewComment: ["GET /repos/{owner}/{repo}/pulls/comments/{comment_id}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     listForTeamDiscussionCommentInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }],
     listForTeamDiscussionInOrg: ["GET /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/reactions", {
-      mediaType: {
+    mediaType: {
         previews: ["squirrel-girl"]
-      }
+    }
     }]
-  },
-  repos: {
+},
+repos: {
     acceptInvitation: ["PATCH /user/repository_invitations/{invitation_id}"],
     addAppAccessRestrictions: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps", {}, {
-      mapToData: "apps"
+    mapToData: "apps"
     }],
     addCollaborator: ["PUT /repos/{owner}/{repo}/collaborators/{username}"],
     addStatusCheckContexts: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts", {}, {
-      mapToData: "contexts"
+    mapToData: "contexts"
     }],
     addTeamAccessRestrictions: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams", {}, {
-      mapToData: "teams"
+    mapToData: "teams"
     }],
     addUserAccessRestrictions: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users", {}, {
-      mapToData: "users"
+    mapToData: "users"
     }],
     checkCollaborator: ["GET /repos/{owner}/{repo}/collaborators/{username}"],
     checkVulnerabilityAlerts: ["GET /repos/{owner}/{repo}/vulnerability-alerts", {
-      mediaType: {
+    mediaType: {
         previews: ["dorian"]
-      }
+    }
     }],
     compareCommits: ["GET /repos/{owner}/{repo}/compare/{base}...{head}"],
     createCommitComment: ["POST /repos/{owner}/{repo}/commits/{commit_sha}/comments"],
     createCommitSignatureProtection: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures", {
-      mediaType: {
+    mediaType: {
         previews: ["zzzax"]
-      }
+    }
     }],
     createCommitStatus: ["POST /repos/{owner}/{repo}/statuses/{sha}"],
     createDeployKey: ["POST /repos/{owner}/{repo}/keys"],
@@ -7399,15 +7413,15 @@ const Endpoints = {
     createInOrg: ["POST /orgs/{org}/repos"],
     createOrUpdateFileContents: ["PUT /repos/{owner}/{repo}/contents/{path}"],
     createPagesSite: ["POST /repos/{owner}/{repo}/pages", {
-      mediaType: {
+    mediaType: {
         previews: ["switcheroo"]
-      }
+    }
     }],
     createRelease: ["POST /repos/{owner}/{repo}/releases"],
     createUsingTemplate: ["POST /repos/{template_owner}/{template_repo}/generate", {
-      mediaType: {
+    mediaType: {
         previews: ["baptiste"]
-      }
+    }
     }],
     createWebhook: ["POST /repos/{owner}/{repo}/hooks"],
     declineInvitation: ["DELETE /user/repository_invitations/{invitation_id}"],
@@ -7417,52 +7431,52 @@ const Endpoints = {
     deleteBranchProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection"],
     deleteCommitComment: ["DELETE /repos/{owner}/{repo}/comments/{comment_id}"],
     deleteCommitSignatureProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures", {
-      mediaType: {
+    mediaType: {
         previews: ["zzzax"]
-      }
+    }
     }],
     deleteDeployKey: ["DELETE /repos/{owner}/{repo}/keys/{key_id}"],
     deleteDeployment: ["DELETE /repos/{owner}/{repo}/deployments/{deployment_id}"],
     deleteFile: ["DELETE /repos/{owner}/{repo}/contents/{path}"],
     deleteInvitation: ["DELETE /repos/{owner}/{repo}/invitations/{invitation_id}"],
     deletePagesSite: ["DELETE /repos/{owner}/{repo}/pages", {
-      mediaType: {
+    mediaType: {
         previews: ["switcheroo"]
-      }
+    }
     }],
     deletePullRequestReviewProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_pull_request_reviews"],
     deleteRelease: ["DELETE /repos/{owner}/{repo}/releases/{release_id}"],
     deleteReleaseAsset: ["DELETE /repos/{owner}/{repo}/releases/assets/{asset_id}"],
     deleteWebhook: ["DELETE /repos/{owner}/{repo}/hooks/{hook_id}"],
     disableAutomatedSecurityFixes: ["DELETE /repos/{owner}/{repo}/automated-security-fixes", {
-      mediaType: {
+    mediaType: {
         previews: ["london"]
-      }
+    }
     }],
     disableVulnerabilityAlerts: ["DELETE /repos/{owner}/{repo}/vulnerability-alerts", {
-      mediaType: {
+    mediaType: {
         previews: ["dorian"]
-      }
+    }
     }],
     downloadArchive: ["GET /repos/{owner}/{repo}/{archive_format}/{ref}"],
     enableAutomatedSecurityFixes: ["PUT /repos/{owner}/{repo}/automated-security-fixes", {
-      mediaType: {
+    mediaType: {
         previews: ["london"]
-      }
+    }
     }],
     enableVulnerabilityAlerts: ["PUT /repos/{owner}/{repo}/vulnerability-alerts", {
-      mediaType: {
+    mediaType: {
         previews: ["dorian"]
-      }
+    }
     }],
     get: ["GET /repos/{owner}/{repo}"],
     getAccessRestrictions: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions"],
     getAdminBranchProtection: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"],
     getAllStatusCheckContexts: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts"],
     getAllTopics: ["GET /repos/{owner}/{repo}/topics", {
-      mediaType: {
+    mediaType: {
         previews: ["mercy"]
-      }
+    }
     }],
     getAppsWithAccessToProtectedBranch: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps"],
     getBranch: ["GET /repos/{owner}/{repo}/branches/{branch}"],
@@ -7475,14 +7489,14 @@ const Endpoints = {
     getCommitActivityStats: ["GET /repos/{owner}/{repo}/stats/commit_activity"],
     getCommitComment: ["GET /repos/{owner}/{repo}/comments/{comment_id}"],
     getCommitSignatureProtection: ["GET /repos/{owner}/{repo}/branches/{branch}/protection/required_signatures", {
-      mediaType: {
+    mediaType: {
         previews: ["zzzax"]
-      }
+    }
     }],
     getCommunityProfileMetrics: ["GET /repos/{owner}/{repo}/community/profile", {
-      mediaType: {
+    mediaType: {
         previews: ["black-panther"]
-      }
+    }
     }],
     getContent: ["GET /repos/{owner}/{repo}/contents/{path}"],
     getContributorsStats: ["GET /repos/{owner}/{repo}/stats/contributors"],
@@ -7509,9 +7523,9 @@ const Endpoints = {
     getWebhook: ["GET /repos/{owner}/{repo}/hooks/{hook_id}"],
     listBranches: ["GET /repos/{owner}/{repo}/branches"],
     listBranchesForHeadCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head", {
-      mediaType: {
+    mediaType: {
         previews: ["groot"]
-      }
+    }
     }],
     listCollaborators: ["GET /repos/{owner}/{repo}/collaborators"],
     listCommentsForCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/comments"],
@@ -7532,9 +7546,9 @@ const Endpoints = {
     listPagesBuilds: ["GET /repos/{owner}/{repo}/pages/builds"],
     listPublic: ["GET /repositories"],
     listPullRequestsAssociatedWithCommit: ["GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls", {
-      mediaType: {
+    mediaType: {
         previews: ["groot"]
-      }
+    }
     }],
     listReleaseAssets: ["GET /repos/{owner}/{repo}/releases/{release_id}/assets"],
     listReleases: ["GET /repos/{owner}/{repo}/releases"],
@@ -7544,37 +7558,37 @@ const Endpoints = {
     merge: ["POST /repos/{owner}/{repo}/merges"],
     pingWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/pings"],
     removeAppAccessRestrictions: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps", {}, {
-      mapToData: "apps"
+    mapToData: "apps"
     }],
     removeCollaborator: ["DELETE /repos/{owner}/{repo}/collaborators/{username}"],
     removeStatusCheckContexts: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts", {}, {
-      mapToData: "contexts"
+    mapToData: "contexts"
     }],
     removeStatusCheckProtection: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"],
     removeTeamAccessRestrictions: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams", {}, {
-      mapToData: "teams"
+    mapToData: "teams"
     }],
     removeUserAccessRestrictions: ["DELETE /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users", {}, {
-      mapToData: "users"
+    mapToData: "users"
     }],
     replaceAllTopics: ["PUT /repos/{owner}/{repo}/topics", {
-      mediaType: {
+    mediaType: {
         previews: ["mercy"]
-      }
+    }
     }],
     requestPagesBuild: ["POST /repos/{owner}/{repo}/pages/builds"],
     setAdminBranchProtection: ["POST /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins"],
     setAppAccessRestrictions: ["PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/apps", {}, {
-      mapToData: "apps"
+    mapToData: "apps"
     }],
     setStatusCheckContexts: ["PUT /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts", {}, {
-      mapToData: "contexts"
+    mapToData: "contexts"
     }],
     setTeamAccessRestrictions: ["PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/teams", {}, {
-      mapToData: "teams"
+    mapToData: "teams"
     }],
     setUserAccessRestrictions: ["PUT /repos/{owner}/{repo}/branches/{branch}/protection/restrictions/users", {}, {
-      mapToData: "users"
+    mapToData: "users"
     }],
     testPushWebhook: ["POST /repos/{owner}/{repo}/hooks/{hook_id}/tests"],
     transfer: ["POST /repos/{owner}/{repo}/transfer"],
@@ -7589,38 +7603,38 @@ const Endpoints = {
     updateStatusCheckPotection: ["PATCH /repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"],
     updateWebhook: ["PATCH /repos/{owner}/{repo}/hooks/{hook_id}"],
     uploadReleaseAsset: ["POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name,label}", {
-      baseUrl: "https://uploads.github.com"
+    baseUrl: "https://uploads.github.com"
     }]
-  },
-  search: {
+},
+search: {
     code: ["GET /search/code"],
     commits: ["GET /search/commits", {
-      mediaType: {
+    mediaType: {
         previews: ["cloak"]
-      }
+    }
     }],
     issuesAndPullRequests: ["GET /search/issues"],
     labels: ["GET /search/labels"],
     repos: ["GET /search/repositories"],
     topics: ["GET /search/topics", {
-      mediaType: {
+    mediaType: {
         previews: ["mercy"]
-      }
+    }
     }],
     users: ["GET /search/users"]
-  },
-  teams: {
+},
+teams: {
     addOrUpdateMembershipForUserInOrg: ["PUT /orgs/{org}/teams/{team_slug}/memberships/{username}"],
     addOrUpdateProjectPermissionsInOrg: ["PUT /orgs/{org}/teams/{team_slug}/projects/{project_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     addOrUpdateRepoPermissionsInOrg: ["PUT /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"],
     checkPermissionsForProjectInOrg: ["GET /orgs/{org}/teams/{team_slug}/projects/{project_id}", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     checkPermissionsForRepoInOrg: ["GET /orgs/{org}/teams/{team_slug}/repos/{owner}/{repo}"],
     create: ["POST /orgs/{org}/teams"],
@@ -7641,9 +7655,9 @@ const Endpoints = {
     listMembersInOrg: ["GET /orgs/{org}/teams/{team_slug}/members"],
     listPendingInvitationsInOrg: ["GET /orgs/{org}/teams/{team_slug}/invitations"],
     listProjectsInOrg: ["GET /orgs/{org}/teams/{team_slug}/projects", {
-      mediaType: {
+    mediaType: {
         previews: ["inertia"]
-      }
+    }
     }],
     listReposInOrg: ["GET /orgs/{org}/teams/{team_slug}/repos"],
     removeMembershipForUserInOrg: ["DELETE /orgs/{org}/teams/{team_slug}/memberships/{username}"],
@@ -7652,8 +7666,8 @@ const Endpoints = {
     updateDiscussionCommentInOrg: ["PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments/{comment_number}"],
     updateDiscussionInOrg: ["PATCH /orgs/{org}/teams/{team_slug}/discussions/{discussion_number}"],
     updateInOrg: ["PATCH /orgs/{org}/teams/{team_slug}"]
-  },
-  users: {
+},
+users: {
     addEmailForAuthenticated: ["POST /user/emails"],
     block: ["PUT /user/blocks/{username}"],
     checkBlocked: ["GET /user/blocks/{username}"],
@@ -7686,90 +7700,90 @@ const Endpoints = {
     unblock: ["DELETE /user/blocks/{username}"],
     unfollow: ["DELETE /user/following/{username}"],
     updateAuthenticated: ["PATCH /user"]
-  }
+}
 };
 
 const VERSION = "4.1.2";
 
 function endpointsToMethods(octokit, endpointsMap) {
-  const newMethods = {};
+const newMethods = {};
 
-  for (const [scope, endpoints] of Object.entries(endpointsMap)) {
+for (const [scope, endpoints] of Object.entries(endpointsMap)) {
     for (const [methodName, endpoint] of Object.entries(endpoints)) {
-      const [route, defaults, decorations] = endpoint;
-      const [method, url] = route.split(/ /);
-      const endpointDefaults = Object.assign({
+    const [route, defaults, decorations] = endpoint;
+    const [method, url] = route.split(/ /);
+    const endpointDefaults = Object.assign({
         method,
         url
-      }, defaults);
+    }, defaults);
 
-      if (!newMethods[scope]) {
+    if (!newMethods[scope]) {
         newMethods[scope] = {};
-      }
+    }
 
-      const scopeMethods = newMethods[scope];
+    const scopeMethods = newMethods[scope];
 
-      if (decorations) {
+    if (decorations) {
         scopeMethods[methodName] = decorate(octokit, scope, methodName, endpointDefaults, decorations);
         continue;
-      }
-
-      scopeMethods[methodName] = octokit.request.defaults(endpointDefaults);
     }
-  }
 
-  return newMethods;
+    scopeMethods[methodName] = octokit.request.defaults(endpointDefaults);
+    }
+}
+
+return newMethods;
 }
 
 function decorate(octokit, scope, methodName, defaults, decorations) {
-  const requestWithDefaults = octokit.request.defaults(defaults);
-  /* istanbul ignore next */
+const requestWithDefaults = octokit.request.defaults(defaults);
+/* istanbul ignore next */
 
-  function withDecorations(...args) {
+function withDecorations(...args) {
     // @ts-ignore https://github.com/microsoft/TypeScript/issues/25488
     let options = requestWithDefaults.endpoint.merge(...args); // There are currently no other decorations than `.mapToData`
 
     if (decorations.mapToData) {
-      options = Object.assign({}, options, {
+    options = Object.assign({}, options, {
         data: options[decorations.mapToData],
         [decorations.mapToData]: undefined
-      });
-      return requestWithDefaults(options);
+    });
+    return requestWithDefaults(options);
     }
 
     if (decorations.renamed) {
-      const [newScope, newMethodName] = decorations.renamed;
-      octokit.log.warn(`octokit.${scope}.${methodName}() has been renamed to octokit.${newScope}.${newMethodName}()`);
+    const [newScope, newMethodName] = decorations.renamed;
+    octokit.log.warn(`octokit.${scope}.${methodName}() has been renamed to octokit.${newScope}.${newMethodName}()`);
     }
 
     if (decorations.deprecated) {
-      octokit.log.warn(decorations.deprecated);
+    octokit.log.warn(decorations.deprecated);
     }
 
     if (decorations.renamedParameters) {
-      // @ts-ignore https://github.com/microsoft/TypeScript/issues/25488
-      const options = requestWithDefaults.endpoint.merge(...args);
+    // @ts-ignore https://github.com/microsoft/TypeScript/issues/25488
+    const options = requestWithDefaults.endpoint.merge(...args);
 
-      for (const [name, alias] of Object.entries(decorations.renamedParameters)) {
+    for (const [name, alias] of Object.entries(decorations.renamedParameters)) {
         if (name in options) {
-          octokit.log.warn(`"${name}" parameter is deprecated for "octokit.${scope}.${methodName}()". Use "${alias}" instead`);
+        octokit.log.warn(`"${name}" parameter is deprecated for "octokit.${scope}.${methodName}()". Use "${alias}" instead`);
 
-          if (!(alias in options)) {
+        if (!(alias in options)) {
             options[alias] = options[name];
-          }
-
-          delete options[name];
         }
-      }
 
-      return requestWithDefaults(options);
+        delete options[name];
+        }
+    }
+
+    return requestWithDefaults(options);
     } // @ts-ignore https://github.com/microsoft/TypeScript/issues/25488
 
 
     return requestWithDefaults(...args);
-  }
+}
 
-  return Object.assign(withDecorations, requestWithDefaults);
+return Object.assign(withDecorations, requestWithDefaults);
 }
 
 /**
@@ -7784,7 +7798,7 @@ function decorate(octokit, scope, methodName, defaults, decorations) {
  */
 
 function restEndpointMethods(octokit) {
-  return endpointsToMethods(octokit, Endpoints);
+return endpointsToMethods(octokit, Endpoints);
 }
 restEndpointMethods.VERSION = VERSION;
 
@@ -7806,44 +7820,44 @@ var bind = Function.bind
 var bindable = bind.bind(bind)
 
 function bindApi (hook, state, name) {
-  var removeHookRef = bindable(removeHook, null).apply(null, name ? [state, name] : [state])
-  hook.api = { remove: removeHookRef }
-  hook.remove = removeHookRef
+var removeHookRef = bindable(removeHook, null).apply(null, name ? [state, name] : [state])
+hook.api = { remove: removeHookRef }
+hook.remove = removeHookRef
 
-  ;['before', 'error', 'after', 'wrap'].forEach(function (kind) {
+;['before', 'error', 'after', 'wrap'].forEach(function (kind) {
     var args = name ? [state, kind, name] : [state, kind]
     hook[kind] = hook.api[kind] = bindable(addHook, null).apply(null, args)
-  })
+})
 }
 
 function HookSingular () {
-  var singularHookName = 'h'
-  var singularHookState = {
+var singularHookName = 'h'
+var singularHookState = {
     registry: {}
-  }
-  var singularHook = register.bind(null, singularHookState, singularHookName)
-  bindApi(singularHook, singularHookState, singularHookName)
-  return singularHook
+}
+var singularHook = register.bind(null, singularHookState, singularHookName)
+bindApi(singularHook, singularHookState, singularHookName)
+return singularHook
 }
 
 function HookCollection () {
-  var state = {
+var state = {
     registry: {}
-  }
+}
 
-  var hook = register.bind(null, state)
-  bindApi(hook, state)
+var hook = register.bind(null, state)
+bindApi(hook, state)
 
-  return hook
+return hook
 }
 
 var collectionHookDeprecationMessageDisplayed = false
 function Hook () {
-  if (!collectionHookDeprecationMessageDisplayed) {
+if (!collectionHookDeprecationMessageDisplayed) {
     console.warn('[before-after-hook]: "Hook()" repurposing warning, use "Hook.Collection()". Read more: https://git.io/upgrade-before-after-hook-to-1.4')
     collectionHookDeprecationMessageDisplayed = true
-  }
-  return HookCollection()
+}
+return HookCollection()
 }
 
 Hook.Singular = HookSingular.bind()
@@ -7864,48 +7878,48 @@ module.exports.Collection = Hook.Collection
 module.exports = addHook
 
 function addHook (state, kind, name, hook) {
-  var orig = hook
-  if (!state.registry[name]) {
+var orig = hook
+if (!state.registry[name]) {
     state.registry[name] = []
-  }
+}
 
-  if (kind === 'before') {
+if (kind === 'before') {
     hook = function (method, options) {
-      return Promise.resolve()
+    return Promise.resolve()
         .then(orig.bind(null, options))
         .then(method.bind(null, options))
     }
-  }
+}
 
-  if (kind === 'after') {
+if (kind === 'after') {
     hook = function (method, options) {
-      var result
-      return Promise.resolve()
+    var result
+    return Promise.resolve()
         .then(method.bind(null, options))
         .then(function (result_) {
-          result = result_
-          return orig(result, options)
+        result = result_
+        return orig(result, options)
         })
         .then(function () {
-          return result
+        return result
         })
     }
-  }
+}
 
-  if (kind === 'error') {
+if (kind === 'error') {
     hook = function (method, options) {
-      return Promise.resolve()
+    return Promise.resolve()
         .then(method.bind(null, options))
         .catch(function (error) {
-          return orig(error, options)
+        return orig(error, options)
         })
     }
-  }
+}
 
-  state.registry[name].push({
+state.registry[name].push({
     hook: hook,
     orig: orig
-  })
+})
 }
 
 
@@ -7917,29 +7931,29 @@ function addHook (state, kind, name, hook) {
 module.exports = register
 
 function register (state, name, method, options) {
-  if (typeof method !== 'function') {
+if (typeof method !== 'function') {
     throw new Error('method for before hook must be a function')
-  }
+}
 
-  if (!options) {
+if (!options) {
     options = {}
-  }
+}
 
-  if (Array.isArray(name)) {
+if (Array.isArray(name)) {
     return name.reverse().reduce(function (callback, name) {
-      return register.bind(null, state, name, callback, options)
+    return register.bind(null, state, name, callback, options)
     }, method)()
-  }
+}
 
-  return Promise.resolve()
+return Promise.resolve()
     .then(function () {
-      if (!state.registry[name]) {
+    if (!state.registry[name]) {
         return method(options)
-      }
+    }
 
-      return (state.registry[name]).reduce(function (method, registered) {
+    return (state.registry[name]).reduce(function (method, registered) {
         return registered.hook.bind(null, method, options)
-      }, method)()
+    }, method)()
     })
 }
 
@@ -7952,19 +7966,19 @@ function register (state, name, method, options) {
 module.exports = removeHook
 
 function removeHook (state, name, method) {
-  if (!state.registry[name]) {
+if (!state.registry[name]) {
     return
-  }
+}
 
-  var index = state.registry[name]
+var index = state.registry[name]
     .map(function (registered) { return registered.orig })
     .indexOf(method)
 
-  if (index === -1) {
+if (index === -1) {
     return
-  }
+}
 
-  state.registry[name].splice(index, 1)
+state.registry[name].splice(index, 1)
 }
 
 
@@ -7979,17 +7993,17 @@ function removeHook (state, name, method) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 class Deprecation extends Error {
-  constructor(message) {
+constructor(message) {
     super(message); // Maintains proper stack trace (only available on V8)
 
     /* istanbul ignore next */
 
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
+    Error.captureStackTrace(this, this.constructor);
     }
 
     this.name = 'Deprecation';
-  }
+}
 
 }
 
@@ -8012,76 +8026,76 @@ exports.Deprecation = Deprecation;
  */
 ;(function() {
 
-  /** Used as a safe reference for `undefined` in pre-ES5 environments. */
-  var undefined;
+/** Used as a safe reference for `undefined` in pre-ES5 environments. */
+var undefined;
 
-  /** Used as the semantic version number. */
-  var VERSION = '4.17.21';
+/** Used as the semantic version number. */
+var VERSION = '4.17.21';
 
-  /** Used as the size to enable large array optimizations. */
-  var LARGE_ARRAY_SIZE = 200;
+/** Used as the size to enable large array optimizations. */
+var LARGE_ARRAY_SIZE = 200;
 
-  /** Error message constants. */
-  var CORE_ERROR_TEXT = 'Unsupported core-js use. Try https://npms.io/search?q=ponyfill.',
-      FUNC_ERROR_TEXT = 'Expected a function',
-      INVALID_TEMPL_VAR_ERROR_TEXT = 'Invalid `variable` option passed into `_.template`';
+/** Error message constants. */
+var CORE_ERROR_TEXT = 'Unsupported core-js use. Try https://npms.io/search?q=ponyfill.',
+    FUNC_ERROR_TEXT = 'Expected a function',
+    INVALID_TEMPL_VAR_ERROR_TEXT = 'Invalid `variable` option passed into `_.template`';
 
-  /** Used to stand-in for `undefined` hash values. */
-  var HASH_UNDEFINED = '__lodash_hash_undefined__';
+/** Used to stand-in for `undefined` hash values. */
+var HASH_UNDEFINED = '__lodash_hash_undefined__';
 
-  /** Used as the maximum memoize cache size. */
-  var MAX_MEMOIZE_SIZE = 500;
+/** Used as the maximum memoize cache size. */
+var MAX_MEMOIZE_SIZE = 500;
 
-  /** Used as the internal argument placeholder. */
-  var PLACEHOLDER = '__lodash_placeholder__';
+/** Used as the internal argument placeholder. */
+var PLACEHOLDER = '__lodash_placeholder__';
 
-  /** Used to compose bitmasks for cloning. */
-  var CLONE_DEEP_FLAG = 1,
-      CLONE_FLAT_FLAG = 2,
-      CLONE_SYMBOLS_FLAG = 4;
+/** Used to compose bitmasks for cloning. */
+var CLONE_DEEP_FLAG = 1,
+    CLONE_FLAT_FLAG = 2,
+    CLONE_SYMBOLS_FLAG = 4;
 
-  /** Used to compose bitmasks for value comparisons. */
-  var COMPARE_PARTIAL_FLAG = 1,
-      COMPARE_UNORDERED_FLAG = 2;
+/** Used to compose bitmasks for value comparisons. */
+var COMPARE_PARTIAL_FLAG = 1,
+    COMPARE_UNORDERED_FLAG = 2;
 
-  /** Used to compose bitmasks for function metadata. */
-  var WRAP_BIND_FLAG = 1,
-      WRAP_BIND_KEY_FLAG = 2,
-      WRAP_CURRY_BOUND_FLAG = 4,
-      WRAP_CURRY_FLAG = 8,
-      WRAP_CURRY_RIGHT_FLAG = 16,
-      WRAP_PARTIAL_FLAG = 32,
-      WRAP_PARTIAL_RIGHT_FLAG = 64,
-      WRAP_ARY_FLAG = 128,
-      WRAP_REARG_FLAG = 256,
-      WRAP_FLIP_FLAG = 512;
+/** Used to compose bitmasks for function metadata. */
+var WRAP_BIND_FLAG = 1,
+    WRAP_BIND_KEY_FLAG = 2,
+    WRAP_CURRY_BOUND_FLAG = 4,
+    WRAP_CURRY_FLAG = 8,
+    WRAP_CURRY_RIGHT_FLAG = 16,
+    WRAP_PARTIAL_FLAG = 32,
+    WRAP_PARTIAL_RIGHT_FLAG = 64,
+    WRAP_ARY_FLAG = 128,
+    WRAP_REARG_FLAG = 256,
+    WRAP_FLIP_FLAG = 512;
 
-  /** Used as default options for `_.truncate`. */
-  var DEFAULT_TRUNC_LENGTH = 30,
-      DEFAULT_TRUNC_OMISSION = '...';
+/** Used as default options for `_.truncate`. */
+var DEFAULT_TRUNC_LENGTH = 30,
+    DEFAULT_TRUNC_OMISSION = '...';
 
-  /** Used to detect hot functions by number of calls within a span of milliseconds. */
-  var HOT_COUNT = 800,
-      HOT_SPAN = 16;
+/** Used to detect hot functions by number of calls within a span of milliseconds. */
+var HOT_COUNT = 800,
+    HOT_SPAN = 16;
 
-  /** Used to indicate the type of lazy iteratees. */
-  var LAZY_FILTER_FLAG = 1,
-      LAZY_MAP_FLAG = 2,
-      LAZY_WHILE_FLAG = 3;
+/** Used to indicate the type of lazy iteratees. */
+var LAZY_FILTER_FLAG = 1,
+    LAZY_MAP_FLAG = 2,
+    LAZY_WHILE_FLAG = 3;
 
-  /** Used as references for various `Number` constants. */
-  var INFINITY = 1 / 0,
-      MAX_SAFE_INTEGER = 9007199254740991,
-      MAX_INTEGER = 1.7976931348623157e+308,
-      NAN = 0 / 0;
+/** Used as references for various `Number` constants. */
+var INFINITY = 1 / 0,
+    MAX_SAFE_INTEGER = 9007199254740991,
+    MAX_INTEGER = 1.7976931348623157e+308,
+    NAN = 0 / 0;
 
-  /** Used as references for the maximum length and index of an array. */
-  var MAX_ARRAY_LENGTH = 4294967295,
-      MAX_ARRAY_INDEX = MAX_ARRAY_LENGTH - 1,
-      HALF_MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH >>> 1;
+/** Used as references for the maximum length and index of an array. */
+var MAX_ARRAY_LENGTH = 4294967295,
+    MAX_ARRAY_INDEX = MAX_ARRAY_LENGTH - 1,
+    HALF_MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH >>> 1;
 
-  /** Used to associate wrap methods with their bit flags. */
-  var wrapFlags = [
+/** Used to associate wrap methods with their bit flags. */
+var wrapFlags = [
     ['ary', WRAP_ARY_FLAG],
     ['bind', WRAP_BIND_FLAG],
     ['bindKey', WRAP_BIND_KEY_FLAG],
@@ -8091,195 +8105,195 @@ exports.Deprecation = Deprecation;
     ['partial', WRAP_PARTIAL_FLAG],
     ['partialRight', WRAP_PARTIAL_RIGHT_FLAG],
     ['rearg', WRAP_REARG_FLAG]
-  ];
+];
 
-  /** `Object#toString` result references. */
-  var argsTag = '[object Arguments]',
-      arrayTag = '[object Array]',
-      asyncTag = '[object AsyncFunction]',
-      boolTag = '[object Boolean]',
-      dateTag = '[object Date]',
-      domExcTag = '[object DOMException]',
-      errorTag = '[object Error]',
-      funcTag = '[object Function]',
-      genTag = '[object GeneratorFunction]',
-      mapTag = '[object Map]',
-      numberTag = '[object Number]',
-      nullTag = '[object Null]',
-      objectTag = '[object Object]',
-      promiseTag = '[object Promise]',
-      proxyTag = '[object Proxy]',
-      regexpTag = '[object RegExp]',
-      setTag = '[object Set]',
-      stringTag = '[object String]',
-      symbolTag = '[object Symbol]',
-      undefinedTag = '[object Undefined]',
-      weakMapTag = '[object WeakMap]',
-      weakSetTag = '[object WeakSet]';
+/** `Object#toString` result references. */
+var argsTag = '[object Arguments]',
+    arrayTag = '[object Array]',
+    asyncTag = '[object AsyncFunction]',
+    boolTag = '[object Boolean]',
+    dateTag = '[object Date]',
+    domExcTag = '[object DOMException]',
+    errorTag = '[object Error]',
+    funcTag = '[object Function]',
+    genTag = '[object GeneratorFunction]',
+    mapTag = '[object Map]',
+    numberTag = '[object Number]',
+    nullTag = '[object Null]',
+    objectTag = '[object Object]',
+    promiseTag = '[object Promise]',
+    proxyTag = '[object Proxy]',
+    regexpTag = '[object RegExp]',
+    setTag = '[object Set]',
+    stringTag = '[object String]',
+    symbolTag = '[object Symbol]',
+    undefinedTag = '[object Undefined]',
+    weakMapTag = '[object WeakMap]',
+    weakSetTag = '[object WeakSet]';
 
-  var arrayBufferTag = '[object ArrayBuffer]',
-      dataViewTag = '[object DataView]',
-      float32Tag = '[object Float32Array]',
-      float64Tag = '[object Float64Array]',
-      int8Tag = '[object Int8Array]',
-      int16Tag = '[object Int16Array]',
-      int32Tag = '[object Int32Array]',
-      uint8Tag = '[object Uint8Array]',
-      uint8ClampedTag = '[object Uint8ClampedArray]',
-      uint16Tag = '[object Uint16Array]',
-      uint32Tag = '[object Uint32Array]';
+var arrayBufferTag = '[object ArrayBuffer]',
+    dataViewTag = '[object DataView]',
+    float32Tag = '[object Float32Array]',
+    float64Tag = '[object Float64Array]',
+    int8Tag = '[object Int8Array]',
+    int16Tag = '[object Int16Array]',
+    int32Tag = '[object Int32Array]',
+    uint8Tag = '[object Uint8Array]',
+    uint8ClampedTag = '[object Uint8ClampedArray]',
+    uint16Tag = '[object Uint16Array]',
+    uint32Tag = '[object Uint32Array]';
 
-  /** Used to match empty string literals in compiled template source. */
-  var reEmptyStringLeading = /\b__p \+= '';/g,
-      reEmptyStringMiddle = /\b(__p \+=) '' \+/g,
-      reEmptyStringTrailing = /(__e\(.*?\)|\b__t\)) \+\n'';/g;
+/** Used to match empty string literals in compiled template source. */
+var reEmptyStringLeading = /\b__p \+= '';/g,
+    reEmptyStringMiddle = /\b(__p \+=) '' \+/g,
+    reEmptyStringTrailing = /(__e\(.*?\)|\b__t\)) \+\n'';/g;
 
-  /** Used to match HTML entities and HTML characters. */
-  var reEscapedHtml = /&(?:amp|lt|gt|quot|#39);/g,
-      reUnescapedHtml = /[&<>"']/g,
-      reHasEscapedHtml = RegExp(reEscapedHtml.source),
-      reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+/** Used to match HTML entities and HTML characters. */
+var reEscapedHtml = /&(?:amp|lt|gt|quot|#39);/g,
+    reUnescapedHtml = /[&<>"']/g,
+    reHasEscapedHtml = RegExp(reEscapedHtml.source),
+    reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
 
-  /** Used to match template delimiters. */
-  var reEscape = /<%-([\s\S]+?)%>/g,
-      reEvaluate = /<%([\s\S]+?)%>/g,
-      reInterpolate = /<%=([\s\S]+?)%>/g;
+/** Used to match template delimiters. */
+var reEscape = /<%-([\s\S]+?)%>/g,
+    reEvaluate = /<%([\s\S]+?)%>/g,
+    reInterpolate = /<%=([\s\S]+?)%>/g;
 
-  /** Used to match property names within property paths. */
-  var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
-      reIsPlainProp = /^\w*$/,
-      rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
+/** Used to match property names within property paths. */
+var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
+    reIsPlainProp = /^\w*$/,
+    rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
 
-  /**
-   * Used to match `RegExp`
-   * [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
-   */
-  var reRegExpChar = /[\\^$.*+?()[\]{}|]/g,
-      reHasRegExpChar = RegExp(reRegExpChar.source);
+/**
+ * Used to match `RegExp`
+ * [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
+ */
+var reRegExpChar = /[\\^$.*+?()[\]{}|]/g,
+    reHasRegExpChar = RegExp(reRegExpChar.source);
 
-  /** Used to match leading whitespace. */
-  var reTrimStart = /^\s+/;
+/** Used to match leading whitespace. */
+var reTrimStart = /^\s+/;
 
-  /** Used to match a single whitespace character. */
-  var reWhitespace = /\s/;
+/** Used to match a single whitespace character. */
+var reWhitespace = /\s/;
 
-  /** Used to match wrap detail comments. */
-  var reWrapComment = /\{(?:\n\/\* \[wrapped with .+\] \*\/)?\n?/,
-      reWrapDetails = /\{\n\/\* \[wrapped with (.+)\] \*/,
-      reSplitDetails = /,? & /;
+/** Used to match wrap detail comments. */
+var reWrapComment = /\{(?:\n\/\* \[wrapped with .+\] \*\/)?\n?/,
+    reWrapDetails = /\{\n\/\* \[wrapped with (.+)\] \*/,
+    reSplitDetails = /,? & /;
 
-  /** Used to match words composed of alphanumeric characters. */
-  var reAsciiWord = /[^\x00-\x2f\x3a-\x40\x5b-\x60\x7b-\x7f]+/g;
+/** Used to match words composed of alphanumeric characters. */
+var reAsciiWord = /[^\x00-\x2f\x3a-\x40\x5b-\x60\x7b-\x7f]+/g;
 
-  /**
-   * Used to validate the `validate` option in `_.template` variable.
-   *
-   * Forbids characters which could potentially change the meaning of the function argument definition:
-   * - "()," (modification of function parameters)
-   * - "=" (default value)
-   * - "[]{}" (destructuring of function parameters)
-   * - "/" (beginning of a comment)
-   * - whitespace
-   */
-  var reForbiddenIdentifierChars = /[()=,{}\[\]\/\s]/;
+/**
+ * Used to validate the `validate` option in `_.template` variable.
+ *
+ * Forbids characters which could potentially change the meaning of the function argument definition:
+ * - "()," (modification of function parameters)
+ * - "=" (default value)
+ * - "[]{}" (destructuring of function parameters)
+ * - "/" (beginning of a comment)
+ * - whitespace
+ */
+var reForbiddenIdentifierChars = /[()=,{}\[\]\/\s]/;
 
-  /** Used to match backslashes in property paths. */
-  var reEscapeChar = /\\(\\)?/g;
+/** Used to match backslashes in property paths. */
+var reEscapeChar = /\\(\\)?/g;
 
-  /**
-   * Used to match
-   * [ES template delimiters](http://ecma-international.org/ecma-262/7.0/#sec-template-literal-lexical-components).
-   */
-  var reEsTemplate = /\$\{([^\\}]*(?:\\.[^\\}]*)*)\}/g;
+/**
+ * Used to match
+ * [ES template delimiters](http://ecma-international.org/ecma-262/7.0/#sec-template-literal-lexical-components).
+ */
+var reEsTemplate = /\$\{([^\\}]*(?:\\.[^\\}]*)*)\}/g;
 
-  /** Used to match `RegExp` flags from their coerced string values. */
-  var reFlags = /\w*$/;
+/** Used to match `RegExp` flags from their coerced string values. */
+var reFlags = /\w*$/;
 
-  /** Used to detect bad signed hexadecimal string values. */
-  var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
+/** Used to detect bad signed hexadecimal string values. */
+var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
 
-  /** Used to detect binary string values. */
-  var reIsBinary = /^0b[01]+$/i;
+/** Used to detect binary string values. */
+var reIsBinary = /^0b[01]+$/i;
 
-  /** Used to detect host constructors (Safari). */
-  var reIsHostCtor = /^\[object .+?Constructor\]$/;
+/** Used to detect host constructors (Safari). */
+var reIsHostCtor = /^\[object .+?Constructor\]$/;
 
-  /** Used to detect octal string values. */
-  var reIsOctal = /^0o[0-7]+$/i;
+/** Used to detect octal string values. */
+var reIsOctal = /^0o[0-7]+$/i;
 
-  /** Used to detect unsigned integer values. */
-  var reIsUint = /^(?:0|[1-9]\d*)$/;
+/** Used to detect unsigned integer values. */
+var reIsUint = /^(?:0|[1-9]\d*)$/;
 
-  /** Used to match Latin Unicode letters (excluding mathematical operators). */
-  var reLatin = /[\xc0-\xd6\xd8-\xf6\xf8-\xff\u0100-\u017f]/g;
+/** Used to match Latin Unicode letters (excluding mathematical operators). */
+var reLatin = /[\xc0-\xd6\xd8-\xf6\xf8-\xff\u0100-\u017f]/g;
 
-  /** Used to ensure capturing order of template delimiters. */
-  var reNoMatch = /($^)/;
+/** Used to ensure capturing order of template delimiters. */
+var reNoMatch = /($^)/;
 
-  /** Used to match unescaped characters in compiled string literals. */
-  var reUnescapedString = /['\n\r\u2028\u2029\\]/g;
+/** Used to match unescaped characters in compiled string literals. */
+var reUnescapedString = /['\n\r\u2028\u2029\\]/g;
 
-  /** Used to compose unicode character classes. */
-  var rsAstralRange = '\\ud800-\\udfff',
-      rsComboMarksRange = '\\u0300-\\u036f',
-      reComboHalfMarksRange = '\\ufe20-\\ufe2f',
-      rsComboSymbolsRange = '\\u20d0-\\u20ff',
-      rsComboRange = rsComboMarksRange + reComboHalfMarksRange + rsComboSymbolsRange,
-      rsDingbatRange = '\\u2700-\\u27bf',
-      rsLowerRange = 'a-z\\xdf-\\xf6\\xf8-\\xff',
-      rsMathOpRange = '\\xac\\xb1\\xd7\\xf7',
-      rsNonCharRange = '\\x00-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\xbf',
-      rsPunctuationRange = '\\u2000-\\u206f',
-      rsSpaceRange = ' \\t\\x0b\\f\\xa0\\ufeff\\n\\r\\u2028\\u2029\\u1680\\u180e\\u2000\\u2001\\u2002\\u2003\\u2004\\u2005\\u2006\\u2007\\u2008\\u2009\\u200a\\u202f\\u205f\\u3000',
-      rsUpperRange = 'A-Z\\xc0-\\xd6\\xd8-\\xde',
-      rsVarRange = '\\ufe0e\\ufe0f',
-      rsBreakRange = rsMathOpRange + rsNonCharRange + rsPunctuationRange + rsSpaceRange;
+/** Used to compose unicode character classes. */
+var rsAstralRange = '\\ud800-\\udfff',
+    rsComboMarksRange = '\\u0300-\\u036f',
+    reComboHalfMarksRange = '\\ufe20-\\ufe2f',
+    rsComboSymbolsRange = '\\u20d0-\\u20ff',
+    rsComboRange = rsComboMarksRange + reComboHalfMarksRange + rsComboSymbolsRange,
+    rsDingbatRange = '\\u2700-\\u27bf',
+    rsLowerRange = 'a-z\\xdf-\\xf6\\xf8-\\xff',
+    rsMathOpRange = '\\xac\\xb1\\xd7\\xf7',
+    rsNonCharRange = '\\x00-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\xbf',
+    rsPunctuationRange = '\\u2000-\\u206f',
+    rsSpaceRange = ' \\t\\x0b\\f\\xa0\\ufeff\\n\\r\\u2028\\u2029\\u1680\\u180e\\u2000\\u2001\\u2002\\u2003\\u2004\\u2005\\u2006\\u2007\\u2008\\u2009\\u200a\\u202f\\u205f\\u3000',
+    rsUpperRange = 'A-Z\\xc0-\\xd6\\xd8-\\xde',
+    rsVarRange = '\\ufe0e\\ufe0f',
+    rsBreakRange = rsMathOpRange + rsNonCharRange + rsPunctuationRange + rsSpaceRange;
 
-  /** Used to compose unicode capture groups. */
-  var rsApos = "['\u2019]",
-      rsAstral = '[' + rsAstralRange + ']',
-      rsBreak = '[' + rsBreakRange + ']',
-      rsCombo = '[' + rsComboRange + ']',
-      rsDigits = '\\d+',
-      rsDingbat = '[' + rsDingbatRange + ']',
-      rsLower = '[' + rsLowerRange + ']',
-      rsMisc = '[^' + rsAstralRange + rsBreakRange + rsDigits + rsDingbatRange + rsLowerRange + rsUpperRange + ']',
-      rsFitz = '\\ud83c[\\udffb-\\udfff]',
-      rsModifier = '(?:' + rsCombo + '|' + rsFitz + ')',
-      rsNonAstral = '[^' + rsAstralRange + ']',
-      rsRegional = '(?:\\ud83c[\\udde6-\\uddff]){2}',
-      rsSurrPair = '[\\ud800-\\udbff][\\udc00-\\udfff]',
-      rsUpper = '[' + rsUpperRange + ']',
-      rsZWJ = '\\u200d';
+/** Used to compose unicode capture groups. */
+var rsApos = "['\u2019]",
+    rsAstral = '[' + rsAstralRange + ']',
+    rsBreak = '[' + rsBreakRange + ']',
+    rsCombo = '[' + rsComboRange + ']',
+    rsDigits = '\\d+',
+    rsDingbat = '[' + rsDingbatRange + ']',
+    rsLower = '[' + rsLowerRange + ']',
+    rsMisc = '[^' + rsAstralRange + rsBreakRange + rsDigits + rsDingbatRange + rsLowerRange + rsUpperRange + ']',
+    rsFitz = '\\ud83c[\\udffb-\\udfff]',
+    rsModifier = '(?:' + rsCombo + '|' + rsFitz + ')',
+    rsNonAstral = '[^' + rsAstralRange + ']',
+    rsRegional = '(?:\\ud83c[\\udde6-\\uddff]){2}',
+    rsSurrPair = '[\\ud800-\\udbff][\\udc00-\\udfff]',
+    rsUpper = '[' + rsUpperRange + ']',
+    rsZWJ = '\\u200d';
 
-  /** Used to compose unicode regexes. */
-  var rsMiscLower = '(?:' + rsLower + '|' + rsMisc + ')',
-      rsMiscUpper = '(?:' + rsUpper + '|' + rsMisc + ')',
-      rsOptContrLower = '(?:' + rsApos + '(?:d|ll|m|re|s|t|ve))?',
-      rsOptContrUpper = '(?:' + rsApos + '(?:D|LL|M|RE|S|T|VE))?',
-      reOptMod = rsModifier + '?',
-      rsOptVar = '[' + rsVarRange + ']?',
-      rsOptJoin = '(?:' + rsZWJ + '(?:' + [rsNonAstral, rsRegional, rsSurrPair].join('|') + ')' + rsOptVar + reOptMod + ')*',
-      rsOrdLower = '\\d*(?:1st|2nd|3rd|(?![123])\\dth)(?=\\b|[A-Z_])',
-      rsOrdUpper = '\\d*(?:1ST|2ND|3RD|(?![123])\\dTH)(?=\\b|[a-z_])',
-      rsSeq = rsOptVar + reOptMod + rsOptJoin,
-      rsEmoji = '(?:' + [rsDingbat, rsRegional, rsSurrPair].join('|') + ')' + rsSeq,
-      rsSymbol = '(?:' + [rsNonAstral + rsCombo + '?', rsCombo, rsRegional, rsSurrPair, rsAstral].join('|') + ')';
+/** Used to compose unicode regexes. */
+var rsMiscLower = '(?:' + rsLower + '|' + rsMisc + ')',
+    rsMiscUpper = '(?:' + rsUpper + '|' + rsMisc + ')',
+    rsOptContrLower = '(?:' + rsApos + '(?:d|ll|m|re|s|t|ve))?',
+    rsOptContrUpper = '(?:' + rsApos + '(?:D|LL|M|RE|S|T|VE))?',
+    reOptMod = rsModifier + '?',
+    rsOptVar = '[' + rsVarRange + ']?',
+    rsOptJoin = '(?:' + rsZWJ + '(?:' + [rsNonAstral, rsRegional, rsSurrPair].join('|') + ')' + rsOptVar + reOptMod + ')*',
+    rsOrdLower = '\\d*(?:1st|2nd|3rd|(?![123])\\dth)(?=\\b|[A-Z_])',
+    rsOrdUpper = '\\d*(?:1ST|2ND|3RD|(?![123])\\dTH)(?=\\b|[a-z_])',
+    rsSeq = rsOptVar + reOptMod + rsOptJoin,
+    rsEmoji = '(?:' + [rsDingbat, rsRegional, rsSurrPair].join('|') + ')' + rsSeq,
+    rsSymbol = '(?:' + [rsNonAstral + rsCombo + '?', rsCombo, rsRegional, rsSurrPair, rsAstral].join('|') + ')';
 
-  /** Used to match apostrophes. */
-  var reApos = RegExp(rsApos, 'g');
+/** Used to match apostrophes. */
+var reApos = RegExp(rsApos, 'g');
 
-  /**
-   * Used to match [combining diacritical marks](https://en.wikipedia.org/wiki/Combining_Diacritical_Marks) and
-   * [combining diacritical marks for symbols](https://en.wikipedia.org/wiki/Combining_Diacritical_Marks_for_Symbols).
-   */
-  var reComboMark = RegExp(rsCombo, 'g');
+/**
+ * Used to match [combining diacritical marks](https://en.wikipedia.org/wiki/Combining_Diacritical_Marks) and
+ * [combining diacritical marks for symbols](https://en.wikipedia.org/wiki/Combining_Diacritical_Marks_for_Symbols).
+ */
+var reComboMark = RegExp(rsCombo, 'g');
 
-  /** Used to match [string symbols](https://mathiasbynens.be/notes/javascript-unicode). */
-  var reUnicode = RegExp(rsFitz + '(?=' + rsFitz + ')|' + rsSymbol + rsSeq, 'g');
+/** Used to match [string symbols](https://mathiasbynens.be/notes/javascript-unicode). */
+var reUnicode = RegExp(rsFitz + '(?=' + rsFitz + ')|' + rsSymbol + rsSeq, 'g');
 
-  /** Used to match complex or compound words. */
-  var reUnicodeWord = RegExp([
+/** Used to match complex or compound words. */
+var reUnicodeWord = RegExp([
     rsUpper + '?' + rsLower + '+' + rsOptContrLower + '(?=' + [rsBreak, rsUpper, '$'].join('|') + ')',
     rsMiscUpper + '+' + rsOptContrUpper + '(?=' + [rsBreak, rsUpper + rsMiscLower, '$'].join('|') + ')',
     rsUpper + '?' + rsMiscLower + '+' + rsOptContrLower,
@@ -8288,60 +8302,60 @@ exports.Deprecation = Deprecation;
     rsOrdLower,
     rsDigits,
     rsEmoji
-  ].join('|'), 'g');
+].join('|'), 'g');
 
-  /** Used to detect strings with [zero-width joiners or code points from the astral planes](http://eev.ee/blog/2015/09/12/dark-corners-of-unicode/). */
-  var reHasUnicode = RegExp('[' + rsZWJ + rsAstralRange  + rsComboRange + rsVarRange + ']');
+/** Used to detect strings with [zero-width joiners or code points from the astral planes](http://eev.ee/blog/2015/09/12/dark-corners-of-unicode/). */
+var reHasUnicode = RegExp('[' + rsZWJ + rsAstralRange  + rsComboRange + rsVarRange + ']');
 
-  /** Used to detect strings that need a more robust regexp to match words. */
-  var reHasUnicodeWord = /[a-z][A-Z]|[A-Z]{2}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
+/** Used to detect strings that need a more robust regexp to match words. */
+var reHasUnicodeWord = /[a-z][A-Z]|[A-Z]{2}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
 
-  /** Used to assign default `context` object properties. */
-  var contextProps = [
+/** Used to assign default `context` object properties. */
+var contextProps = [
     'Array', 'Buffer', 'DataView', 'Date', 'Error', 'Float32Array', 'Float64Array',
     'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Map', 'Math', 'Object',
     'Promise', 'RegExp', 'Set', 'String', 'Symbol', 'TypeError', 'Uint8Array',
     'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'WeakMap',
     '_', 'clearTimeout', 'isFinite', 'parseInt', 'setTimeout'
-  ];
+];
 
-  /** Used to make template sourceURLs easier to identify. */
-  var templateCounter = -1;
+/** Used to make template sourceURLs easier to identify. */
+var templateCounter = -1;
 
-  /** Used to identify `toStringTag` values of typed arrays. */
-  var typedArrayTags = {};
-  typedArrayTags[float32Tag] = typedArrayTags[float64Tag] =
-  typedArrayTags[int8Tag] = typedArrayTags[int16Tag] =
-  typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] =
-  typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] =
-  typedArrayTags[uint32Tag] = true;
-  typedArrayTags[argsTag] = typedArrayTags[arrayTag] =
-  typedArrayTags[arrayBufferTag] = typedArrayTags[boolTag] =
-  typedArrayTags[dataViewTag] = typedArrayTags[dateTag] =
-  typedArrayTags[errorTag] = typedArrayTags[funcTag] =
-  typedArrayTags[mapTag] = typedArrayTags[numberTag] =
-  typedArrayTags[objectTag] = typedArrayTags[regexpTag] =
-  typedArrayTags[setTag] = typedArrayTags[stringTag] =
-  typedArrayTags[weakMapTag] = false;
+/** Used to identify `toStringTag` values of typed arrays. */
+var typedArrayTags = {};
+typedArrayTags[float32Tag] = typedArrayTags[float64Tag] =
+typedArrayTags[int8Tag] = typedArrayTags[int16Tag] =
+typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] =
+typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] =
+typedArrayTags[uint32Tag] = true;
+typedArrayTags[argsTag] = typedArrayTags[arrayTag] =
+typedArrayTags[arrayBufferTag] = typedArrayTags[boolTag] =
+typedArrayTags[dataViewTag] = typedArrayTags[dateTag] =
+typedArrayTags[errorTag] = typedArrayTags[funcTag] =
+typedArrayTags[mapTag] = typedArrayTags[numberTag] =
+typedArrayTags[objectTag] = typedArrayTags[regexpTag] =
+typedArrayTags[setTag] = typedArrayTags[stringTag] =
+typedArrayTags[weakMapTag] = false;
 
-  /** Used to identify `toStringTag` values supported by `_.clone`. */
-  var cloneableTags = {};
-  cloneableTags[argsTag] = cloneableTags[arrayTag] =
-  cloneableTags[arrayBufferTag] = cloneableTags[dataViewTag] =
-  cloneableTags[boolTag] = cloneableTags[dateTag] =
-  cloneableTags[float32Tag] = cloneableTags[float64Tag] =
-  cloneableTags[int8Tag] = cloneableTags[int16Tag] =
-  cloneableTags[int32Tag] = cloneableTags[mapTag] =
-  cloneableTags[numberTag] = cloneableTags[objectTag] =
-  cloneableTags[regexpTag] = cloneableTags[setTag] =
-  cloneableTags[stringTag] = cloneableTags[symbolTag] =
-  cloneableTags[uint8Tag] = cloneableTags[uint8ClampedTag] =
-  cloneableTags[uint16Tag] = cloneableTags[uint32Tag] = true;
-  cloneableTags[errorTag] = cloneableTags[funcTag] =
-  cloneableTags[weakMapTag] = false;
+/** Used to identify `toStringTag` values supported by `_.clone`. */
+var cloneableTags = {};
+cloneableTags[argsTag] = cloneableTags[arrayTag] =
+cloneableTags[arrayBufferTag] = cloneableTags[dataViewTag] =
+cloneableTags[boolTag] = cloneableTags[dateTag] =
+cloneableTags[float32Tag] = cloneableTags[float64Tag] =
+cloneableTags[int8Tag] = cloneableTags[int16Tag] =
+cloneableTags[int32Tag] = cloneableTags[mapTag] =
+cloneableTags[numberTag] = cloneableTags[objectTag] =
+cloneableTags[regexpTag] = cloneableTags[setTag] =
+cloneableTags[stringTag] = cloneableTags[symbolTag] =
+cloneableTags[uint8Tag] = cloneableTags[uint8ClampedTag] =
+cloneableTags[uint16Tag] = cloneableTags[uint32Tag] = true;
+cloneableTags[errorTag] = cloneableTags[funcTag] =
+cloneableTags[weakMapTag] = false;
 
-  /** Used to map Latin Unicode letters to basic Latin letters. */
-  var deburredLetters = {
+/** Used to map Latin Unicode letters to basic Latin letters. */
+var deburredLetters = {
     // Latin-1 Supplement block.
     '\xc0': 'A',  '\xc1': 'A', '\xc2': 'A', '\xc3': 'A', '\xc4': 'A', '\xc5': 'A',
     '\xe0': 'a',  '\xe1': 'a', '\xe2': 'a', '\xe3': 'a', '\xe4': 'a', '\xe5': 'a',
@@ -8396,1060 +8410,1060 @@ exports.Deprecation = Deprecation;
     '\u0132': 'IJ', '\u0133': 'ij',
     '\u0152': 'Oe', '\u0153': 'oe',
     '\u0149': "'n", '\u017f': 's'
-  };
+};
 
-  /** Used to map characters to HTML entities. */
-  var htmlEscapes = {
+/** Used to map characters to HTML entities. */
+var htmlEscapes = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
     "'": '&#39;'
-  };
+};
 
-  /** Used to map HTML entities to characters. */
-  var htmlUnescapes = {
+/** Used to map HTML entities to characters. */
+var htmlUnescapes = {
     '&amp;': '&',
     '&lt;': '<',
     '&gt;': '>',
     '&quot;': '"',
     '&#39;': "'"
-  };
+};
 
-  /** Used to escape characters for inclusion in compiled string literals. */
-  var stringEscapes = {
+/** Used to escape characters for inclusion in compiled string literals. */
+var stringEscapes = {
     '\\': '\\',
     "'": "'",
     '\n': 'n',
     '\r': 'r',
     '\u2028': 'u2028',
     '\u2029': 'u2029'
-  };
+};
 
-  /** Built-in method references without a dependency on `root`. */
-  var freeParseFloat = parseFloat,
-      freeParseInt = parseInt;
+/** Built-in method references without a dependency on `root`. */
+var freeParseFloat = parseFloat,
+    freeParseInt = parseInt;
 
-  /** Detect free variable `global` from Node.js. */
-  var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
+/** Detect free variable `global` from Node.js. */
+var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
 
-  /** Detect free variable `self`. */
-  var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
+/** Detect free variable `self`. */
+var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
 
-  /** Used as a reference to the global object. */
-  var root = freeGlobal || freeSelf || Function('return this')();
+/** Used as a reference to the global object. */
+var root = freeGlobal || freeSelf || Function('return this')();
 
-  /** Detect free variable `exports`. */
-  var freeExports =  true && exports && !exports.nodeType && exports;
+/** Detect free variable `exports`. */
+var freeExports =  true && exports && !exports.nodeType && exports;
 
-  /** Detect free variable `module`. */
-  var freeModule = freeExports && "object" == 'object' && module && !module.nodeType && module;
+/** Detect free variable `module`. */
+var freeModule = freeExports && "object" == 'object' && module && !module.nodeType && module;
 
-  /** Detect the popular CommonJS extension `module.exports`. */
-  var moduleExports = freeModule && freeModule.exports === freeExports;
+/** Detect the popular CommonJS extension `module.exports`. */
+var moduleExports = freeModule && freeModule.exports === freeExports;
 
-  /** Detect free variable `process` from Node.js. */
-  var freeProcess = moduleExports && freeGlobal.process;
+/** Detect free variable `process` from Node.js. */
+var freeProcess = moduleExports && freeGlobal.process;
 
-  /** Used to access faster Node.js helpers. */
-  var nodeUtil = (function() {
+/** Used to access faster Node.js helpers. */
+var nodeUtil = (function() {
     try {
-      // Use `util.types` for Node.js 10+.
-      var types = freeModule && freeModule.require && freeModule.require('util').types;
+    // Use `util.types` for Node.js 10+.
+    var types = freeModule && freeModule.require && freeModule.require('util').types;
 
-      if (types) {
+    if (types) {
         return types;
-      }
+    }
 
-      // Legacy `process.binding('util')` for Node.js < 10.
-      return freeProcess && freeProcess.binding && freeProcess.binding('util');
+    // Legacy `process.binding('util')` for Node.js < 10.
+    return freeProcess && freeProcess.binding && freeProcess.binding('util');
     } catch (e) {}
-  }());
+}());
 
-  /* Node.js helper references. */
-  var nodeIsArrayBuffer = nodeUtil && nodeUtil.isArrayBuffer,
-      nodeIsDate = nodeUtil && nodeUtil.isDate,
-      nodeIsMap = nodeUtil && nodeUtil.isMap,
-      nodeIsRegExp = nodeUtil && nodeUtil.isRegExp,
-      nodeIsSet = nodeUtil && nodeUtil.isSet,
-      nodeIsTypedArray = nodeUtil && nodeUtil.isTypedArray;
+/* Node.js helper references. */
+var nodeIsArrayBuffer = nodeUtil && nodeUtil.isArrayBuffer,
+    nodeIsDate = nodeUtil && nodeUtil.isDate,
+    nodeIsMap = nodeUtil && nodeUtil.isMap,
+    nodeIsRegExp = nodeUtil && nodeUtil.isRegExp,
+    nodeIsSet = nodeUtil && nodeUtil.isSet,
+    nodeIsTypedArray = nodeUtil && nodeUtil.isTypedArray;
 
-  /*--------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
 
-  /**
-   * A faster alternative to `Function#apply`, this function invokes `func`
-   * with the `this` binding of `thisArg` and the arguments of `args`.
-   *
-   * @private
-   * @param {Function} func The function to invoke.
-   * @param {*} thisArg The `this` binding of `func`.
-   * @param {Array} args The arguments to invoke `func` with.
-   * @returns {*} Returns the result of `func`.
-   */
-  function apply(func, thisArg, args) {
+/**
+ * A faster alternative to `Function#apply`, this function invokes `func`
+ * with the `this` binding of `thisArg` and the arguments of `args`.
+ *
+ * @private
+ * @param {Function} func The function to invoke.
+ * @param {*} thisArg The `this` binding of `func`.
+ * @param {Array} args The arguments to invoke `func` with.
+ * @returns {*} Returns the result of `func`.
+ */
+function apply(func, thisArg, args) {
     switch (args.length) {
-      case 0: return func.call(thisArg);
-      case 1: return func.call(thisArg, args[0]);
-      case 2: return func.call(thisArg, args[0], args[1]);
-      case 3: return func.call(thisArg, args[0], args[1], args[2]);
+    case 0: return func.call(thisArg);
+    case 1: return func.call(thisArg, args[0]);
+    case 2: return func.call(thisArg, args[0], args[1]);
+    case 3: return func.call(thisArg, args[0], args[1], args[2]);
     }
     return func.apply(thisArg, args);
-  }
+}
 
-  /**
-   * A specialized version of `baseAggregator` for arrays.
-   *
-   * @private
-   * @param {Array} [array] The array to iterate over.
-   * @param {Function} setter The function to set `accumulator` values.
-   * @param {Function} iteratee The iteratee to transform keys.
-   * @param {Object} accumulator The initial aggregated object.
-   * @returns {Function} Returns `accumulator`.
-   */
-  function arrayAggregator(array, setter, iteratee, accumulator) {
+/**
+ * A specialized version of `baseAggregator` for arrays.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} setter The function to set `accumulator` values.
+ * @param {Function} iteratee The iteratee to transform keys.
+ * @param {Object} accumulator The initial aggregated object.
+ * @returns {Function} Returns `accumulator`.
+ */
+function arrayAggregator(array, setter, iteratee, accumulator) {
     var index = -1,
         length = array == null ? 0 : array.length;
 
     while (++index < length) {
-      var value = array[index];
-      setter(accumulator, value, iteratee(value), array);
+    var value = array[index];
+    setter(accumulator, value, iteratee(value), array);
     }
     return accumulator;
-  }
+}
 
-  /**
-   * A specialized version of `_.forEach` for arrays without support for
-   * iteratee shorthands.
-   *
-   * @private
-   * @param {Array} [array] The array to iterate over.
-   * @param {Function} iteratee The function invoked per iteration.
-   * @returns {Array} Returns `array`.
-   */
-  function arrayEach(array, iteratee) {
+/**
+ * A specialized version of `_.forEach` for arrays without support for
+ * iteratee shorthands.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array} Returns `array`.
+ */
+function arrayEach(array, iteratee) {
     var index = -1,
         length = array == null ? 0 : array.length;
 
     while (++index < length) {
-      if (iteratee(array[index], index, array) === false) {
+    if (iteratee(array[index], index, array) === false) {
         break;
-      }
+    }
     }
     return array;
-  }
+}
 
-  /**
-   * A specialized version of `_.forEachRight` for arrays without support for
-   * iteratee shorthands.
-   *
-   * @private
-   * @param {Array} [array] The array to iterate over.
-   * @param {Function} iteratee The function invoked per iteration.
-   * @returns {Array} Returns `array`.
-   */
-  function arrayEachRight(array, iteratee) {
+/**
+ * A specialized version of `_.forEachRight` for arrays without support for
+ * iteratee shorthands.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array} Returns `array`.
+ */
+function arrayEachRight(array, iteratee) {
     var length = array == null ? 0 : array.length;
 
     while (length--) {
-      if (iteratee(array[length], length, array) === false) {
+    if (iteratee(array[length], length, array) === false) {
         break;
-      }
+    }
     }
     return array;
-  }
+}
 
-  /**
-   * A specialized version of `_.every` for arrays without support for
-   * iteratee shorthands.
-   *
-   * @private
-   * @param {Array} [array] The array to iterate over.
-   * @param {Function} predicate The function invoked per iteration.
-   * @returns {boolean} Returns `true` if all elements pass the predicate check,
-   *  else `false`.
-   */
-  function arrayEvery(array, predicate) {
+/**
+ * A specialized version of `_.every` for arrays without support for
+ * iteratee shorthands.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} predicate The function invoked per iteration.
+ * @returns {boolean} Returns `true` if all elements pass the predicate check,
+ *  else `false`.
+ */
+function arrayEvery(array, predicate) {
     var index = -1,
         length = array == null ? 0 : array.length;
 
     while (++index < length) {
-      if (!predicate(array[index], index, array)) {
+    if (!predicate(array[index], index, array)) {
         return false;
-      }
+    }
     }
     return true;
-  }
+}
 
-  /**
-   * A specialized version of `_.filter` for arrays without support for
-   * iteratee shorthands.
-   *
-   * @private
-   * @param {Array} [array] The array to iterate over.
-   * @param {Function} predicate The function invoked per iteration.
-   * @returns {Array} Returns the new filtered array.
-   */
-  function arrayFilter(array, predicate) {
+/**
+ * A specialized version of `_.filter` for arrays without support for
+ * iteratee shorthands.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} predicate The function invoked per iteration.
+ * @returns {Array} Returns the new filtered array.
+ */
+function arrayFilter(array, predicate) {
     var index = -1,
         length = array == null ? 0 : array.length,
         resIndex = 0,
         result = [];
 
     while (++index < length) {
-      var value = array[index];
-      if (predicate(value, index, array)) {
+    var value = array[index];
+    if (predicate(value, index, array)) {
         result[resIndex++] = value;
-      }
+    }
     }
     return result;
-  }
+}
 
-  /**
-   * A specialized version of `_.includes` for arrays without support for
-   * specifying an index to search from.
-   *
-   * @private
-   * @param {Array} [array] The array to inspect.
-   * @param {*} target The value to search for.
-   * @returns {boolean} Returns `true` if `target` is found, else `false`.
-   */
-  function arrayIncludes(array, value) {
+/**
+ * A specialized version of `_.includes` for arrays without support for
+ * specifying an index to search from.
+ *
+ * @private
+ * @param {Array} [array] The array to inspect.
+ * @param {*} target The value to search for.
+ * @returns {boolean} Returns `true` if `target` is found, else `false`.
+ */
+function arrayIncludes(array, value) {
     var length = array == null ? 0 : array.length;
     return !!length && baseIndexOf(array, value, 0) > -1;
-  }
+}
 
-  /**
-   * This function is like `arrayIncludes` except that it accepts a comparator.
-   *
-   * @private
-   * @param {Array} [array] The array to inspect.
-   * @param {*} target The value to search for.
-   * @param {Function} comparator The comparator invoked per element.
-   * @returns {boolean} Returns `true` if `target` is found, else `false`.
-   */
-  function arrayIncludesWith(array, value, comparator) {
+/**
+ * This function is like `arrayIncludes` except that it accepts a comparator.
+ *
+ * @private
+ * @param {Array} [array] The array to inspect.
+ * @param {*} target The value to search for.
+ * @param {Function} comparator The comparator invoked per element.
+ * @returns {boolean} Returns `true` if `target` is found, else `false`.
+ */
+function arrayIncludesWith(array, value, comparator) {
     var index = -1,
         length = array == null ? 0 : array.length;
 
     while (++index < length) {
-      if (comparator(value, array[index])) {
+    if (comparator(value, array[index])) {
         return true;
-      }
+    }
     }
     return false;
-  }
+}
 
-  /**
-   * A specialized version of `_.map` for arrays without support for iteratee
-   * shorthands.
-   *
-   * @private
-   * @param {Array} [array] The array to iterate over.
-   * @param {Function} iteratee The function invoked per iteration.
-   * @returns {Array} Returns the new mapped array.
-   */
-  function arrayMap(array, iteratee) {
+/**
+ * A specialized version of `_.map` for arrays without support for iteratee
+ * shorthands.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array} Returns the new mapped array.
+ */
+function arrayMap(array, iteratee) {
     var index = -1,
         length = array == null ? 0 : array.length,
         result = Array(length);
 
     while (++index < length) {
-      result[index] = iteratee(array[index], index, array);
+    result[index] = iteratee(array[index], index, array);
     }
     return result;
-  }
+}
 
-  /**
-   * Appends the elements of `values` to `array`.
-   *
-   * @private
-   * @param {Array} array The array to modify.
-   * @param {Array} values The values to append.
-   * @returns {Array} Returns `array`.
-   */
-  function arrayPush(array, values) {
+/**
+ * Appends the elements of `values` to `array`.
+ *
+ * @private
+ * @param {Array} array The array to modify.
+ * @param {Array} values The values to append.
+ * @returns {Array} Returns `array`.
+ */
+function arrayPush(array, values) {
     var index = -1,
         length = values.length,
         offset = array.length;
 
     while (++index < length) {
-      array[offset + index] = values[index];
+    array[offset + index] = values[index];
     }
     return array;
-  }
+}
 
-  /**
-   * A specialized version of `_.reduce` for arrays without support for
-   * iteratee shorthands.
-   *
-   * @private
-   * @param {Array} [array] The array to iterate over.
-   * @param {Function} iteratee The function invoked per iteration.
-   * @param {*} [accumulator] The initial value.
-   * @param {boolean} [initAccum] Specify using the first element of `array` as
-   *  the initial value.
-   * @returns {*} Returns the accumulated value.
-   */
-  function arrayReduce(array, iteratee, accumulator, initAccum) {
+/**
+ * A specialized version of `_.reduce` for arrays without support for
+ * iteratee shorthands.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {*} [accumulator] The initial value.
+ * @param {boolean} [initAccum] Specify using the first element of `array` as
+ *  the initial value.
+ * @returns {*} Returns the accumulated value.
+ */
+function arrayReduce(array, iteratee, accumulator, initAccum) {
     var index = -1,
         length = array == null ? 0 : array.length;
 
     if (initAccum && length) {
-      accumulator = array[++index];
+    accumulator = array[++index];
     }
     while (++index < length) {
-      accumulator = iteratee(accumulator, array[index], index, array);
+    accumulator = iteratee(accumulator, array[index], index, array);
     }
     return accumulator;
-  }
+}
 
-  /**
-   * A specialized version of `_.reduceRight` for arrays without support for
-   * iteratee shorthands.
-   *
-   * @private
-   * @param {Array} [array] The array to iterate over.
-   * @param {Function} iteratee The function invoked per iteration.
-   * @param {*} [accumulator] The initial value.
-   * @param {boolean} [initAccum] Specify using the last element of `array` as
-   *  the initial value.
-   * @returns {*} Returns the accumulated value.
-   */
-  function arrayReduceRight(array, iteratee, accumulator, initAccum) {
+/**
+ * A specialized version of `_.reduceRight` for arrays without support for
+ * iteratee shorthands.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {*} [accumulator] The initial value.
+ * @param {boolean} [initAccum] Specify using the last element of `array` as
+ *  the initial value.
+ * @returns {*} Returns the accumulated value.
+ */
+function arrayReduceRight(array, iteratee, accumulator, initAccum) {
     var length = array == null ? 0 : array.length;
     if (initAccum && length) {
-      accumulator = array[--length];
+    accumulator = array[--length];
     }
     while (length--) {
-      accumulator = iteratee(accumulator, array[length], length, array);
+    accumulator = iteratee(accumulator, array[length], length, array);
     }
     return accumulator;
-  }
+}
 
-  /**
-   * A specialized version of `_.some` for arrays without support for iteratee
-   * shorthands.
-   *
-   * @private
-   * @param {Array} [array] The array to iterate over.
-   * @param {Function} predicate The function invoked per iteration.
-   * @returns {boolean} Returns `true` if any element passes the predicate check,
-   *  else `false`.
-   */
-  function arraySome(array, predicate) {
+/**
+ * A specialized version of `_.some` for arrays without support for iteratee
+ * shorthands.
+ *
+ * @private
+ * @param {Array} [array] The array to iterate over.
+ * @param {Function} predicate The function invoked per iteration.
+ * @returns {boolean} Returns `true` if any element passes the predicate check,
+ *  else `false`.
+ */
+function arraySome(array, predicate) {
     var index = -1,
         length = array == null ? 0 : array.length;
 
     while (++index < length) {
-      if (predicate(array[index], index, array)) {
+    if (predicate(array[index], index, array)) {
         return true;
-      }
+    }
     }
     return false;
-  }
+}
 
-  /**
-   * Gets the size of an ASCII `string`.
-   *
-   * @private
-   * @param {string} string The string inspect.
-   * @returns {number} Returns the string size.
-   */
-  var asciiSize = baseProperty('length');
+/**
+ * Gets the size of an ASCII `string`.
+ *
+ * @private
+ * @param {string} string The string inspect.
+ * @returns {number} Returns the string size.
+ */
+var asciiSize = baseProperty('length');
 
-  /**
-   * Converts an ASCII `string` to an array.
-   *
-   * @private
-   * @param {string} string The string to convert.
-   * @returns {Array} Returns the converted array.
-   */
-  function asciiToArray(string) {
+/**
+ * Converts an ASCII `string` to an array.
+ *
+ * @private
+ * @param {string} string The string to convert.
+ * @returns {Array} Returns the converted array.
+ */
+function asciiToArray(string) {
     return string.split('');
-  }
+}
 
-  /**
-   * Splits an ASCII `string` into an array of its words.
-   *
-   * @private
-   * @param {string} The string to inspect.
-   * @returns {Array} Returns the words of `string`.
-   */
-  function asciiWords(string) {
+/**
+ * Splits an ASCII `string` into an array of its words.
+ *
+ * @private
+ * @param {string} The string to inspect.
+ * @returns {Array} Returns the words of `string`.
+ */
+function asciiWords(string) {
     return string.match(reAsciiWord) || [];
-  }
+}
 
-  /**
-   * The base implementation of methods like `_.findKey` and `_.findLastKey`,
-   * without support for iteratee shorthands, which iterates over `collection`
-   * using `eachFunc`.
-   *
-   * @private
-   * @param {Array|Object} collection The collection to inspect.
-   * @param {Function} predicate The function invoked per iteration.
-   * @param {Function} eachFunc The function to iterate over `collection`.
-   * @returns {*} Returns the found element or its key, else `undefined`.
-   */
-  function baseFindKey(collection, predicate, eachFunc) {
+/**
+ * The base implementation of methods like `_.findKey` and `_.findLastKey`,
+ * without support for iteratee shorthands, which iterates over `collection`
+ * using `eachFunc`.
+ *
+ * @private
+ * @param {Array|Object} collection The collection to inspect.
+ * @param {Function} predicate The function invoked per iteration.
+ * @param {Function} eachFunc The function to iterate over `collection`.
+ * @returns {*} Returns the found element or its key, else `undefined`.
+ */
+function baseFindKey(collection, predicate, eachFunc) {
     var result;
     eachFunc(collection, function(value, key, collection) {
-      if (predicate(value, key, collection)) {
+    if (predicate(value, key, collection)) {
         result = key;
         return false;
-      }
+    }
     });
     return result;
-  }
+}
 
-  /**
-   * The base implementation of `_.findIndex` and `_.findLastIndex` without
-   * support for iteratee shorthands.
-   *
-   * @private
-   * @param {Array} array The array to inspect.
-   * @param {Function} predicate The function invoked per iteration.
-   * @param {number} fromIndex The index to search from.
-   * @param {boolean} [fromRight] Specify iterating from right to left.
-   * @returns {number} Returns the index of the matched value, else `-1`.
-   */
-  function baseFindIndex(array, predicate, fromIndex, fromRight) {
+/**
+ * The base implementation of `_.findIndex` and `_.findLastIndex` without
+ * support for iteratee shorthands.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {Function} predicate The function invoked per iteration.
+ * @param {number} fromIndex The index to search from.
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ */
+function baseFindIndex(array, predicate, fromIndex, fromRight) {
     var length = array.length,
         index = fromIndex + (fromRight ? 1 : -1);
 
     while ((fromRight ? index-- : ++index < length)) {
-      if (predicate(array[index], index, array)) {
+    if (predicate(array[index], index, array)) {
         return index;
-      }
+    }
     }
     return -1;
-  }
+}
 
-  /**
-   * The base implementation of `_.indexOf` without `fromIndex` bounds checks.
-   *
-   * @private
-   * @param {Array} array The array to inspect.
-   * @param {*} value The value to search for.
-   * @param {number} fromIndex The index to search from.
-   * @returns {number} Returns the index of the matched value, else `-1`.
-   */
-  function baseIndexOf(array, value, fromIndex) {
+/**
+ * The base implementation of `_.indexOf` without `fromIndex` bounds checks.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {*} value The value to search for.
+ * @param {number} fromIndex The index to search from.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ */
+function baseIndexOf(array, value, fromIndex) {
     return value === value
-      ? strictIndexOf(array, value, fromIndex)
-      : baseFindIndex(array, baseIsNaN, fromIndex);
-  }
+    ? strictIndexOf(array, value, fromIndex)
+    : baseFindIndex(array, baseIsNaN, fromIndex);
+}
 
-  /**
-   * This function is like `baseIndexOf` except that it accepts a comparator.
-   *
-   * @private
-   * @param {Array} array The array to inspect.
-   * @param {*} value The value to search for.
-   * @param {number} fromIndex The index to search from.
-   * @param {Function} comparator The comparator invoked per element.
-   * @returns {number} Returns the index of the matched value, else `-1`.
-   */
-  function baseIndexOfWith(array, value, fromIndex, comparator) {
+/**
+ * This function is like `baseIndexOf` except that it accepts a comparator.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {*} value The value to search for.
+ * @param {number} fromIndex The index to search from.
+ * @param {Function} comparator The comparator invoked per element.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ */
+function baseIndexOfWith(array, value, fromIndex, comparator) {
     var index = fromIndex - 1,
         length = array.length;
 
     while (++index < length) {
-      if (comparator(array[index], value)) {
+    if (comparator(array[index], value)) {
         return index;
-      }
+    }
     }
     return -1;
-  }
+}
 
-  /**
-   * The base implementation of `_.isNaN` without support for number objects.
-   *
-   * @private
-   * @param {*} value The value to check.
-   * @returns {boolean} Returns `true` if `value` is `NaN`, else `false`.
-   */
-  function baseIsNaN(value) {
+/**
+ * The base implementation of `_.isNaN` without support for number objects.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is `NaN`, else `false`.
+ */
+function baseIsNaN(value) {
     return value !== value;
-  }
+}
 
-  /**
-   * The base implementation of `_.mean` and `_.meanBy` without support for
-   * iteratee shorthands.
-   *
-   * @private
-   * @param {Array} array The array to iterate over.
-   * @param {Function} iteratee The function invoked per iteration.
-   * @returns {number} Returns the mean.
-   */
-  function baseMean(array, iteratee) {
+/**
+ * The base implementation of `_.mean` and `_.meanBy` without support for
+ * iteratee shorthands.
+ *
+ * @private
+ * @param {Array} array The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {number} Returns the mean.
+ */
+function baseMean(array, iteratee) {
     var length = array == null ? 0 : array.length;
     return length ? (baseSum(array, iteratee) / length) : NAN;
-  }
+}
 
-  /**
-   * The base implementation of `_.property` without support for deep paths.
-   *
-   * @private
-   * @param {string} key The key of the property to get.
-   * @returns {Function} Returns the new accessor function.
-   */
-  function baseProperty(key) {
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new accessor function.
+ */
+function baseProperty(key) {
     return function(object) {
-      return object == null ? undefined : object[key];
+    return object == null ? undefined : object[key];
     };
-  }
+}
 
-  /**
-   * The base implementation of `_.propertyOf` without support for deep paths.
-   *
-   * @private
-   * @param {Object} object The object to query.
-   * @returns {Function} Returns the new accessor function.
-   */
-  function basePropertyOf(object) {
+/**
+ * The base implementation of `_.propertyOf` without support for deep paths.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {Function} Returns the new accessor function.
+ */
+function basePropertyOf(object) {
     return function(key) {
-      return object == null ? undefined : object[key];
+    return object == null ? undefined : object[key];
     };
-  }
+}
 
-  /**
-   * The base implementation of `_.reduce` and `_.reduceRight`, without support
-   * for iteratee shorthands, which iterates over `collection` using `eachFunc`.
-   *
-   * @private
-   * @param {Array|Object} collection The collection to iterate over.
-   * @param {Function} iteratee The function invoked per iteration.
-   * @param {*} accumulator The initial value.
-   * @param {boolean} initAccum Specify using the first or last element of
-   *  `collection` as the initial value.
-   * @param {Function} eachFunc The function to iterate over `collection`.
-   * @returns {*} Returns the accumulated value.
-   */
-  function baseReduce(collection, iteratee, accumulator, initAccum, eachFunc) {
+/**
+ * The base implementation of `_.reduce` and `_.reduceRight`, without support
+ * for iteratee shorthands, which iterates over `collection` using `eachFunc`.
+ *
+ * @private
+ * @param {Array|Object} collection The collection to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {*} accumulator The initial value.
+ * @param {boolean} initAccum Specify using the first or last element of
+ *  `collection` as the initial value.
+ * @param {Function} eachFunc The function to iterate over `collection`.
+ * @returns {*} Returns the accumulated value.
+ */
+function baseReduce(collection, iteratee, accumulator, initAccum, eachFunc) {
     eachFunc(collection, function(value, index, collection) {
-      accumulator = initAccum
+    accumulator = initAccum
         ? (initAccum = false, value)
         : iteratee(accumulator, value, index, collection);
     });
     return accumulator;
-  }
+}
 
-  /**
-   * The base implementation of `_.sortBy` which uses `comparer` to define the
-   * sort order of `array` and replaces criteria objects with their corresponding
-   * values.
-   *
-   * @private
-   * @param {Array} array The array to sort.
-   * @param {Function} comparer The function to define sort order.
-   * @returns {Array} Returns `array`.
-   */
-  function baseSortBy(array, comparer) {
+/**
+ * The base implementation of `_.sortBy` which uses `comparer` to define the
+ * sort order of `array` and replaces criteria objects with their corresponding
+ * values.
+ *
+ * @private
+ * @param {Array} array The array to sort.
+ * @param {Function} comparer The function to define sort order.
+ * @returns {Array} Returns `array`.
+ */
+function baseSortBy(array, comparer) {
     var length = array.length;
 
     array.sort(comparer);
     while (length--) {
-      array[length] = array[length].value;
+    array[length] = array[length].value;
     }
     return array;
-  }
+}
 
-  /**
-   * The base implementation of `_.sum` and `_.sumBy` without support for
-   * iteratee shorthands.
-   *
-   * @private
-   * @param {Array} array The array to iterate over.
-   * @param {Function} iteratee The function invoked per iteration.
-   * @returns {number} Returns the sum.
-   */
-  function baseSum(array, iteratee) {
+/**
+ * The base implementation of `_.sum` and `_.sumBy` without support for
+ * iteratee shorthands.
+ *
+ * @private
+ * @param {Array} array The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {number} Returns the sum.
+ */
+function baseSum(array, iteratee) {
     var result,
         index = -1,
         length = array.length;
 
     while (++index < length) {
-      var current = iteratee(array[index]);
-      if (current !== undefined) {
+    var current = iteratee(array[index]);
+    if (current !== undefined) {
         result = result === undefined ? current : (result + current);
-      }
+    }
     }
     return result;
-  }
+}
 
-  /**
-   * The base implementation of `_.times` without support for iteratee shorthands
-   * or max array length checks.
-   *
-   * @private
-   * @param {number} n The number of times to invoke `iteratee`.
-   * @param {Function} iteratee The function invoked per iteration.
-   * @returns {Array} Returns the array of results.
-   */
-  function baseTimes(n, iteratee) {
+/**
+ * The base implementation of `_.times` without support for iteratee shorthands
+ * or max array length checks.
+ *
+ * @private
+ * @param {number} n The number of times to invoke `iteratee`.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array} Returns the array of results.
+ */
+function baseTimes(n, iteratee) {
     var index = -1,
         result = Array(n);
 
     while (++index < n) {
-      result[index] = iteratee(index);
+    result[index] = iteratee(index);
     }
     return result;
-  }
+}
 
-  /**
-   * The base implementation of `_.toPairs` and `_.toPairsIn` which creates an array
-   * of key-value pairs for `object` corresponding to the property names of `props`.
-   *
-   * @private
-   * @param {Object} object The object to query.
-   * @param {Array} props The property names to get values for.
-   * @returns {Object} Returns the key-value pairs.
-   */
-  function baseToPairs(object, props) {
+/**
+ * The base implementation of `_.toPairs` and `_.toPairsIn` which creates an array
+ * of key-value pairs for `object` corresponding to the property names of `props`.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @param {Array} props The property names to get values for.
+ * @returns {Object} Returns the key-value pairs.
+ */
+function baseToPairs(object, props) {
     return arrayMap(props, function(key) {
-      return [key, object[key]];
+    return [key, object[key]];
     });
-  }
+}
 
-  /**
-   * The base implementation of `_.trim`.
-   *
-   * @private
-   * @param {string} string The string to trim.
-   * @returns {string} Returns the trimmed string.
-   */
-  function baseTrim(string) {
+/**
+ * The base implementation of `_.trim`.
+ *
+ * @private
+ * @param {string} string The string to trim.
+ * @returns {string} Returns the trimmed string.
+ */
+function baseTrim(string) {
     return string
-      ? string.slice(0, trimmedEndIndex(string) + 1).replace(reTrimStart, '')
-      : string;
-  }
+    ? string.slice(0, trimmedEndIndex(string) + 1).replace(reTrimStart, '')
+    : string;
+}
 
-  /**
-   * The base implementation of `_.unary` without support for storing metadata.
-   *
-   * @private
-   * @param {Function} func The function to cap arguments for.
-   * @returns {Function} Returns the new capped function.
-   */
-  function baseUnary(func) {
+/**
+ * The base implementation of `_.unary` without support for storing metadata.
+ *
+ * @private
+ * @param {Function} func The function to cap arguments for.
+ * @returns {Function} Returns the new capped function.
+ */
+function baseUnary(func) {
     return function(value) {
-      return func(value);
+    return func(value);
     };
-  }
+}
 
-  /**
-   * The base implementation of `_.values` and `_.valuesIn` which creates an
-   * array of `object` property values corresponding to the property names
-   * of `props`.
-   *
-   * @private
-   * @param {Object} object The object to query.
-   * @param {Array} props The property names to get values for.
-   * @returns {Object} Returns the array of property values.
-   */
-  function baseValues(object, props) {
+/**
+ * The base implementation of `_.values` and `_.valuesIn` which creates an
+ * array of `object` property values corresponding to the property names
+ * of `props`.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @param {Array} props The property names to get values for.
+ * @returns {Object} Returns the array of property values.
+ */
+function baseValues(object, props) {
     return arrayMap(props, function(key) {
-      return object[key];
+    return object[key];
     });
-  }
+}
 
-  /**
-   * Checks if a `cache` value for `key` exists.
-   *
-   * @private
-   * @param {Object} cache The cache to query.
-   * @param {string} key The key of the entry to check.
-   * @returns {boolean} Returns `true` if an entry for `key` exists, else `false`.
-   */
-  function cacheHas(cache, key) {
+/**
+ * Checks if a `cache` value for `key` exists.
+ *
+ * @private
+ * @param {Object} cache The cache to query.
+ * @param {string} key The key of the entry to check.
+ * @returns {boolean} Returns `true` if an entry for `key` exists, else `false`.
+ */
+function cacheHas(cache, key) {
     return cache.has(key);
-  }
+}
 
-  /**
-   * Used by `_.trim` and `_.trimStart` to get the index of the first string symbol
-   * that is not found in the character symbols.
-   *
-   * @private
-   * @param {Array} strSymbols The string symbols to inspect.
-   * @param {Array} chrSymbols The character symbols to find.
-   * @returns {number} Returns the index of the first unmatched string symbol.
-   */
-  function charsStartIndex(strSymbols, chrSymbols) {
+/**
+ * Used by `_.trim` and `_.trimStart` to get the index of the first string symbol
+ * that is not found in the character symbols.
+ *
+ * @private
+ * @param {Array} strSymbols The string symbols to inspect.
+ * @param {Array} chrSymbols The character symbols to find.
+ * @returns {number} Returns the index of the first unmatched string symbol.
+ */
+function charsStartIndex(strSymbols, chrSymbols) {
     var index = -1,
         length = strSymbols.length;
 
     while (++index < length && baseIndexOf(chrSymbols, strSymbols[index], 0) > -1) {}
     return index;
-  }
+}
 
-  /**
-   * Used by `_.trim` and `_.trimEnd` to get the index of the last string symbol
-   * that is not found in the character symbols.
-   *
-   * @private
-   * @param {Array} strSymbols The string symbols to inspect.
-   * @param {Array} chrSymbols The character symbols to find.
-   * @returns {number} Returns the index of the last unmatched string symbol.
-   */
-  function charsEndIndex(strSymbols, chrSymbols) {
+/**
+ * Used by `_.trim` and `_.trimEnd` to get the index of the last string symbol
+ * that is not found in the character symbols.
+ *
+ * @private
+ * @param {Array} strSymbols The string symbols to inspect.
+ * @param {Array} chrSymbols The character symbols to find.
+ * @returns {number} Returns the index of the last unmatched string symbol.
+ */
+function charsEndIndex(strSymbols, chrSymbols) {
     var index = strSymbols.length;
 
     while (index-- && baseIndexOf(chrSymbols, strSymbols[index], 0) > -1) {}
     return index;
-  }
+}
 
-  /**
-   * Gets the number of `placeholder` occurrences in `array`.
-   *
-   * @private
-   * @param {Array} array The array to inspect.
-   * @param {*} placeholder The placeholder to search for.
-   * @returns {number} Returns the placeholder count.
-   */
-  function countHolders(array, placeholder) {
+/**
+ * Gets the number of `placeholder` occurrences in `array`.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {*} placeholder The placeholder to search for.
+ * @returns {number} Returns the placeholder count.
+ */
+function countHolders(array, placeholder) {
     var length = array.length,
         result = 0;
 
     while (length--) {
-      if (array[length] === placeholder) {
+    if (array[length] === placeholder) {
         ++result;
-      }
+    }
     }
     return result;
-  }
+}
 
-  /**
-   * Used by `_.deburr` to convert Latin-1 Supplement and Latin Extended-A
-   * letters to basic Latin letters.
-   *
-   * @private
-   * @param {string} letter The matched letter to deburr.
-   * @returns {string} Returns the deburred letter.
-   */
-  var deburrLetter = basePropertyOf(deburredLetters);
+/**
+ * Used by `_.deburr` to convert Latin-1 Supplement and Latin Extended-A
+ * letters to basic Latin letters.
+ *
+ * @private
+ * @param {string} letter The matched letter to deburr.
+ * @returns {string} Returns the deburred letter.
+ */
+var deburrLetter = basePropertyOf(deburredLetters);
 
-  /**
-   * Used by `_.escape` to convert characters to HTML entities.
-   *
-   * @private
-   * @param {string} chr The matched character to escape.
-   * @returns {string} Returns the escaped character.
-   */
-  var escapeHtmlChar = basePropertyOf(htmlEscapes);
+/**
+ * Used by `_.escape` to convert characters to HTML entities.
+ *
+ * @private
+ * @param {string} chr The matched character to escape.
+ * @returns {string} Returns the escaped character.
+ */
+var escapeHtmlChar = basePropertyOf(htmlEscapes);
 
-  /**
-   * Used by `_.template` to escape characters for inclusion in compiled string literals.
-   *
-   * @private
-   * @param {string} chr The matched character to escape.
-   * @returns {string} Returns the escaped character.
-   */
-  function escapeStringChar(chr) {
+/**
+ * Used by `_.template` to escape characters for inclusion in compiled string literals.
+ *
+ * @private
+ * @param {string} chr The matched character to escape.
+ * @returns {string} Returns the escaped character.
+ */
+function escapeStringChar(chr) {
     return '\\' + stringEscapes[chr];
-  }
+}
 
-  /**
-   * Gets the value at `key` of `object`.
-   *
-   * @private
-   * @param {Object} [object] The object to query.
-   * @param {string} key The key of the property to get.
-   * @returns {*} Returns the property value.
-   */
-  function getValue(object, key) {
+/**
+ * Gets the value at `key` of `object`.
+ *
+ * @private
+ * @param {Object} [object] The object to query.
+ * @param {string} key The key of the property to get.
+ * @returns {*} Returns the property value.
+ */
+function getValue(object, key) {
     return object == null ? undefined : object[key];
-  }
+}
 
-  /**
-   * Checks if `string` contains Unicode symbols.
-   *
-   * @private
-   * @param {string} string The string to inspect.
-   * @returns {boolean} Returns `true` if a symbol is found, else `false`.
-   */
-  function hasUnicode(string) {
+/**
+ * Checks if `string` contains Unicode symbols.
+ *
+ * @private
+ * @param {string} string The string to inspect.
+ * @returns {boolean} Returns `true` if a symbol is found, else `false`.
+ */
+function hasUnicode(string) {
     return reHasUnicode.test(string);
-  }
+}
 
-  /**
-   * Checks if `string` contains a word composed of Unicode symbols.
-   *
-   * @private
-   * @param {string} string The string to inspect.
-   * @returns {boolean} Returns `true` if a word is found, else `false`.
-   */
-  function hasUnicodeWord(string) {
+/**
+ * Checks if `string` contains a word composed of Unicode symbols.
+ *
+ * @private
+ * @param {string} string The string to inspect.
+ * @returns {boolean} Returns `true` if a word is found, else `false`.
+ */
+function hasUnicodeWord(string) {
     return reHasUnicodeWord.test(string);
-  }
+}
 
-  /**
-   * Converts `iterator` to an array.
-   *
-   * @private
-   * @param {Object} iterator The iterator to convert.
-   * @returns {Array} Returns the converted array.
-   */
-  function iteratorToArray(iterator) {
+/**
+ * Converts `iterator` to an array.
+ *
+ * @private
+ * @param {Object} iterator The iterator to convert.
+ * @returns {Array} Returns the converted array.
+ */
+function iteratorToArray(iterator) {
     var data,
         result = [];
 
     while (!(data = iterator.next()).done) {
-      result.push(data.value);
+    result.push(data.value);
     }
     return result;
-  }
+}
 
-  /**
-   * Converts `map` to its key-value pairs.
-   *
-   * @private
-   * @param {Object} map The map to convert.
-   * @returns {Array} Returns the key-value pairs.
-   */
-  function mapToArray(map) {
+/**
+ * Converts `map` to its key-value pairs.
+ *
+ * @private
+ * @param {Object} map The map to convert.
+ * @returns {Array} Returns the key-value pairs.
+ */
+function mapToArray(map) {
     var index = -1,
         result = Array(map.size);
 
     map.forEach(function(value, key) {
-      result[++index] = [key, value];
+    result[++index] = [key, value];
     });
     return result;
-  }
+}
 
-  /**
-   * Creates a unary function that invokes `func` with its argument transformed.
-   *
-   * @private
-   * @param {Function} func The function to wrap.
-   * @param {Function} transform The argument transform.
-   * @returns {Function} Returns the new function.
-   */
-  function overArg(func, transform) {
+/**
+ * Creates a unary function that invokes `func` with its argument transformed.
+ *
+ * @private
+ * @param {Function} func The function to wrap.
+ * @param {Function} transform The argument transform.
+ * @returns {Function} Returns the new function.
+ */
+function overArg(func, transform) {
     return function(arg) {
-      return func(transform(arg));
+    return func(transform(arg));
     };
-  }
+}
 
-  /**
-   * Replaces all `placeholder` elements in `array` with an internal placeholder
-   * and returns an array of their indexes.
-   *
-   * @private
-   * @param {Array} array The array to modify.
-   * @param {*} placeholder The placeholder to replace.
-   * @returns {Array} Returns the new array of placeholder indexes.
-   */
-  function replaceHolders(array, placeholder) {
+/**
+ * Replaces all `placeholder` elements in `array` with an internal placeholder
+ * and returns an array of their indexes.
+ *
+ * @private
+ * @param {Array} array The array to modify.
+ * @param {*} placeholder The placeholder to replace.
+ * @returns {Array} Returns the new array of placeholder indexes.
+ */
+function replaceHolders(array, placeholder) {
     var index = -1,
         length = array.length,
         resIndex = 0,
         result = [];
 
     while (++index < length) {
-      var value = array[index];
-      if (value === placeholder || value === PLACEHOLDER) {
+    var value = array[index];
+    if (value === placeholder || value === PLACEHOLDER) {
         array[index] = PLACEHOLDER;
         result[resIndex++] = index;
-      }
+    }
     }
     return result;
-  }
+}
 
-  /**
-   * Converts `set` to an array of its values.
-   *
-   * @private
-   * @param {Object} set The set to convert.
-   * @returns {Array} Returns the values.
-   */
-  function setToArray(set) {
+/**
+ * Converts `set` to an array of its values.
+ *
+ * @private
+ * @param {Object} set The set to convert.
+ * @returns {Array} Returns the values.
+ */
+function setToArray(set) {
     var index = -1,
         result = Array(set.size);
 
     set.forEach(function(value) {
-      result[++index] = value;
+    result[++index] = value;
     });
     return result;
-  }
+}
 
-  /**
-   * Converts `set` to its value-value pairs.
-   *
-   * @private
-   * @param {Object} set The set to convert.
-   * @returns {Array} Returns the value-value pairs.
-   */
-  function setToPairs(set) {
+/**
+ * Converts `set` to its value-value pairs.
+ *
+ * @private
+ * @param {Object} set The set to convert.
+ * @returns {Array} Returns the value-value pairs.
+ */
+function setToPairs(set) {
     var index = -1,
         result = Array(set.size);
 
     set.forEach(function(value) {
-      result[++index] = [value, value];
+    result[++index] = [value, value];
     });
     return result;
-  }
+}
 
-  /**
-   * A specialized version of `_.indexOf` which performs strict equality
-   * comparisons of values, i.e. `===`.
-   *
-   * @private
-   * @param {Array} array The array to inspect.
-   * @param {*} value The value to search for.
-   * @param {number} fromIndex The index to search from.
-   * @returns {number} Returns the index of the matched value, else `-1`.
-   */
-  function strictIndexOf(array, value, fromIndex) {
+/**
+ * A specialized version of `_.indexOf` which performs strict equality
+ * comparisons of values, i.e. `===`.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {*} value The value to search for.
+ * @param {number} fromIndex The index to search from.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ */
+function strictIndexOf(array, value, fromIndex) {
     var index = fromIndex - 1,
         length = array.length;
 
     while (++index < length) {
-      if (array[index] === value) {
+    if (array[index] === value) {
         return index;
-      }
+    }
     }
     return -1;
-  }
+}
 
-  /**
-   * A specialized version of `_.lastIndexOf` which performs strict equality
-   * comparisons of values, i.e. `===`.
-   *
-   * @private
-   * @param {Array} array The array to inspect.
-   * @param {*} value The value to search for.
-   * @param {number} fromIndex The index to search from.
-   * @returns {number} Returns the index of the matched value, else `-1`.
-   */
-  function strictLastIndexOf(array, value, fromIndex) {
+/**
+ * A specialized version of `_.lastIndexOf` which performs strict equality
+ * comparisons of values, i.e. `===`.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {*} value The value to search for.
+ * @param {number} fromIndex The index to search from.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ */
+function strictLastIndexOf(array, value, fromIndex) {
     var index = fromIndex + 1;
     while (index--) {
-      if (array[index] === value) {
+    if (array[index] === value) {
         return index;
-      }
+    }
     }
     return index;
-  }
+}
 
-  /**
-   * Gets the number of symbols in `string`.
-   *
-   * @private
-   * @param {string} string The string to inspect.
-   * @returns {number} Returns the string size.
-   */
-  function stringSize(string) {
+/**
+ * Gets the number of symbols in `string`.
+ *
+ * @private
+ * @param {string} string The string to inspect.
+ * @returns {number} Returns the string size.
+ */
+function stringSize(string) {
     return hasUnicode(string)
-      ? unicodeSize(string)
-      : asciiSize(string);
-  }
+    ? unicodeSize(string)
+    : asciiSize(string);
+}
 
-  /**
-   * Converts `string` to an array.
-   *
-   * @private
-   * @param {string} string The string to convert.
-   * @returns {Array} Returns the converted array.
-   */
-  function stringToArray(string) {
+/**
+ * Converts `string` to an array.
+ *
+ * @private
+ * @param {string} string The string to convert.
+ * @returns {Array} Returns the converted array.
+ */
+function stringToArray(string) {
     return hasUnicode(string)
-      ? unicodeToArray(string)
-      : asciiToArray(string);
-  }
+    ? unicodeToArray(string)
+    : asciiToArray(string);
+}
 
-  /**
-   * Used by `_.trim` and `_.trimEnd` to get the index of the last non-whitespace
-   * character of `string`.
-   *
-   * @private
-   * @param {string} string The string to inspect.
-   * @returns {number} Returns the index of the last non-whitespace character.
-   */
-  function trimmedEndIndex(string) {
+/**
+ * Used by `_.trim` and `_.trimEnd` to get the index of the last non-whitespace
+ * character of `string`.
+ *
+ * @private
+ * @param {string} string The string to inspect.
+ * @returns {number} Returns the index of the last non-whitespace character.
+ */
+function trimmedEndIndex(string) {
     var index = string.length;
 
     while (index-- && reWhitespace.test(string.charAt(index))) {}
     return index;
-  }
+}
 
-  /**
-   * Used by `_.unescape` to convert HTML entities to characters.
-   *
-   * @private
-   * @param {string} chr The matched character to unescape.
-   * @returns {string} Returns the unescaped character.
-   */
-  var unescapeHtmlChar = basePropertyOf(htmlUnescapes);
+/**
+ * Used by `_.unescape` to convert HTML entities to characters.
+ *
+ * @private
+ * @param {string} chr The matched character to unescape.
+ * @returns {string} Returns the unescaped character.
+ */
+var unescapeHtmlChar = basePropertyOf(htmlUnescapes);
 
-  /**
-   * Gets the size of a Unicode `string`.
-   *
-   * @private
-   * @param {string} string The string inspect.
-   * @returns {number} Returns the string size.
-   */
-  function unicodeSize(string) {
+/**
+ * Gets the size of a Unicode `string`.
+ *
+ * @private
+ * @param {string} string The string inspect.
+ * @returns {number} Returns the string size.
+ */
+function unicodeSize(string) {
     var result = reUnicode.lastIndex = 0;
     while (reUnicode.test(string)) {
-      ++result;
+    ++result;
     }
     return result;
-  }
+}
 
-  /**
-   * Converts a Unicode `string` to an array.
-   *
-   * @private
-   * @param {string} string The string to convert.
-   * @returns {Array} Returns the converted array.
-   */
-  function unicodeToArray(string) {
+/**
+ * Converts a Unicode `string` to an array.
+ *
+ * @private
+ * @param {string} string The string to convert.
+ * @returns {Array} Returns the converted array.
+ */
+function unicodeToArray(string) {
     return string.match(reUnicode) || [];
-  }
+}
 
-  /**
-   * Splits a Unicode `string` into an array of its words.
-   *
-   * @private
-   * @param {string} The string to inspect.
-   * @returns {Array} Returns the words of `string`.
-   */
-  function unicodeWords(string) {
+/**
+ * Splits a Unicode `string` into an array of its words.
+ *
+ * @private
+ * @param {string} The string to inspect.
+ * @returns {Array} Returns the words of `string`.
+ */
+function unicodeWords(string) {
     return string.match(reUnicodeWord) || [];
-  }
+}
 
-  /*--------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
 
-  /**
-   * Create a new pristine `lodash` function using the `context` object.
-   *
-   * @static
-   * @memberOf _
-   * @since 1.1.0
-   * @category Util
-   * @param {Object} [context=root] The context object.
-   * @returns {Function} Returns a new `lodash` function.
-   * @example
-   *
-   * _.mixin({ 'foo': _.constant('foo') });
-   *
-   * var lodash = _.runInContext();
-   * lodash.mixin({ 'bar': lodash.constant('bar') });
-   *
-   * _.isFunction(_.foo);
-   * // => true
-   * _.isFunction(_.bar);
-   * // => false
-   *
-   * lodash.isFunction(lodash.foo);
-   * // => false
-   * lodash.isFunction(lodash.bar);
-   * // => true
-   *
-   * // Create a suped-up `defer` in Node.js.
-   * var defer = _.runInContext({ 'setTimeout': setImmediate }).defer;
-   */
-  var runInContext = (function runInContext(context) {
+/**
+ * Create a new pristine `lodash` function using the `context` object.
+ *
+ * @static
+ * @memberOf _
+ * @since 1.1.0
+ * @category Util
+ * @param {Object} [context=root] The context object.
+ * @returns {Function} Returns a new `lodash` function.
+ * @example
+ *
+ * _.mixin({ 'foo': _.constant('foo') });
+ *
+ * var lodash = _.runInContext();
+ * lodash.mixin({ 'bar': lodash.constant('bar') });
+ *
+ * _.isFunction(_.foo);
+ * // => true
+ * _.isFunction(_.bar);
+ * // => false
+ *
+ * lodash.isFunction(lodash.foo);
+ * // => false
+ * lodash.isFunction(lodash.bar);
+ * // => true
+ *
+ * // Create a suped-up `defer` in Node.js.
+ * var defer = _.runInContext({ 'setTimeout': setImmediate }).defer;
+ */
+var runInContext = (function runInContext(context) {
     context = context == null ? root : _.defaults(root.Object(), context, _.pick(root, contextProps));
 
     /** Built-in constructor references. */
@@ -9482,8 +9496,8 @@ exports.Deprecation = Deprecation;
 
     /** Used to detect methods masquerading as native. */
     var maskSrcKey = (function() {
-      var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || '');
-      return uid ? ('Symbol(src)_1.' + uid) : '';
+    var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || '');
+    return uid ? ('Symbol(src)_1.' + uid) : '';
     }());
 
     /**
@@ -9501,8 +9515,8 @@ exports.Deprecation = Deprecation;
 
     /** Used to detect if a method is native. */
     var reIsNative = RegExp('^' +
-      funcToString.call(hasOwnProperty).replace(reRegExpChar, '\\$&')
-      .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
+    funcToString.call(hasOwnProperty).replace(reRegExpChar, '\\$&')
+    .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
     );
 
     /** Built-in value references. */
@@ -9519,11 +9533,11 @@ exports.Deprecation = Deprecation;
         symToStringTag = Symbol ? Symbol.toStringTag : undefined;
 
     var defineProperty = (function() {
-      try {
+    try {
         var func = getNative(Object, 'defineProperty');
         func({}, '', {});
         return func;
-      } catch (e) {}
+    } catch (e) {}
     }());
 
     /** Mocked built-ins. */
@@ -9692,15 +9706,15 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function lodash(value) {
-      if (isObjectLike(value) && !isArray(value) && !(value instanceof LazyWrapper)) {
+    if (isObjectLike(value) && !isArray(value) && !(value instanceof LazyWrapper)) {
         if (value instanceof LodashWrapper) {
-          return value;
+        return value;
         }
         if (hasOwnProperty.call(value, '__wrapped__')) {
-          return wrapperClone(value);
+        return wrapperClone(value);
         }
-      }
-      return new LodashWrapper(value);
+    }
+    return new LodashWrapper(value);
     }
 
     /**
@@ -9712,19 +9726,19 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the new object.
      */
     var baseCreate = (function() {
-      function object() {}
-      return function(proto) {
+    function object() {}
+    return function(proto) {
         if (!isObject(proto)) {
-          return {};
+        return {};
         }
         if (objectCreate) {
-          return objectCreate(proto);
+        return objectCreate(proto);
         }
         object.prototype = proto;
         var result = new object;
         object.prototype = undefined;
         return result;
-      };
+    };
     }());
 
     /**
@@ -9733,7 +9747,7 @@ exports.Deprecation = Deprecation;
      * @private
      */
     function baseLodash() {
-      // No operation performed.
+    // No operation performed.
     }
 
     /**
@@ -9744,11 +9758,11 @@ exports.Deprecation = Deprecation;
      * @param {boolean} [chainAll] Enable explicit method chain sequences.
      */
     function LodashWrapper(value, chainAll) {
-      this.__wrapped__ = value;
-      this.__actions__ = [];
-      this.__chain__ = !!chainAll;
-      this.__index__ = 0;
-      this.__values__ = undefined;
+    this.__wrapped__ = value;
+    this.__actions__ = [];
+    this.__chain__ = !!chainAll;
+    this.__index__ = 0;
+    this.__values__ = undefined;
     }
 
     /**
@@ -9762,45 +9776,45 @@ exports.Deprecation = Deprecation;
      */
     lodash.templateSettings = {
 
-      /**
-       * Used to detect `data` property values to be HTML-escaped.
-       *
-       * @memberOf _.templateSettings
-       * @type {RegExp}
-       */
-      'escape': reEscape,
+    /**
+     * Used to detect `data` property values to be HTML-escaped.
+     *
+     * @memberOf _.templateSettings
+     * @type {RegExp}
+     */
+    'escape': reEscape,
 
-      /**
-       * Used to detect code to be evaluated.
-       *
-       * @memberOf _.templateSettings
-       * @type {RegExp}
-       */
-      'evaluate': reEvaluate,
+    /**
+     * Used to detect code to be evaluated.
+     *
+     * @memberOf _.templateSettings
+     * @type {RegExp}
+     */
+    'evaluate': reEvaluate,
 
-      /**
-       * Used to detect `data` property values to inject.
-       *
-       * @memberOf _.templateSettings
-       * @type {RegExp}
-       */
-      'interpolate': reInterpolate,
+    /**
+     * Used to detect `data` property values to inject.
+     *
+     * @memberOf _.templateSettings
+     * @type {RegExp}
+     */
+    'interpolate': reInterpolate,
 
-      /**
-       * Used to reference the data object in the template text.
-       *
-       * @memberOf _.templateSettings
-       * @type {string}
-       */
-      'variable': '',
+    /**
+     * Used to reference the data object in the template text.
+     *
+     * @memberOf _.templateSettings
+     * @type {string}
+     */
+    'variable': '',
 
-      /**
-       * Used to import variables into the compiled template.
-       *
-       * @memberOf _.templateSettings
-       * @type {Object}
-       */
-      'imports': {
+    /**
+     * Used to import variables into the compiled template.
+     *
+     * @memberOf _.templateSettings
+     * @type {Object}
+     */
+    'imports': {
 
         /**
          * A reference to the `lodash` function.
@@ -9809,7 +9823,7 @@ exports.Deprecation = Deprecation;
          * @type {Function}
          */
         '_': lodash
-      }
+    }
     };
 
     // Ensure wrappers are instances of `baseLodash`.
@@ -9829,13 +9843,13 @@ exports.Deprecation = Deprecation;
      * @param {*} value The value to wrap.
      */
     function LazyWrapper(value) {
-      this.__wrapped__ = value;
-      this.__actions__ = [];
-      this.__dir__ = 1;
-      this.__filtered__ = false;
-      this.__iteratees__ = [];
-      this.__takeCount__ = MAX_ARRAY_LENGTH;
-      this.__views__ = [];
+    this.__wrapped__ = value;
+    this.__actions__ = [];
+    this.__dir__ = 1;
+    this.__filtered__ = false;
+    this.__iteratees__ = [];
+    this.__takeCount__ = MAX_ARRAY_LENGTH;
+    this.__views__ = [];
     }
 
     /**
@@ -9847,14 +9861,14 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the cloned `LazyWrapper` object.
      */
     function lazyClone() {
-      var result = new LazyWrapper(this.__wrapped__);
-      result.__actions__ = copyArray(this.__actions__);
-      result.__dir__ = this.__dir__;
-      result.__filtered__ = this.__filtered__;
-      result.__iteratees__ = copyArray(this.__iteratees__);
-      result.__takeCount__ = this.__takeCount__;
-      result.__views__ = copyArray(this.__views__);
-      return result;
+    var result = new LazyWrapper(this.__wrapped__);
+    result.__actions__ = copyArray(this.__actions__);
+    result.__dir__ = this.__dir__;
+    result.__filtered__ = this.__filtered__;
+    result.__iteratees__ = copyArray(this.__iteratees__);
+    result.__takeCount__ = this.__takeCount__;
+    result.__views__ = copyArray(this.__views__);
+    return result;
     }
 
     /**
@@ -9866,15 +9880,15 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the new reversed `LazyWrapper` object.
      */
     function lazyReverse() {
-      if (this.__filtered__) {
+    if (this.__filtered__) {
         var result = new LazyWrapper(this);
         result.__dir__ = -1;
         result.__filtered__ = true;
-      } else {
+    } else {
         result = this.clone();
         result.__dir__ *= -1;
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -9886,52 +9900,52 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the unwrapped value.
      */
     function lazyValue() {
-      var array = this.__wrapped__.value(),
-          dir = this.__dir__,
-          isArr = isArray(array),
-          isRight = dir < 0,
-          arrLength = isArr ? array.length : 0,
-          view = getView(0, arrLength, this.__views__),
-          start = view.start,
-          end = view.end,
-          length = end - start,
-          index = isRight ? end : (start - 1),
-          iteratees = this.__iteratees__,
-          iterLength = iteratees.length,
-          resIndex = 0,
-          takeCount = nativeMin(length, this.__takeCount__);
+    var array = this.__wrapped__.value(),
+        dir = this.__dir__,
+        isArr = isArray(array),
+        isRight = dir < 0,
+        arrLength = isArr ? array.length : 0,
+        view = getView(0, arrLength, this.__views__),
+        start = view.start,
+        end = view.end,
+        length = end - start,
+        index = isRight ? end : (start - 1),
+        iteratees = this.__iteratees__,
+        iterLength = iteratees.length,
+        resIndex = 0,
+        takeCount = nativeMin(length, this.__takeCount__);
 
-      if (!isArr || (!isRight && arrLength == length && takeCount == length)) {
+    if (!isArr || (!isRight && arrLength == length && takeCount == length)) {
         return baseWrapperValue(array, this.__actions__);
-      }
-      var result = [];
+    }
+    var result = [];
 
-      outer:
-      while (length-- && resIndex < takeCount) {
+    outer:
+    while (length-- && resIndex < takeCount) {
         index += dir;
 
         var iterIndex = -1,
             value = array[index];
 
         while (++iterIndex < iterLength) {
-          var data = iteratees[iterIndex],
-              iteratee = data.iteratee,
-              type = data.type,
-              computed = iteratee(value);
+        var data = iteratees[iterIndex],
+            iteratee = data.iteratee,
+            type = data.type,
+            computed = iteratee(value);
 
-          if (type == LAZY_MAP_FLAG) {
+        if (type == LAZY_MAP_FLAG) {
             value = computed;
-          } else if (!computed) {
+        } else if (!computed) {
             if (type == LAZY_FILTER_FLAG) {
-              continue outer;
+            continue outer;
             } else {
-              break outer;
+            break outer;
             }
-          }
+        }
         }
         result[resIndex++] = value;
-      }
-      return result;
+    }
+    return result;
     }
 
     // Ensure `LazyWrapper` is an instance of `baseLodash`.
@@ -9948,14 +9962,14 @@ exports.Deprecation = Deprecation;
      * @param {Array} [entries] The key-value pairs to cache.
      */
     function Hash(entries) {
-      var index = -1,
-          length = entries == null ? 0 : entries.length;
+    var index = -1,
+        length = entries == null ? 0 : entries.length;
 
-      this.clear();
-      while (++index < length) {
+    this.clear();
+    while (++index < length) {
         var entry = entries[index];
         this.set(entry[0], entry[1]);
-      }
+    }
     }
 
     /**
@@ -9966,8 +9980,8 @@ exports.Deprecation = Deprecation;
      * @memberOf Hash
      */
     function hashClear() {
-      this.__data__ = nativeCreate ? nativeCreate(null) : {};
-      this.size = 0;
+    this.__data__ = nativeCreate ? nativeCreate(null) : {};
+    this.size = 0;
     }
 
     /**
@@ -9981,9 +9995,9 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if the entry was removed, else `false`.
      */
     function hashDelete(key) {
-      var result = this.has(key) && delete this.__data__[key];
-      this.size -= result ? 1 : 0;
-      return result;
+    var result = this.has(key) && delete this.__data__[key];
+    this.size -= result ? 1 : 0;
+    return result;
     }
 
     /**
@@ -9996,12 +10010,12 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the entry value.
      */
     function hashGet(key) {
-      var data = this.__data__;
-      if (nativeCreate) {
+    var data = this.__data__;
+    if (nativeCreate) {
         var result = data[key];
         return result === HASH_UNDEFINED ? undefined : result;
-      }
-      return hasOwnProperty.call(data, key) ? data[key] : undefined;
+    }
+    return hasOwnProperty.call(data, key) ? data[key] : undefined;
     }
 
     /**
@@ -10014,8 +10028,8 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if an entry for `key` exists, else `false`.
      */
     function hashHas(key) {
-      var data = this.__data__;
-      return nativeCreate ? (data[key] !== undefined) : hasOwnProperty.call(data, key);
+    var data = this.__data__;
+    return nativeCreate ? (data[key] !== undefined) : hasOwnProperty.call(data, key);
     }
 
     /**
@@ -10029,10 +10043,10 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the hash instance.
      */
     function hashSet(key, value) {
-      var data = this.__data__;
-      this.size += this.has(key) ? 0 : 1;
-      data[key] = (nativeCreate && value === undefined) ? HASH_UNDEFINED : value;
-      return this;
+    var data = this.__data__;
+    this.size += this.has(key) ? 0 : 1;
+    data[key] = (nativeCreate && value === undefined) ? HASH_UNDEFINED : value;
+    return this;
     }
 
     // Add methods to `Hash`.
@@ -10052,14 +10066,14 @@ exports.Deprecation = Deprecation;
      * @param {Array} [entries] The key-value pairs to cache.
      */
     function ListCache(entries) {
-      var index = -1,
-          length = entries == null ? 0 : entries.length;
+    var index = -1,
+        length = entries == null ? 0 : entries.length;
 
-      this.clear();
-      while (++index < length) {
+    this.clear();
+    while (++index < length) {
         var entry = entries[index];
         this.set(entry[0], entry[1]);
-      }
+    }
     }
 
     /**
@@ -10070,8 +10084,8 @@ exports.Deprecation = Deprecation;
      * @memberOf ListCache
      */
     function listCacheClear() {
-      this.__data__ = [];
-      this.size = 0;
+    this.__data__ = [];
+    this.size = 0;
     }
 
     /**
@@ -10084,20 +10098,20 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if the entry was removed, else `false`.
      */
     function listCacheDelete(key) {
-      var data = this.__data__,
-          index = assocIndexOf(data, key);
+    var data = this.__data__,
+        index = assocIndexOf(data, key);
 
-      if (index < 0) {
+    if (index < 0) {
         return false;
-      }
-      var lastIndex = data.length - 1;
-      if (index == lastIndex) {
+    }
+    var lastIndex = data.length - 1;
+    if (index == lastIndex) {
         data.pop();
-      } else {
+    } else {
         splice.call(data, index, 1);
-      }
-      --this.size;
-      return true;
+    }
+    --this.size;
+    return true;
     }
 
     /**
@@ -10110,10 +10124,10 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the entry value.
      */
     function listCacheGet(key) {
-      var data = this.__data__,
-          index = assocIndexOf(data, key);
+    var data = this.__data__,
+        index = assocIndexOf(data, key);
 
-      return index < 0 ? undefined : data[index][1];
+    return index < 0 ? undefined : data[index][1];
     }
 
     /**
@@ -10126,7 +10140,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if an entry for `key` exists, else `false`.
      */
     function listCacheHas(key) {
-      return assocIndexOf(this.__data__, key) > -1;
+    return assocIndexOf(this.__data__, key) > -1;
     }
 
     /**
@@ -10140,16 +10154,16 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the list cache instance.
      */
     function listCacheSet(key, value) {
-      var data = this.__data__,
-          index = assocIndexOf(data, key);
+    var data = this.__data__,
+        index = assocIndexOf(data, key);
 
-      if (index < 0) {
+    if (index < 0) {
         ++this.size;
         data.push([key, value]);
-      } else {
+    } else {
         data[index][1] = value;
-      }
-      return this;
+    }
+    return this;
     }
 
     // Add methods to `ListCache`.
@@ -10169,14 +10183,14 @@ exports.Deprecation = Deprecation;
      * @param {Array} [entries] The key-value pairs to cache.
      */
     function MapCache(entries) {
-      var index = -1,
-          length = entries == null ? 0 : entries.length;
+    var index = -1,
+        length = entries == null ? 0 : entries.length;
 
-      this.clear();
-      while (++index < length) {
+    this.clear();
+    while (++index < length) {
         var entry = entries[index];
         this.set(entry[0], entry[1]);
-      }
+    }
     }
 
     /**
@@ -10187,12 +10201,12 @@ exports.Deprecation = Deprecation;
      * @memberOf MapCache
      */
     function mapCacheClear() {
-      this.size = 0;
-      this.__data__ = {
+    this.size = 0;
+    this.__data__ = {
         'hash': new Hash,
         'map': new (Map || ListCache),
         'string': new Hash
-      };
+    };
     }
 
     /**
@@ -10205,9 +10219,9 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if the entry was removed, else `false`.
      */
     function mapCacheDelete(key) {
-      var result = getMapData(this, key)['delete'](key);
-      this.size -= result ? 1 : 0;
-      return result;
+    var result = getMapData(this, key)['delete'](key);
+    this.size -= result ? 1 : 0;
+    return result;
     }
 
     /**
@@ -10220,7 +10234,7 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the entry value.
      */
     function mapCacheGet(key) {
-      return getMapData(this, key).get(key);
+    return getMapData(this, key).get(key);
     }
 
     /**
@@ -10233,7 +10247,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if an entry for `key` exists, else `false`.
      */
     function mapCacheHas(key) {
-      return getMapData(this, key).has(key);
+    return getMapData(this, key).has(key);
     }
 
     /**
@@ -10247,12 +10261,12 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the map cache instance.
      */
     function mapCacheSet(key, value) {
-      var data = getMapData(this, key),
-          size = data.size;
+    var data = getMapData(this, key),
+        size = data.size;
 
-      data.set(key, value);
-      this.size += data.size == size ? 0 : 1;
-      return this;
+    data.set(key, value);
+    this.size += data.size == size ? 0 : 1;
+    return this;
     }
 
     // Add methods to `MapCache`.
@@ -10273,13 +10287,13 @@ exports.Deprecation = Deprecation;
      * @param {Array} [values] The values to cache.
      */
     function SetCache(values) {
-      var index = -1,
-          length = values == null ? 0 : values.length;
+    var index = -1,
+        length = values == null ? 0 : values.length;
 
-      this.__data__ = new MapCache;
-      while (++index < length) {
+    this.__data__ = new MapCache;
+    while (++index < length) {
         this.add(values[index]);
-      }
+    }
     }
 
     /**
@@ -10293,8 +10307,8 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the cache instance.
      */
     function setCacheAdd(value) {
-      this.__data__.set(value, HASH_UNDEFINED);
-      return this;
+    this.__data__.set(value, HASH_UNDEFINED);
+    return this;
     }
 
     /**
@@ -10307,7 +10321,7 @@ exports.Deprecation = Deprecation;
      * @returns {number} Returns `true` if `value` is found, else `false`.
      */
     function setCacheHas(value) {
-      return this.__data__.has(value);
+    return this.__data__.has(value);
     }
 
     // Add methods to `SetCache`.
@@ -10324,8 +10338,8 @@ exports.Deprecation = Deprecation;
      * @param {Array} [entries] The key-value pairs to cache.
      */
     function Stack(entries) {
-      var data = this.__data__ = new ListCache(entries);
-      this.size = data.size;
+    var data = this.__data__ = new ListCache(entries);
+    this.size = data.size;
     }
 
     /**
@@ -10336,8 +10350,8 @@ exports.Deprecation = Deprecation;
      * @memberOf Stack
      */
     function stackClear() {
-      this.__data__ = new ListCache;
-      this.size = 0;
+    this.__data__ = new ListCache;
+    this.size = 0;
     }
 
     /**
@@ -10350,11 +10364,11 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if the entry was removed, else `false`.
      */
     function stackDelete(key) {
-      var data = this.__data__,
-          result = data['delete'](key);
+    var data = this.__data__,
+        result = data['delete'](key);
 
-      this.size = data.size;
-      return result;
+    this.size = data.size;
+    return result;
     }
 
     /**
@@ -10367,7 +10381,7 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the entry value.
      */
     function stackGet(key) {
-      return this.__data__.get(key);
+    return this.__data__.get(key);
     }
 
     /**
@@ -10380,7 +10394,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if an entry for `key` exists, else `false`.
      */
     function stackHas(key) {
-      return this.__data__.has(key);
+    return this.__data__.has(key);
     }
 
     /**
@@ -10394,19 +10408,19 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the stack cache instance.
      */
     function stackSet(key, value) {
-      var data = this.__data__;
-      if (data instanceof ListCache) {
+    var data = this.__data__;
+    if (data instanceof ListCache) {
         var pairs = data.__data__;
         if (!Map || (pairs.length < LARGE_ARRAY_SIZE - 1)) {
-          pairs.push([key, value]);
-          this.size = ++data.size;
-          return this;
+        pairs.push([key, value]);
+        this.size = ++data.size;
+        return this;
         }
         data = this.__data__ = new MapCache(pairs);
-      }
-      data.set(key, value);
-      this.size = data.size;
-      return this;
+    }
+    data.set(key, value);
+    this.size = data.size;
+    return this;
     }
 
     // Add methods to `Stack`.
@@ -10427,30 +10441,30 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the array of property names.
      */
     function arrayLikeKeys(value, inherited) {
-      var isArr = isArray(value),
-          isArg = !isArr && isArguments(value),
-          isBuff = !isArr && !isArg && isBuffer(value),
-          isType = !isArr && !isArg && !isBuff && isTypedArray(value),
-          skipIndexes = isArr || isArg || isBuff || isType,
-          result = skipIndexes ? baseTimes(value.length, String) : [],
-          length = result.length;
+    var isArr = isArray(value),
+        isArg = !isArr && isArguments(value),
+        isBuff = !isArr && !isArg && isBuffer(value),
+        isType = !isArr && !isArg && !isBuff && isTypedArray(value),
+        skipIndexes = isArr || isArg || isBuff || isType,
+        result = skipIndexes ? baseTimes(value.length, String) : [],
+        length = result.length;
 
-      for (var key in value) {
+    for (var key in value) {
         if ((inherited || hasOwnProperty.call(value, key)) &&
             !(skipIndexes && (
-               // Safari 9 has enumerable `arguments.length` in strict mode.
-               key == 'length' ||
-               // Node.js 0.10 has enumerable non-index properties on buffers.
-               (isBuff && (key == 'offset' || key == 'parent')) ||
-               // PhantomJS 2 has enumerable non-index properties on typed arrays.
-               (isType && (key == 'buffer' || key == 'byteLength' || key == 'byteOffset')) ||
-               // Skip index properties.
-               isIndex(key, length)
+                // Safari 9 has enumerable `arguments.length` in strict mode.
+                key == 'length' ||
+                // Node.js 0.10 has enumerable non-index properties on buffers.
+                (isBuff && (key == 'offset' || key == 'parent')) ||
+                // PhantomJS 2 has enumerable non-index properties on typed arrays.
+                (isType && (key == 'buffer' || key == 'byteLength' || key == 'byteOffset')) ||
+                // Skip index properties.
+                isIndex(key, length)
             ))) {
-          result.push(key);
+        result.push(key);
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -10461,8 +10475,8 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the random element.
      */
     function arraySample(array) {
-      var length = array.length;
-      return length ? array[baseRandom(0, length - 1)] : undefined;
+    var length = array.length;
+    return length ? array[baseRandom(0, length - 1)] : undefined;
     }
 
     /**
@@ -10474,7 +10488,7 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the random elements.
      */
     function arraySampleSize(array, n) {
-      return shuffleSelf(copyArray(array), baseClamp(n, 0, array.length));
+    return shuffleSelf(copyArray(array), baseClamp(n, 0, array.length));
     }
 
     /**
@@ -10485,7 +10499,7 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new shuffled array.
      */
     function arrayShuffle(array) {
-      return shuffleSelf(copyArray(array));
+    return shuffleSelf(copyArray(array));
     }
 
     /**
@@ -10498,10 +10512,10 @@ exports.Deprecation = Deprecation;
      * @param {*} value The value to assign.
      */
     function assignMergeValue(object, key, value) {
-      if ((value !== undefined && !eq(object[key], value)) ||
-          (value === undefined && !(key in object))) {
+    if ((value !== undefined && !eq(object[key], value)) ||
+        (value === undefined && !(key in object))) {
         baseAssignValue(object, key, value);
-      }
+    }
     }
 
     /**
@@ -10515,11 +10529,11 @@ exports.Deprecation = Deprecation;
      * @param {*} value The value to assign.
      */
     function assignValue(object, key, value) {
-      var objValue = object[key];
-      if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) ||
-          (value === undefined && !(key in object))) {
+    var objValue = object[key];
+    if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) ||
+        (value === undefined && !(key in object))) {
         baseAssignValue(object, key, value);
-      }
+    }
     }
 
     /**
@@ -10531,13 +10545,13 @@ exports.Deprecation = Deprecation;
      * @returns {number} Returns the index of the matched value, else `-1`.
      */
     function assocIndexOf(array, key) {
-      var length = array.length;
-      while (length--) {
+    var length = array.length;
+    while (length--) {
         if (eq(array[length][0], key)) {
-          return length;
+        return length;
         }
-      }
-      return -1;
+    }
+    return -1;
     }
 
     /**
@@ -10552,10 +10566,10 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns `accumulator`.
      */
     function baseAggregator(collection, setter, iteratee, accumulator) {
-      baseEach(collection, function(value, key, collection) {
+    baseEach(collection, function(value, key, collection) {
         setter(accumulator, value, iteratee(value), collection);
-      });
-      return accumulator;
+    });
+    return accumulator;
     }
 
     /**
@@ -10568,7 +10582,7 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns `object`.
      */
     function baseAssign(object, source) {
-      return object && copyObject(source, keys(source), object);
+    return object && copyObject(source, keys(source), object);
     }
 
     /**
@@ -10581,7 +10595,7 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns `object`.
      */
     function baseAssignIn(object, source) {
-      return object && copyObject(source, keysIn(source), object);
+    return object && copyObject(source, keysIn(source), object);
     }
 
     /**
@@ -10594,16 +10608,16 @@ exports.Deprecation = Deprecation;
      * @param {*} value The value to assign.
      */
     function baseAssignValue(object, key, value) {
-      if (key == '__proto__' && defineProperty) {
+    if (key == '__proto__' && defineProperty) {
         defineProperty(object, key, {
-          'configurable': true,
-          'enumerable': true,
-          'value': value,
-          'writable': true
+        'configurable': true,
+        'enumerable': true,
+        'value': value,
+        'writable': true
         });
-      } else {
+    } else {
         object[key] = value;
-      }
+    }
     }
 
     /**
@@ -10615,15 +10629,15 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the picked elements.
      */
     function baseAt(object, paths) {
-      var index = -1,
-          length = paths.length,
-          result = Array(length),
-          skip = object == null;
+    var index = -1,
+        length = paths.length,
+        result = Array(length),
+        skip = object == null;
 
-      while (++index < length) {
+    while (++index < length) {
         result[index] = skip ? undefined : get(object, paths[index]);
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -10636,15 +10650,15 @@ exports.Deprecation = Deprecation;
      * @returns {number} Returns the clamped number.
      */
     function baseClamp(number, lower, upper) {
-      if (number === number) {
+    if (number === number) {
         if (upper !== undefined) {
-          number = number <= upper ? number : upper;
+        number = number <= upper ? number : upper;
         }
         if (lower !== undefined) {
-          number = number >= lower ? number : lower;
+        number = number >= lower ? number : lower;
         }
-      }
-      return number;
+    }
+    return number;
     }
 
     /**
@@ -10664,79 +10678,79 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the cloned value.
      */
     function baseClone(value, bitmask, customizer, key, object, stack) {
-      var result,
-          isDeep = bitmask & CLONE_DEEP_FLAG,
-          isFlat = bitmask & CLONE_FLAT_FLAG,
-          isFull = bitmask & CLONE_SYMBOLS_FLAG;
+    var result,
+        isDeep = bitmask & CLONE_DEEP_FLAG,
+        isFlat = bitmask & CLONE_FLAT_FLAG,
+        isFull = bitmask & CLONE_SYMBOLS_FLAG;
 
-      if (customizer) {
+    if (customizer) {
         result = object ? customizer(value, key, object, stack) : customizer(value);
-      }
-      if (result !== undefined) {
+    }
+    if (result !== undefined) {
         return result;
-      }
-      if (!isObject(value)) {
+    }
+    if (!isObject(value)) {
         return value;
-      }
-      var isArr = isArray(value);
-      if (isArr) {
+    }
+    var isArr = isArray(value);
+    if (isArr) {
         result = initCloneArray(value);
         if (!isDeep) {
-          return copyArray(value, result);
+        return copyArray(value, result);
         }
-      } else {
+    } else {
         var tag = getTag(value),
             isFunc = tag == funcTag || tag == genTag;
 
         if (isBuffer(value)) {
-          return cloneBuffer(value, isDeep);
+        return cloneBuffer(value, isDeep);
         }
         if (tag == objectTag || tag == argsTag || (isFunc && !object)) {
-          result = (isFlat || isFunc) ? {} : initCloneObject(value);
-          if (!isDeep) {
+        result = (isFlat || isFunc) ? {} : initCloneObject(value);
+        if (!isDeep) {
             return isFlat
-              ? copySymbolsIn(value, baseAssignIn(result, value))
-              : copySymbols(value, baseAssign(result, value));
-          }
-        } else {
-          if (!cloneableTags[tag]) {
-            return object ? value : {};
-          }
-          result = initCloneByTag(value, tag, isDeep);
+            ? copySymbolsIn(value, baseAssignIn(result, value))
+            : copySymbols(value, baseAssign(result, value));
         }
-      }
-      // Check for circular references and return its corresponding clone.
-      stack || (stack = new Stack);
-      var stacked = stack.get(value);
-      if (stacked) {
+        } else {
+        if (!cloneableTags[tag]) {
+            return object ? value : {};
+        }
+        result = initCloneByTag(value, tag, isDeep);
+        }
+    }
+    // Check for circular references and return its corresponding clone.
+    stack || (stack = new Stack);
+    var stacked = stack.get(value);
+    if (stacked) {
         return stacked;
-      }
-      stack.set(value, result);
+    }
+    stack.set(value, result);
 
-      if (isSet(value)) {
+    if (isSet(value)) {
         value.forEach(function(subValue) {
-          result.add(baseClone(subValue, bitmask, customizer, subValue, value, stack));
+        result.add(baseClone(subValue, bitmask, customizer, subValue, value, stack));
         });
-      } else if (isMap(value)) {
+    } else if (isMap(value)) {
         value.forEach(function(subValue, key) {
-          result.set(key, baseClone(subValue, bitmask, customizer, key, value, stack));
+        result.set(key, baseClone(subValue, bitmask, customizer, key, value, stack));
         });
-      }
+    }
 
-      var keysFunc = isFull
+    var keysFunc = isFull
         ? (isFlat ? getAllKeysIn : getAllKeys)
         : (isFlat ? keysIn : keys);
 
-      var props = isArr ? undefined : keysFunc(value);
-      arrayEach(props || value, function(subValue, key) {
+    var props = isArr ? undefined : keysFunc(value);
+    arrayEach(props || value, function(subValue, key) {
         if (props) {
-          key = subValue;
-          subValue = value[key];
+        key = subValue;
+        subValue = value[key];
         }
         // Recursively populate clone (susceptible to call stack limits).
         assignValue(result, key, baseClone(subValue, bitmask, customizer, key, value, stack));
-      });
-      return result;
+    });
+    return result;
     }
 
     /**
@@ -10747,10 +10761,10 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new spec function.
      */
     function baseConforms(source) {
-      var props = keys(source);
-      return function(object) {
+    var props = keys(source);
+    return function(object) {
         return baseConformsTo(object, source, props);
-      };
+    };
     }
 
     /**
@@ -10762,21 +10776,21 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `object` conforms, else `false`.
      */
     function baseConformsTo(object, source, props) {
-      var length = props.length;
-      if (object == null) {
+    var length = props.length;
+    if (object == null) {
         return !length;
-      }
-      object = Object(object);
-      while (length--) {
+    }
+    object = Object(object);
+    while (length--) {
         var key = props[length],
             predicate = source[key],
             value = object[key];
 
         if ((value === undefined && !(key in object)) || !predicate(value)) {
-          return false;
+        return false;
         }
-      }
-      return true;
+    }
+    return true;
     }
 
     /**
@@ -10790,10 +10804,10 @@ exports.Deprecation = Deprecation;
      * @returns {number|Object} Returns the timer id or timeout object.
      */
     function baseDelay(func, wait, args) {
-      if (typeof func != 'function') {
+    if (typeof func != 'function') {
         throw new TypeError(FUNC_ERROR_TEXT);
-      }
-      return setTimeout(function() { func.apply(undefined, args); }, wait);
+    }
+    return setTimeout(function() { func.apply(undefined, args); }, wait);
     }
 
     /**
@@ -10808,48 +10822,48 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new array of filtered values.
      */
     function baseDifference(array, values, iteratee, comparator) {
-      var index = -1,
-          includes = arrayIncludes,
-          isCommon = true,
-          length = array.length,
-          result = [],
-          valuesLength = values.length;
+    var index = -1,
+        includes = arrayIncludes,
+        isCommon = true,
+        length = array.length,
+        result = [],
+        valuesLength = values.length;
 
-      if (!length) {
+    if (!length) {
         return result;
-      }
-      if (iteratee) {
+    }
+    if (iteratee) {
         values = arrayMap(values, baseUnary(iteratee));
-      }
-      if (comparator) {
+    }
+    if (comparator) {
         includes = arrayIncludesWith;
         isCommon = false;
-      }
-      else if (values.length >= LARGE_ARRAY_SIZE) {
+    }
+    else if (values.length >= LARGE_ARRAY_SIZE) {
         includes = cacheHas;
         isCommon = false;
         values = new SetCache(values);
-      }
-      outer:
-      while (++index < length) {
+    }
+    outer:
+    while (++index < length) {
         var value = array[index],
             computed = iteratee == null ? value : iteratee(value);
 
         value = (comparator || value !== 0) ? value : 0;
         if (isCommon && computed === computed) {
-          var valuesIndex = valuesLength;
-          while (valuesIndex--) {
+        var valuesIndex = valuesLength;
+        while (valuesIndex--) {
             if (values[valuesIndex] === computed) {
-              continue outer;
+            continue outer;
             }
-          }
-          result.push(value);
+        }
+        result.push(value);
         }
         else if (!includes(values, computed, comparator)) {
-          result.push(value);
+        result.push(value);
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -10882,12 +10896,12 @@ exports.Deprecation = Deprecation;
      *  else `false`
      */
     function baseEvery(collection, predicate) {
-      var result = true;
-      baseEach(collection, function(value, index, collection) {
+    var result = true;
+    baseEach(collection, function(value, index, collection) {
         result = !!predicate(value, index, collection);
         return result;
-      });
-      return result;
+    });
+    return result;
     }
 
     /**
@@ -10901,22 +10915,22 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the extremum value.
      */
     function baseExtremum(array, iteratee, comparator) {
-      var index = -1,
-          length = array.length;
+    var index = -1,
+        length = array.length;
 
-      while (++index < length) {
+    while (++index < length) {
         var value = array[index],
             current = iteratee(value);
 
         if (current != null && (computed === undefined
-              ? (current === current && !isSymbol(current))
-              : comparator(current, computed)
+            ? (current === current && !isSymbol(current))
+            : comparator(current, computed)
             )) {
-          var computed = current,
-              result = value;
+        var computed = current,
+            result = value;
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -10930,21 +10944,21 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns `array`.
      */
     function baseFill(array, value, start, end) {
-      var length = array.length;
+    var length = array.length;
 
-      start = toInteger(start);
-      if (start < 0) {
+    start = toInteger(start);
+    if (start < 0) {
         start = -start > length ? 0 : (length + start);
-      }
-      end = (end === undefined || end > length) ? length : toInteger(end);
-      if (end < 0) {
+    }
+    end = (end === undefined || end > length) ? length : toInteger(end);
+    if (end < 0) {
         end += length;
-      }
-      end = start > end ? 0 : toLength(end);
-      while (start < end) {
+    }
+    end = start > end ? 0 : toLength(end);
+    while (start < end) {
         array[start++] = value;
-      }
-      return array;
+    }
+    return array;
     }
 
     /**
@@ -10956,13 +10970,13 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new filtered array.
      */
     function baseFilter(collection, predicate) {
-      var result = [];
-      baseEach(collection, function(value, index, collection) {
+    var result = [];
+    baseEach(collection, function(value, index, collection) {
         if (predicate(value, index, collection)) {
-          result.push(value);
+        result.push(value);
         }
-      });
-      return result;
+    });
+    return result;
     }
 
     /**
@@ -10977,26 +10991,26 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new flattened array.
      */
     function baseFlatten(array, depth, predicate, isStrict, result) {
-      var index = -1,
-          length = array.length;
+    var index = -1,
+        length = array.length;
 
-      predicate || (predicate = isFlattenable);
-      result || (result = []);
+    predicate || (predicate = isFlattenable);
+    result || (result = []);
 
-      while (++index < length) {
+    while (++index < length) {
         var value = array[index];
         if (depth > 0 && predicate(value)) {
-          if (depth > 1) {
+        if (depth > 1) {
             // Recursively flatten arrays (susceptible to call stack limits).
             baseFlatten(value, depth - 1, predicate, isStrict, result);
-          } else {
+        } else {
             arrayPush(result, value);
-          }
-        } else if (!isStrict) {
-          result[result.length] = value;
         }
-      }
-      return result;
+        } else if (!isStrict) {
+        result[result.length] = value;
+        }
+    }
+    return result;
     }
 
     /**
@@ -11033,7 +11047,7 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns `object`.
      */
     function baseForOwn(object, iteratee) {
-      return object && baseFor(object, iteratee, keys);
+    return object && baseFor(object, iteratee, keys);
     }
 
     /**
@@ -11045,7 +11059,7 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns `object`.
      */
     function baseForOwnRight(object, iteratee) {
-      return object && baseForRight(object, iteratee, keys);
+    return object && baseForRight(object, iteratee, keys);
     }
 
     /**
@@ -11058,9 +11072,9 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the function names.
      */
     function baseFunctions(object, props) {
-      return arrayFilter(props, function(key) {
+    return arrayFilter(props, function(key) {
         return isFunction(object[key]);
-      });
+    });
     }
 
     /**
@@ -11072,15 +11086,15 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the resolved value.
      */
     function baseGet(object, path) {
-      path = castPath(path, object);
+    path = castPath(path, object);
 
-      var index = 0,
-          length = path.length;
+    var index = 0,
+        length = path.length;
 
-      while (object != null && index < length) {
+    while (object != null && index < length) {
         object = object[toKey(path[index++])];
-      }
-      return (index && index == length) ? object : undefined;
+    }
+    return (index && index == length) ? object : undefined;
     }
 
     /**
@@ -11095,8 +11109,8 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the array of property names and symbols.
      */
     function baseGetAllKeys(object, keysFunc, symbolsFunc) {
-      var result = keysFunc(object);
-      return isArray(object) ? result : arrayPush(result, symbolsFunc(object));
+    var result = keysFunc(object);
+    return isArray(object) ? result : arrayPush(result, symbolsFunc(object));
     }
 
     /**
@@ -11107,10 +11121,10 @@ exports.Deprecation = Deprecation;
      * @returns {string} Returns the `toStringTag`.
      */
     function baseGetTag(value) {
-      if (value == null) {
+    if (value == null) {
         return value === undefined ? undefinedTag : nullTag;
-      }
-      return (symToStringTag && symToStringTag in Object(value))
+    }
+    return (symToStringTag && symToStringTag in Object(value))
         ? getRawTag(value)
         : objectToString(value);
     }
@@ -11125,7 +11139,7 @@ exports.Deprecation = Deprecation;
      *  else `false`.
      */
     function baseGt(value, other) {
-      return value > other;
+    return value > other;
     }
 
     /**
@@ -11137,7 +11151,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `key` exists, else `false`.
      */
     function baseHas(object, key) {
-      return object != null && hasOwnProperty.call(object, key);
+    return object != null && hasOwnProperty.call(object, key);
     }
 
     /**
@@ -11149,7 +11163,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `key` exists, else `false`.
      */
     function baseHasIn(object, key) {
-      return object != null && key in Object(object);
+    return object != null && key in Object(object);
     }
 
     /**
@@ -11162,7 +11176,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `number` is in the range, else `false`.
      */
     function baseInRange(number, start, end) {
-      return number >= nativeMin(start, end) && number < nativeMax(start, end);
+    return number >= nativeMin(start, end) && number < nativeMax(start, end);
     }
 
     /**
@@ -11176,56 +11190,56 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new array of shared values.
      */
     function baseIntersection(arrays, iteratee, comparator) {
-      var includes = comparator ? arrayIncludesWith : arrayIncludes,
-          length = arrays[0].length,
-          othLength = arrays.length,
-          othIndex = othLength,
-          caches = Array(othLength),
-          maxLength = Infinity,
-          result = [];
+    var includes = comparator ? arrayIncludesWith : arrayIncludes,
+        length = arrays[0].length,
+        othLength = arrays.length,
+        othIndex = othLength,
+        caches = Array(othLength),
+        maxLength = Infinity,
+        result = [];
 
-      while (othIndex--) {
+    while (othIndex--) {
         var array = arrays[othIndex];
         if (othIndex && iteratee) {
-          array = arrayMap(array, baseUnary(iteratee));
+        array = arrayMap(array, baseUnary(iteratee));
         }
         maxLength = nativeMin(array.length, maxLength);
         caches[othIndex] = !comparator && (iteratee || (length >= 120 && array.length >= 120))
-          ? new SetCache(othIndex && array)
-          : undefined;
-      }
-      array = arrays[0];
+        ? new SetCache(othIndex && array)
+        : undefined;
+    }
+    array = arrays[0];
 
-      var index = -1,
-          seen = caches[0];
+    var index = -1,
+        seen = caches[0];
 
-      outer:
-      while (++index < length && result.length < maxLength) {
+    outer:
+    while (++index < length && result.length < maxLength) {
         var value = array[index],
             computed = iteratee ? iteratee(value) : value;
 
         value = (comparator || value !== 0) ? value : 0;
         if (!(seen
-              ? cacheHas(seen, computed)
-              : includes(result, computed, comparator)
+            ? cacheHas(seen, computed)
+            : includes(result, computed, comparator)
             )) {
-          othIndex = othLength;
-          while (--othIndex) {
+        othIndex = othLength;
+        while (--othIndex) {
             var cache = caches[othIndex];
             if (!(cache
-                  ? cacheHas(cache, computed)
-                  : includes(arrays[othIndex], computed, comparator))
+                ? cacheHas(cache, computed)
+                : includes(arrays[othIndex], computed, comparator))
                 ) {
-              continue outer;
+            continue outer;
             }
-          }
-          if (seen) {
-            seen.push(computed);
-          }
-          result.push(value);
         }
-      }
-      return result;
+        if (seen) {
+            seen.push(computed);
+        }
+        result.push(value);
+        }
+    }
+    return result;
     }
 
     /**
@@ -11240,10 +11254,10 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns `accumulator`.
      */
     function baseInverter(object, setter, iteratee, accumulator) {
-      baseForOwn(object, function(value, key, object) {
+    baseForOwn(object, function(value, key, object) {
         setter(accumulator, iteratee(value), key, object);
-      });
-      return accumulator;
+    });
+    return accumulator;
     }
 
     /**
@@ -11257,10 +11271,10 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the result of the invoked method.
      */
     function baseInvoke(object, path, args) {
-      path = castPath(path, object);
-      object = parent(object, path);
-      var func = object == null ? object : object[toKey(last(path))];
-      return func == null ? undefined : apply(func, object, args);
+    path = castPath(path, object);
+    object = parent(object, path);
+    var func = object == null ? object : object[toKey(last(path))];
+    return func == null ? undefined : apply(func, object, args);
     }
 
     /**
@@ -11271,7 +11285,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is an `arguments` object,
      */
     function baseIsArguments(value) {
-      return isObjectLike(value) && baseGetTag(value) == argsTag;
+    return isObjectLike(value) && baseGetTag(value) == argsTag;
     }
 
     /**
@@ -11282,7 +11296,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is an array buffer, else `false`.
      */
     function baseIsArrayBuffer(value) {
-      return isObjectLike(value) && baseGetTag(value) == arrayBufferTag;
+    return isObjectLike(value) && baseGetTag(value) == arrayBufferTag;
     }
 
     /**
@@ -11293,7 +11307,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is a date object, else `false`.
      */
     function baseIsDate(value) {
-      return isObjectLike(value) && baseGetTag(value) == dateTag;
+    return isObjectLike(value) && baseGetTag(value) == dateTag;
     }
 
     /**
@@ -11311,13 +11325,13 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
      */
     function baseIsEqual(value, other, bitmask, customizer, stack) {
-      if (value === other) {
+    if (value === other) {
         return true;
-      }
-      if (value == null || other == null || (!isObjectLike(value) && !isObjectLike(other))) {
+    }
+    if (value == null || other == null || (!isObjectLike(value) && !isObjectLike(other))) {
         return value !== value && other !== other;
-      }
-      return baseIsEqualDeep(value, other, bitmask, customizer, baseIsEqual, stack);
+    }
+    return baseIsEqualDeep(value, other, bitmask, customizer, baseIsEqual, stack);
     }
 
     /**
@@ -11335,48 +11349,48 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
      */
     function baseIsEqualDeep(object, other, bitmask, customizer, equalFunc, stack) {
-      var objIsArr = isArray(object),
-          othIsArr = isArray(other),
-          objTag = objIsArr ? arrayTag : getTag(object),
-          othTag = othIsArr ? arrayTag : getTag(other);
+    var objIsArr = isArray(object),
+        othIsArr = isArray(other),
+        objTag = objIsArr ? arrayTag : getTag(object),
+        othTag = othIsArr ? arrayTag : getTag(other);
 
-      objTag = objTag == argsTag ? objectTag : objTag;
-      othTag = othTag == argsTag ? objectTag : othTag;
+    objTag = objTag == argsTag ? objectTag : objTag;
+    othTag = othTag == argsTag ? objectTag : othTag;
 
-      var objIsObj = objTag == objectTag,
-          othIsObj = othTag == objectTag,
-          isSameTag = objTag == othTag;
+    var objIsObj = objTag == objectTag,
+        othIsObj = othTag == objectTag,
+        isSameTag = objTag == othTag;
 
-      if (isSameTag && isBuffer(object)) {
+    if (isSameTag && isBuffer(object)) {
         if (!isBuffer(other)) {
-          return false;
+        return false;
         }
         objIsArr = true;
         objIsObj = false;
-      }
-      if (isSameTag && !objIsObj) {
+    }
+    if (isSameTag && !objIsObj) {
         stack || (stack = new Stack);
         return (objIsArr || isTypedArray(object))
-          ? equalArrays(object, other, bitmask, customizer, equalFunc, stack)
-          : equalByTag(object, other, objTag, bitmask, customizer, equalFunc, stack);
-      }
-      if (!(bitmask & COMPARE_PARTIAL_FLAG)) {
+        ? equalArrays(object, other, bitmask, customizer, equalFunc, stack)
+        : equalByTag(object, other, objTag, bitmask, customizer, equalFunc, stack);
+    }
+    if (!(bitmask & COMPARE_PARTIAL_FLAG)) {
         var objIsWrapped = objIsObj && hasOwnProperty.call(object, '__wrapped__'),
             othIsWrapped = othIsObj && hasOwnProperty.call(other, '__wrapped__');
 
         if (objIsWrapped || othIsWrapped) {
-          var objUnwrapped = objIsWrapped ? object.value() : object,
-              othUnwrapped = othIsWrapped ? other.value() : other;
+        var objUnwrapped = objIsWrapped ? object.value() : object,
+            othUnwrapped = othIsWrapped ? other.value() : other;
 
-          stack || (stack = new Stack);
-          return equalFunc(objUnwrapped, othUnwrapped, bitmask, customizer, stack);
+        stack || (stack = new Stack);
+        return equalFunc(objUnwrapped, othUnwrapped, bitmask, customizer, stack);
         }
-      }
-      if (!isSameTag) {
+    }
+    if (!isSameTag) {
         return false;
-      }
-      stack || (stack = new Stack);
-      return equalObjects(object, other, bitmask, customizer, equalFunc, stack);
+    }
+    stack || (stack = new Stack);
+    return equalObjects(object, other, bitmask, customizer, equalFunc, stack);
     }
 
     /**
@@ -11387,7 +11401,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is a map, else `false`.
      */
     function baseIsMap(value) {
-      return isObjectLike(value) && getTag(value) == mapTag;
+    return isObjectLike(value) && getTag(value) == mapTag;
     }
 
     /**
@@ -11401,47 +11415,47 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `object` is a match, else `false`.
      */
     function baseIsMatch(object, source, matchData, customizer) {
-      var index = matchData.length,
-          length = index,
-          noCustomizer = !customizer;
+    var index = matchData.length,
+        length = index,
+        noCustomizer = !customizer;
 
-      if (object == null) {
+    if (object == null) {
         return !length;
-      }
-      object = Object(object);
-      while (index--) {
+    }
+    object = Object(object);
+    while (index--) {
         var data = matchData[index];
         if ((noCustomizer && data[2])
-              ? data[1] !== object[data[0]]
-              : !(data[0] in object)
+            ? data[1] !== object[data[0]]
+            : !(data[0] in object)
             ) {
-          return false;
+        return false;
         }
-      }
-      while (++index < length) {
+    }
+    while (++index < length) {
         data = matchData[index];
         var key = data[0],
             objValue = object[key],
             srcValue = data[1];
 
         if (noCustomizer && data[2]) {
-          if (objValue === undefined && !(key in object)) {
+        if (objValue === undefined && !(key in object)) {
             return false;
-          }
+        }
         } else {
-          var stack = new Stack;
-          if (customizer) {
+        var stack = new Stack;
+        if (customizer) {
             var result = customizer(objValue, srcValue, key, object, source, stack);
-          }
-          if (!(result === undefined
+        }
+        if (!(result === undefined
                 ? baseIsEqual(srcValue, objValue, COMPARE_PARTIAL_FLAG | COMPARE_UNORDERED_FLAG, customizer, stack)
                 : result
-              )) {
+            )) {
             return false;
-          }
         }
-      }
-      return true;
+        }
+    }
+    return true;
     }
 
     /**
@@ -11453,11 +11467,11 @@ exports.Deprecation = Deprecation;
      *  else `false`.
      */
     function baseIsNative(value) {
-      if (!isObject(value) || isMasked(value)) {
+    if (!isObject(value) || isMasked(value)) {
         return false;
-      }
-      var pattern = isFunction(value) ? reIsNative : reIsHostCtor;
-      return pattern.test(toSource(value));
+    }
+    var pattern = isFunction(value) ? reIsNative : reIsHostCtor;
+    return pattern.test(toSource(value));
     }
 
     /**
@@ -11468,7 +11482,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is a regexp, else `false`.
      */
     function baseIsRegExp(value) {
-      return isObjectLike(value) && baseGetTag(value) == regexpTag;
+    return isObjectLike(value) && baseGetTag(value) == regexpTag;
     }
 
     /**
@@ -11479,7 +11493,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is a set, else `false`.
      */
     function baseIsSet(value) {
-      return isObjectLike(value) && getTag(value) == setTag;
+    return isObjectLike(value) && getTag(value) == setTag;
     }
 
     /**
@@ -11490,7 +11504,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is a typed array, else `false`.
      */
     function baseIsTypedArray(value) {
-      return isObjectLike(value) &&
+    return isObjectLike(value) &&
         isLength(value.length) && !!typedArrayTags[baseGetTag(value)];
     }
 
@@ -11502,20 +11516,20 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the iteratee.
      */
     function baseIteratee(value) {
-      // Don't store the `typeof` result in a variable to avoid a JIT bug in Safari 9.
-      // See https://bugs.webkit.org/show_bug.cgi?id=156034 for more details.
-      if (typeof value == 'function') {
+    // Don't store the `typeof` result in a variable to avoid a JIT bug in Safari 9.
+    // See https://bugs.webkit.org/show_bug.cgi?id=156034 for more details.
+    if (typeof value == 'function') {
         return value;
-      }
-      if (value == null) {
+    }
+    if (value == null) {
         return identity;
-      }
-      if (typeof value == 'object') {
+    }
+    if (typeof value == 'object') {
         return isArray(value)
-          ? baseMatchesProperty(value[0], value[1])
-          : baseMatches(value);
-      }
-      return property(value);
+        ? baseMatchesProperty(value[0], value[1])
+        : baseMatches(value);
+    }
+    return property(value);
     }
 
     /**
@@ -11526,16 +11540,16 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the array of property names.
      */
     function baseKeys(object) {
-      if (!isPrototype(object)) {
+    if (!isPrototype(object)) {
         return nativeKeys(object);
-      }
-      var result = [];
-      for (var key in Object(object)) {
+    }
+    var result = [];
+    for (var key in Object(object)) {
         if (hasOwnProperty.call(object, key) && key != 'constructor') {
-          result.push(key);
+        result.push(key);
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -11546,18 +11560,18 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the array of property names.
      */
     function baseKeysIn(object) {
-      if (!isObject(object)) {
+    if (!isObject(object)) {
         return nativeKeysIn(object);
-      }
-      var isProto = isPrototype(object),
-          result = [];
+    }
+    var isProto = isPrototype(object),
+        result = [];
 
-      for (var key in object) {
+    for (var key in object) {
         if (!(key == 'constructor' && (isProto || !hasOwnProperty.call(object, key)))) {
-          result.push(key);
+        result.push(key);
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -11570,7 +11584,7 @@ exports.Deprecation = Deprecation;
      *  else `false`.
      */
     function baseLt(value, other) {
-      return value < other;
+    return value < other;
     }
 
     /**
@@ -11582,13 +11596,13 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new mapped array.
      */
     function baseMap(collection, iteratee) {
-      var index = -1,
-          result = isArrayLike(collection) ? Array(collection.length) : [];
+    var index = -1,
+        result = isArrayLike(collection) ? Array(collection.length) : [];
 
-      baseEach(collection, function(value, key, collection) {
+    baseEach(collection, function(value, key, collection) {
         result[++index] = iteratee(value, key, collection);
-      });
-      return result;
+    });
+    return result;
     }
 
     /**
@@ -11599,13 +11613,13 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new spec function.
      */
     function baseMatches(source) {
-      var matchData = getMatchData(source);
-      if (matchData.length == 1 && matchData[0][2]) {
+    var matchData = getMatchData(source);
+    if (matchData.length == 1 && matchData[0][2]) {
         return matchesStrictComparable(matchData[0][0], matchData[0][1]);
-      }
-      return function(object) {
+    }
+    return function(object) {
         return object === source || baseIsMatch(object, source, matchData);
-      };
+    };
     }
 
     /**
@@ -11617,15 +11631,15 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new spec function.
      */
     function baseMatchesProperty(path, srcValue) {
-      if (isKey(path) && isStrictComparable(srcValue)) {
+    if (isKey(path) && isStrictComparable(srcValue)) {
         return matchesStrictComparable(toKey(path), srcValue);
-      }
-      return function(object) {
+    }
+    return function(object) {
         var objValue = get(object, path);
         return (objValue === undefined && objValue === srcValue)
-          ? hasIn(object, path)
-          : baseIsEqual(srcValue, objValue, COMPARE_PARTIAL_FLAG | COMPARE_UNORDERED_FLAG);
-      };
+        ? hasIn(object, path)
+        : baseIsEqual(srcValue, objValue, COMPARE_PARTIAL_FLAG | COMPARE_UNORDERED_FLAG);
+    };
     }
 
     /**
@@ -11640,25 +11654,25 @@ exports.Deprecation = Deprecation;
      *  counterparts.
      */
     function baseMerge(object, source, srcIndex, customizer, stack) {
-      if (object === source) {
+    if (object === source) {
         return;
-      }
-      baseFor(source, function(srcValue, key) {
+    }
+    baseFor(source, function(srcValue, key) {
         stack || (stack = new Stack);
         if (isObject(srcValue)) {
-          baseMergeDeep(object, source, key, srcIndex, baseMerge, customizer, stack);
+        baseMergeDeep(object, source, key, srcIndex, baseMerge, customizer, stack);
         }
         else {
-          var newValue = customizer
+        var newValue = customizer
             ? customizer(safeGet(object, key), srcValue, (key + ''), object, source, stack)
             : undefined;
 
-          if (newValue === undefined) {
+        if (newValue === undefined) {
             newValue = srcValue;
-          }
-          assignMergeValue(object, key, newValue);
         }
-      }, keysIn);
+        assignMergeValue(object, key, newValue);
+        }
+    }, keysIn);
     }
 
     /**
@@ -11677,65 +11691,65 @@ exports.Deprecation = Deprecation;
      *  counterparts.
      */
     function baseMergeDeep(object, source, key, srcIndex, mergeFunc, customizer, stack) {
-      var objValue = safeGet(object, key),
-          srcValue = safeGet(source, key),
-          stacked = stack.get(srcValue);
+    var objValue = safeGet(object, key),
+        srcValue = safeGet(source, key),
+        stacked = stack.get(srcValue);
 
-      if (stacked) {
+    if (stacked) {
         assignMergeValue(object, key, stacked);
         return;
-      }
-      var newValue = customizer
+    }
+    var newValue = customizer
         ? customizer(objValue, srcValue, (key + ''), object, source, stack)
         : undefined;
 
-      var isCommon = newValue === undefined;
+    var isCommon = newValue === undefined;
 
-      if (isCommon) {
+    if (isCommon) {
         var isArr = isArray(srcValue),
             isBuff = !isArr && isBuffer(srcValue),
             isTyped = !isArr && !isBuff && isTypedArray(srcValue);
 
         newValue = srcValue;
         if (isArr || isBuff || isTyped) {
-          if (isArray(objValue)) {
+        if (isArray(objValue)) {
             newValue = objValue;
-          }
-          else if (isArrayLikeObject(objValue)) {
+        }
+        else if (isArrayLikeObject(objValue)) {
             newValue = copyArray(objValue);
-          }
-          else if (isBuff) {
+        }
+        else if (isBuff) {
             isCommon = false;
             newValue = cloneBuffer(srcValue, true);
-          }
-          else if (isTyped) {
+        }
+        else if (isTyped) {
             isCommon = false;
             newValue = cloneTypedArray(srcValue, true);
-          }
-          else {
-            newValue = [];
-          }
-        }
-        else if (isPlainObject(srcValue) || isArguments(srcValue)) {
-          newValue = objValue;
-          if (isArguments(objValue)) {
-            newValue = toPlainObject(objValue);
-          }
-          else if (!isObject(objValue) || isFunction(objValue)) {
-            newValue = initCloneObject(srcValue);
-          }
         }
         else {
-          isCommon = false;
+            newValue = [];
         }
-      }
-      if (isCommon) {
+        }
+        else if (isPlainObject(srcValue) || isArguments(srcValue)) {
+        newValue = objValue;
+        if (isArguments(objValue)) {
+            newValue = toPlainObject(objValue);
+        }
+        else if (!isObject(objValue) || isFunction(objValue)) {
+            newValue = initCloneObject(srcValue);
+        }
+        }
+        else {
+        isCommon = false;
+        }
+    }
+    if (isCommon) {
         // Recursively merge objects and arrays (susceptible to call stack limits).
         stack.set(srcValue, newValue);
         mergeFunc(newValue, srcValue, srcIndex, customizer, stack);
         stack['delete'](srcValue);
-      }
-      assignMergeValue(object, key, newValue);
+    }
+    assignMergeValue(object, key, newValue);
     }
 
     /**
@@ -11747,12 +11761,12 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the nth element of `array`.
      */
     function baseNth(array, n) {
-      var length = array.length;
-      if (!length) {
+    var length = array.length;
+    if (!length) {
         return;
-      }
-      n += n < 0 ? length : 0;
-      return isIndex(n, length) ? array[n] : undefined;
+    }
+    n += n < 0 ? length : 0;
+    return isIndex(n, length) ? array[n] : undefined;
     }
 
     /**
@@ -11765,32 +11779,32 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new sorted array.
      */
     function baseOrderBy(collection, iteratees, orders) {
-      if (iteratees.length) {
+    if (iteratees.length) {
         iteratees = arrayMap(iteratees, function(iteratee) {
-          if (isArray(iteratee)) {
+        if (isArray(iteratee)) {
             return function(value) {
-              return baseGet(value, iteratee.length === 1 ? iteratee[0] : iteratee);
+            return baseGet(value, iteratee.length === 1 ? iteratee[0] : iteratee);
             }
-          }
-          return iteratee;
+        }
+        return iteratee;
         });
-      } else {
+    } else {
         iteratees = [identity];
-      }
+    }
 
-      var index = -1;
-      iteratees = arrayMap(iteratees, baseUnary(getIteratee()));
+    var index = -1;
+    iteratees = arrayMap(iteratees, baseUnary(getIteratee()));
 
-      var result = baseMap(collection, function(value, key, collection) {
+    var result = baseMap(collection, function(value, key, collection) {
         var criteria = arrayMap(iteratees, function(iteratee) {
-          return iteratee(value);
+        return iteratee(value);
         });
         return { 'criteria': criteria, 'index': ++index, 'value': value };
-      });
+    });
 
-      return baseSortBy(result, function(object, other) {
+    return baseSortBy(result, function(object, other) {
         return compareMultiple(object, other, orders);
-      });
+    });
     }
 
     /**
@@ -11803,9 +11817,9 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the new object.
      */
     function basePick(object, paths) {
-      return basePickBy(object, paths, function(value, path) {
+    return basePickBy(object, paths, function(value, path) {
         return hasIn(object, path);
-      });
+    });
     }
 
     /**
@@ -11818,19 +11832,19 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the new object.
      */
     function basePickBy(object, paths, predicate) {
-      var index = -1,
-          length = paths.length,
-          result = {};
+    var index = -1,
+        length = paths.length,
+        result = {};
 
-      while (++index < length) {
+    while (++index < length) {
         var path = paths[index],
             value = baseGet(object, path);
 
         if (predicate(value, path)) {
-          baseSet(result, castPath(path, object), value);
+        baseSet(result, castPath(path, object), value);
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -11841,9 +11855,9 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new accessor function.
      */
     function basePropertyDeep(path) {
-      return function(object) {
+    return function(object) {
         return baseGet(object, path);
-      };
+    };
     }
 
     /**
@@ -11858,30 +11872,30 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns `array`.
      */
     function basePullAll(array, values, iteratee, comparator) {
-      var indexOf = comparator ? baseIndexOfWith : baseIndexOf,
-          index = -1,
-          length = values.length,
-          seen = array;
+    var indexOf = comparator ? baseIndexOfWith : baseIndexOf,
+        index = -1,
+        length = values.length,
+        seen = array;
 
-      if (array === values) {
+    if (array === values) {
         values = copyArray(values);
-      }
-      if (iteratee) {
+    }
+    if (iteratee) {
         seen = arrayMap(array, baseUnary(iteratee));
-      }
-      while (++index < length) {
+    }
+    while (++index < length) {
         var fromIndex = 0,
             value = values[index],
             computed = iteratee ? iteratee(value) : value;
 
         while ((fromIndex = indexOf(seen, computed, fromIndex, comparator)) > -1) {
-          if (seen !== array) {
+        if (seen !== array) {
             splice.call(seen, fromIndex, 1);
-          }
-          splice.call(array, fromIndex, 1);
         }
-      }
-      return array;
+        splice.call(array, fromIndex, 1);
+        }
+    }
+    return array;
     }
 
     /**
@@ -11894,21 +11908,21 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns `array`.
      */
     function basePullAt(array, indexes) {
-      var length = array ? indexes.length : 0,
-          lastIndex = length - 1;
+    var length = array ? indexes.length : 0,
+        lastIndex = length - 1;
 
-      while (length--) {
+    while (length--) {
         var index = indexes[length];
         if (length == lastIndex || index !== previous) {
-          var previous = index;
-          if (isIndex(index)) {
+        var previous = index;
+        if (isIndex(index)) {
             splice.call(array, index, 1);
-          } else {
+        } else {
             baseUnset(array, index);
-          }
         }
-      }
-      return array;
+        }
+    }
+    return array;
     }
 
     /**
@@ -11921,7 +11935,7 @@ exports.Deprecation = Deprecation;
      * @returns {number} Returns the random number.
      */
     function baseRandom(lower, upper) {
-      return lower + nativeFloor(nativeRandom() * (upper - lower + 1));
+    return lower + nativeFloor(nativeRandom() * (upper - lower + 1));
     }
 
     /**
@@ -11936,15 +11950,15 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the range of numbers.
      */
     function baseRange(start, end, step, fromRight) {
-      var index = -1,
-          length = nativeMax(nativeCeil((end - start) / (step || 1)), 0),
-          result = Array(length);
+    var index = -1,
+        length = nativeMax(nativeCeil((end - start) / (step || 1)), 0),
+        result = Array(length);
 
-      while (length--) {
+    while (length--) {
         result[fromRight ? length : ++index] = start;
         start += step;
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -11956,23 +11970,23 @@ exports.Deprecation = Deprecation;
      * @returns {string} Returns the repeated string.
      */
     function baseRepeat(string, n) {
-      var result = '';
-      if (!string || n < 1 || n > MAX_SAFE_INTEGER) {
+    var result = '';
+    if (!string || n < 1 || n > MAX_SAFE_INTEGER) {
         return result;
-      }
-      // Leverage the exponentiation by squaring algorithm for a faster repeat.
-      // See https://en.wikipedia.org/wiki/Exponentiation_by_squaring for more details.
-      do {
+    }
+    // Leverage the exponentiation by squaring algorithm for a faster repeat.
+    // See https://en.wikipedia.org/wiki/Exponentiation_by_squaring for more details.
+    do {
         if (n % 2) {
-          result += string;
+        result += string;
         }
         n = nativeFloor(n / 2);
         if (n) {
-          string += string;
+        string += string;
         }
-      } while (n);
+    } while (n);
 
-      return result;
+    return result;
     }
 
     /**
@@ -11984,7 +11998,7 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new function.
      */
     function baseRest(func, start) {
-      return setToString(overRest(func, start, identity), func + '');
+    return setToString(overRest(func, start, identity), func + '');
     }
 
     /**
@@ -11995,7 +12009,7 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the random element.
      */
     function baseSample(collection) {
-      return arraySample(values(collection));
+    return arraySample(values(collection));
     }
 
     /**
@@ -12007,8 +12021,8 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the random elements.
      */
     function baseSampleSize(collection, n) {
-      var array = values(collection);
-      return shuffleSelf(array, baseClamp(n, 0, array.length));
+    var array = values(collection);
+    return shuffleSelf(array, baseClamp(n, 0, array.length));
     }
 
     /**
@@ -12022,37 +12036,37 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns `object`.
      */
     function baseSet(object, path, value, customizer) {
-      if (!isObject(object)) {
+    if (!isObject(object)) {
         return object;
-      }
-      path = castPath(path, object);
+    }
+    path = castPath(path, object);
 
-      var index = -1,
-          length = path.length,
-          lastIndex = length - 1,
-          nested = object;
+    var index = -1,
+        length = path.length,
+        lastIndex = length - 1,
+        nested = object;
 
-      while (nested != null && ++index < length) {
+    while (nested != null && ++index < length) {
         var key = toKey(path[index]),
             newValue = value;
 
         if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
-          return object;
+        return object;
         }
 
         if (index != lastIndex) {
-          var objValue = nested[key];
-          newValue = customizer ? customizer(objValue, key, nested) : undefined;
-          if (newValue === undefined) {
+        var objValue = nested[key];
+        newValue = customizer ? customizer(objValue, key, nested) : undefined;
+        if (newValue === undefined) {
             newValue = isObject(objValue)
-              ? objValue
-              : (isIndex(path[index + 1]) ? [] : {});
-          }
+            ? objValue
+            : (isIndex(path[index + 1]) ? [] : {});
+        }
         }
         assignValue(nested, key, newValue);
         nested = nested[key];
-      }
-      return object;
+    }
+    return object;
     }
 
     /**
@@ -12064,8 +12078,8 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns `func`.
      */
     var baseSetData = !metaMap ? identity : function(func, data) {
-      metaMap.set(func, data);
-      return func;
+    metaMap.set(func, data);
+    return func;
     };
 
     /**
@@ -12077,12 +12091,12 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns `func`.
      */
     var baseSetToString = !defineProperty ? identity : function(func, string) {
-      return defineProperty(func, 'toString', {
+    return defineProperty(func, 'toString', {
         'configurable': true,
         'enumerable': false,
         'value': constant(string),
         'writable': true
-      });
+    });
     };
 
     /**
@@ -12093,7 +12107,7 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new shuffled array.
      */
     function baseShuffle(collection) {
-      return shuffleSelf(values(collection));
+    return shuffleSelf(values(collection));
     }
 
     /**
@@ -12106,24 +12120,24 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the slice of `array`.
      */
     function baseSlice(array, start, end) {
-      var index = -1,
-          length = array.length;
+    var index = -1,
+        length = array.length;
 
-      if (start < 0) {
+    if (start < 0) {
         start = -start > length ? 0 : (length + start);
-      }
-      end = end > length ? length : end;
-      if (end < 0) {
+    }
+    end = end > length ? length : end;
+    if (end < 0) {
         end += length;
-      }
-      length = start > end ? 0 : ((end - start) >>> 0);
-      start >>>= 0;
+    }
+    length = start > end ? 0 : ((end - start) >>> 0);
+    start >>>= 0;
 
-      var result = Array(length);
-      while (++index < length) {
+    var result = Array(length);
+    while (++index < length) {
         result[index] = array[index + start];
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -12136,13 +12150,13 @@ exports.Deprecation = Deprecation;
      *  else `false`.
      */
     function baseSome(collection, predicate) {
-      var result;
+    var result;
 
-      baseEach(collection, function(value, index, collection) {
+    baseEach(collection, function(value, index, collection) {
         result = predicate(value, index, collection);
         return !result;
-      });
-      return !!result;
+    });
+    return !!result;
     }
 
     /**
@@ -12158,24 +12172,24 @@ exports.Deprecation = Deprecation;
      *  into `array`.
      */
     function baseSortedIndex(array, value, retHighest) {
-      var low = 0,
-          high = array == null ? low : array.length;
+    var low = 0,
+        high = array == null ? low : array.length;
 
-      if (typeof value == 'number' && value === value && high <= HALF_MAX_ARRAY_LENGTH) {
+    if (typeof value == 'number' && value === value && high <= HALF_MAX_ARRAY_LENGTH) {
         while (low < high) {
-          var mid = (low + high) >>> 1,
-              computed = array[mid];
+        var mid = (low + high) >>> 1,
+            computed = array[mid];
 
-          if (computed !== null && !isSymbol(computed) &&
-              (retHighest ? (computed <= value) : (computed < value))) {
+        if (computed !== null && !isSymbol(computed) &&
+            (retHighest ? (computed <= value) : (computed < value))) {
             low = mid + 1;
-          } else {
+        } else {
             high = mid;
-          }
+        }
         }
         return high;
-      }
-      return baseSortedIndexBy(array, value, identity, retHighest);
+    }
+    return baseSortedIndexBy(array, value, identity, retHighest);
     }
 
     /**
@@ -12192,19 +12206,19 @@ exports.Deprecation = Deprecation;
      *  into `array`.
      */
     function baseSortedIndexBy(array, value, iteratee, retHighest) {
-      var low = 0,
-          high = array == null ? 0 : array.length;
-      if (high === 0) {
+    var low = 0,
+        high = array == null ? 0 : array.length;
+    if (high === 0) {
         return 0;
-      }
+    }
 
-      value = iteratee(value);
-      var valIsNaN = value !== value,
-          valIsNull = value === null,
-          valIsSymbol = isSymbol(value),
-          valIsUndefined = value === undefined;
+    value = iteratee(value);
+    var valIsNaN = value !== value,
+        valIsNull = value === null,
+        valIsSymbol = isSymbol(value),
+        valIsUndefined = value === undefined;
 
-      while (low < high) {
+    while (low < high) {
         var mid = nativeFloor((low + high) / 2),
             computed = iteratee(array[mid]),
             othIsDefined = computed !== undefined,
@@ -12213,25 +12227,25 @@ exports.Deprecation = Deprecation;
             othIsSymbol = isSymbol(computed);
 
         if (valIsNaN) {
-          var setLow = retHighest || othIsReflexive;
+        var setLow = retHighest || othIsReflexive;
         } else if (valIsUndefined) {
-          setLow = othIsReflexive && (retHighest || othIsDefined);
+        setLow = othIsReflexive && (retHighest || othIsDefined);
         } else if (valIsNull) {
-          setLow = othIsReflexive && othIsDefined && (retHighest || !othIsNull);
+        setLow = othIsReflexive && othIsDefined && (retHighest || !othIsNull);
         } else if (valIsSymbol) {
-          setLow = othIsReflexive && othIsDefined && !othIsNull && (retHighest || !othIsSymbol);
+        setLow = othIsReflexive && othIsDefined && !othIsNull && (retHighest || !othIsSymbol);
         } else if (othIsNull || othIsSymbol) {
-          setLow = false;
+        setLow = false;
         } else {
-          setLow = retHighest ? (computed <= value) : (computed < value);
+        setLow = retHighest ? (computed <= value) : (computed < value);
         }
         if (setLow) {
-          low = mid + 1;
+        low = mid + 1;
         } else {
-          high = mid;
+        high = mid;
         }
-      }
-      return nativeMin(high, MAX_ARRAY_INDEX);
+    }
+    return nativeMin(high, MAX_ARRAY_INDEX);
     }
 
     /**
@@ -12244,21 +12258,21 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new duplicate free array.
      */
     function baseSortedUniq(array, iteratee) {
-      var index = -1,
-          length = array.length,
-          resIndex = 0,
-          result = [];
+    var index = -1,
+        length = array.length,
+        resIndex = 0,
+        result = [];
 
-      while (++index < length) {
+    while (++index < length) {
         var value = array[index],
             computed = iteratee ? iteratee(value) : value;
 
         if (!index || !eq(computed, seen)) {
-          var seen = computed;
-          result[resIndex++] = value === 0 ? 0 : value;
+        var seen = computed;
+        result[resIndex++] = value === 0 ? 0 : value;
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -12270,13 +12284,13 @@ exports.Deprecation = Deprecation;
      * @returns {number} Returns the number.
      */
     function baseToNumber(value) {
-      if (typeof value == 'number') {
+    if (typeof value == 'number') {
         return value;
-      }
-      if (isSymbol(value)) {
+    }
+    if (isSymbol(value)) {
         return NAN;
-      }
-      return +value;
+    }
+    return +value;
     }
 
     /**
@@ -12288,19 +12302,19 @@ exports.Deprecation = Deprecation;
      * @returns {string} Returns the string.
      */
     function baseToString(value) {
-      // Exit early for strings to avoid a performance hit in some environments.
-      if (typeof value == 'string') {
+    // Exit early for strings to avoid a performance hit in some environments.
+    if (typeof value == 'string') {
         return value;
-      }
-      if (isArray(value)) {
+    }
+    if (isArray(value)) {
         // Recursively convert values (susceptible to call stack limits).
         return arrayMap(value, baseToString) + '';
-      }
-      if (isSymbol(value)) {
+    }
+    if (isSymbol(value)) {
         return symbolToString ? symbolToString.call(value) : '';
-      }
-      var result = (value + '');
-      return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+    }
+    var result = (value + '');
+    return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
     }
 
     /**
@@ -12313,55 +12327,55 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new duplicate free array.
      */
     function baseUniq(array, iteratee, comparator) {
-      var index = -1,
-          includes = arrayIncludes,
-          length = array.length,
-          isCommon = true,
-          result = [],
-          seen = result;
+    var index = -1,
+        includes = arrayIncludes,
+        length = array.length,
+        isCommon = true,
+        result = [],
+        seen = result;
 
-      if (comparator) {
+    if (comparator) {
         isCommon = false;
         includes = arrayIncludesWith;
-      }
-      else if (length >= LARGE_ARRAY_SIZE) {
+    }
+    else if (length >= LARGE_ARRAY_SIZE) {
         var set = iteratee ? null : createSet(array);
         if (set) {
-          return setToArray(set);
+        return setToArray(set);
         }
         isCommon = false;
         includes = cacheHas;
         seen = new SetCache;
-      }
-      else {
+    }
+    else {
         seen = iteratee ? [] : result;
-      }
-      outer:
-      while (++index < length) {
+    }
+    outer:
+    while (++index < length) {
         var value = array[index],
             computed = iteratee ? iteratee(value) : value;
 
         value = (comparator || value !== 0) ? value : 0;
         if (isCommon && computed === computed) {
-          var seenIndex = seen.length;
-          while (seenIndex--) {
+        var seenIndex = seen.length;
+        while (seenIndex--) {
             if (seen[seenIndex] === computed) {
-              continue outer;
+            continue outer;
             }
-          }
-          if (iteratee) {
+        }
+        if (iteratee) {
             seen.push(computed);
-          }
-          result.push(value);
+        }
+        result.push(value);
         }
         else if (!includes(seen, computed, comparator)) {
-          if (seen !== result) {
+        if (seen !== result) {
             seen.push(computed);
-          }
-          result.push(value);
         }
-      }
-      return result;
+        result.push(value);
+        }
+    }
+    return result;
     }
 
     /**
@@ -12373,9 +12387,9 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if the property is deleted, else `false`.
      */
     function baseUnset(object, path) {
-      path = castPath(path, object);
-      object = parent(object, path);
-      return object == null || delete object[toKey(last(path))];
+    path = castPath(path, object);
+    object = parent(object, path);
+    return object == null || delete object[toKey(last(path))];
     }
 
     /**
@@ -12389,7 +12403,7 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns `object`.
      */
     function baseUpdate(object, path, updater, customizer) {
-      return baseSet(object, path, updater(baseGet(object, path)), customizer);
+    return baseSet(object, path, updater(baseGet(object, path)), customizer);
     }
 
     /**
@@ -12404,13 +12418,13 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the slice of `array`.
      */
     function baseWhile(array, predicate, isDrop, fromRight) {
-      var length = array.length,
-          index = fromRight ? length : -1;
+    var length = array.length,
+        index = fromRight ? length : -1;
 
-      while ((fromRight ? index-- : ++index < length) &&
+    while ((fromRight ? index-- : ++index < length) &&
         predicate(array[index], index, array)) {}
 
-      return isDrop
+    return isDrop
         ? baseSlice(array, (fromRight ? 0 : index), (fromRight ? index + 1 : length))
         : baseSlice(array, (fromRight ? index + 1 : 0), (fromRight ? length : index));
     }
@@ -12426,13 +12440,13 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the resolved value.
      */
     function baseWrapperValue(value, actions) {
-      var result = value;
-      if (result instanceof LazyWrapper) {
+    var result = value;
+    if (result instanceof LazyWrapper) {
         result = result.value();
-      }
-      return arrayReduce(actions, function(result, action) {
+    }
+    return arrayReduce(actions, function(result, action) {
         return action.func.apply(action.thisArg, arrayPush([result], action.args));
-      }, result);
+    }, result);
     }
 
     /**
@@ -12446,24 +12460,24 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new array of values.
      */
     function baseXor(arrays, iteratee, comparator) {
-      var length = arrays.length;
-      if (length < 2) {
+    var length = arrays.length;
+    if (length < 2) {
         return length ? baseUniq(arrays[0]) : [];
-      }
-      var index = -1,
-          result = Array(length);
+    }
+    var index = -1,
+        result = Array(length);
 
-      while (++index < length) {
+    while (++index < length) {
         var array = arrays[index],
             othIndex = -1;
 
         while (++othIndex < length) {
-          if (othIndex != index) {
+        if (othIndex != index) {
             result[index] = baseDifference(result[index] || array, arrays[othIndex], iteratee, comparator);
-          }
         }
-      }
-      return baseUniq(baseFlatten(result, 1), iteratee, comparator);
+        }
+    }
+    return baseUniq(baseFlatten(result, 1), iteratee, comparator);
     }
 
     /**
@@ -12476,16 +12490,16 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the new object.
      */
     function baseZipObject(props, values, assignFunc) {
-      var index = -1,
-          length = props.length,
-          valsLength = values.length,
-          result = {};
+    var index = -1,
+        length = props.length,
+        valsLength = values.length,
+        result = {};
 
-      while (++index < length) {
+    while (++index < length) {
         var value = index < valsLength ? values[index] : undefined;
         assignFunc(result, props[index], value);
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -12496,7 +12510,7 @@ exports.Deprecation = Deprecation;
      * @returns {Array|Object} Returns the cast array-like object.
      */
     function castArrayLikeObject(value) {
-      return isArrayLikeObject(value) ? value : [];
+    return isArrayLikeObject(value) ? value : [];
     }
 
     /**
@@ -12507,7 +12521,7 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns cast function.
      */
     function castFunction(value) {
-      return typeof value == 'function' ? value : identity;
+    return typeof value == 'function' ? value : identity;
     }
 
     /**
@@ -12519,10 +12533,10 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the cast property path array.
      */
     function castPath(value, object) {
-      if (isArray(value)) {
+    if (isArray(value)) {
         return value;
-      }
-      return isKey(value, object) ? [value] : stringToPath(toString(value));
+    }
+    return isKey(value, object) ? [value] : stringToPath(toString(value));
     }
 
     /**
@@ -12546,9 +12560,9 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the cast slice.
      */
     function castSlice(array, start, end) {
-      var length = array.length;
-      end = end === undefined ? length : end;
-      return (!start && end >= length) ? array : baseSlice(array, start, end);
+    var length = array.length;
+    end = end === undefined ? length : end;
+    return (!start && end >= length) ? array : baseSlice(array, start, end);
     }
 
     /**
@@ -12558,7 +12572,7 @@ exports.Deprecation = Deprecation;
      * @param {number|Object} id The timer id or timeout object of the timer to clear.
      */
     var clearTimeout = ctxClearTimeout || function(id) {
-      return root.clearTimeout(id);
+    return root.clearTimeout(id);
     };
 
     /**
@@ -12570,14 +12584,14 @@ exports.Deprecation = Deprecation;
      * @returns {Buffer} Returns the cloned buffer.
      */
     function cloneBuffer(buffer, isDeep) {
-      if (isDeep) {
+    if (isDeep) {
         return buffer.slice();
-      }
-      var length = buffer.length,
-          result = allocUnsafe ? allocUnsafe(length) : new buffer.constructor(length);
+    }
+    var length = buffer.length,
+        result = allocUnsafe ? allocUnsafe(length) : new buffer.constructor(length);
 
-      buffer.copy(result);
-      return result;
+    buffer.copy(result);
+    return result;
     }
 
     /**
@@ -12588,9 +12602,9 @@ exports.Deprecation = Deprecation;
      * @returns {ArrayBuffer} Returns the cloned array buffer.
      */
     function cloneArrayBuffer(arrayBuffer) {
-      var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
-      new Uint8Array(result).set(new Uint8Array(arrayBuffer));
-      return result;
+    var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
+    new Uint8Array(result).set(new Uint8Array(arrayBuffer));
+    return result;
     }
 
     /**
@@ -12602,8 +12616,8 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the cloned data view.
      */
     function cloneDataView(dataView, isDeep) {
-      var buffer = isDeep ? cloneArrayBuffer(dataView.buffer) : dataView.buffer;
-      return new dataView.constructor(buffer, dataView.byteOffset, dataView.byteLength);
+    var buffer = isDeep ? cloneArrayBuffer(dataView.buffer) : dataView.buffer;
+    return new dataView.constructor(buffer, dataView.byteOffset, dataView.byteLength);
     }
 
     /**
@@ -12614,9 +12628,9 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the cloned regexp.
      */
     function cloneRegExp(regexp) {
-      var result = new regexp.constructor(regexp.source, reFlags.exec(regexp));
-      result.lastIndex = regexp.lastIndex;
-      return result;
+    var result = new regexp.constructor(regexp.source, reFlags.exec(regexp));
+    result.lastIndex = regexp.lastIndex;
+    return result;
     }
 
     /**
@@ -12627,7 +12641,7 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the cloned symbol object.
      */
     function cloneSymbol(symbol) {
-      return symbolValueOf ? Object(symbolValueOf.call(symbol)) : {};
+    return symbolValueOf ? Object(symbolValueOf.call(symbol)) : {};
     }
 
     /**
@@ -12639,8 +12653,8 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the cloned typed array.
      */
     function cloneTypedArray(typedArray, isDeep) {
-      var buffer = isDeep ? cloneArrayBuffer(typedArray.buffer) : typedArray.buffer;
-      return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
+    var buffer = isDeep ? cloneArrayBuffer(typedArray.buffer) : typedArray.buffer;
+    return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
     }
 
     /**
@@ -12652,7 +12666,7 @@ exports.Deprecation = Deprecation;
      * @returns {number} Returns the sort order indicator for `value`.
      */
     function compareAscending(value, other) {
-      if (value !== other) {
+    if (value !== other) {
         var valIsDefined = value !== undefined,
             valIsNull = value === null,
             valIsReflexive = value === value,
@@ -12668,17 +12682,17 @@ exports.Deprecation = Deprecation;
             (valIsNull && othIsDefined && othIsReflexive) ||
             (!valIsDefined && othIsReflexive) ||
             !valIsReflexive) {
-          return 1;
+        return 1;
         }
         if ((!valIsNull && !valIsSymbol && !othIsSymbol && value < other) ||
             (othIsSymbol && valIsDefined && valIsReflexive && !valIsNull && !valIsSymbol) ||
             (othIsNull && valIsDefined && valIsReflexive) ||
             (!othIsDefined && valIsReflexive) ||
             !othIsReflexive) {
-          return -1;
+        return -1;
         }
-      }
-      return 0;
+    }
+    return 0;
     }
 
     /**
@@ -12696,30 +12710,30 @@ exports.Deprecation = Deprecation;
      * @returns {number} Returns the sort order indicator for `object`.
      */
     function compareMultiple(object, other, orders) {
-      var index = -1,
-          objCriteria = object.criteria,
-          othCriteria = other.criteria,
-          length = objCriteria.length,
-          ordersLength = orders.length;
+    var index = -1,
+        objCriteria = object.criteria,
+        othCriteria = other.criteria,
+        length = objCriteria.length,
+        ordersLength = orders.length;
 
-      while (++index < length) {
+    while (++index < length) {
         var result = compareAscending(objCriteria[index], othCriteria[index]);
         if (result) {
-          if (index >= ordersLength) {
+        if (index >= ordersLength) {
             return result;
-          }
-          var order = orders[index];
-          return result * (order == 'desc' ? -1 : 1);
         }
-      }
-      // Fixes an `Array#sort` bug in the JS engine embedded in Adobe applications
-      // that causes it, under certain circumstances, to provide the same value for
-      // `object` and `other`. See https://github.com/jashkenas/underscore/pull/1247
-      // for more details.
-      //
-      // This also ensures a stable sort in V8 and other engines.
-      // See https://bugs.chromium.org/p/v8/issues/detail?id=90 for more details.
-      return object.index - other.index;
+        var order = orders[index];
+        return result * (order == 'desc' ? -1 : 1);
+        }
+    }
+    // Fixes an `Array#sort` bug in the JS engine embedded in Adobe applications
+    // that causes it, under certain circumstances, to provide the same value for
+    // `object` and `other`. See https://github.com/jashkenas/underscore/pull/1247
+    // for more details.
+    //
+    // This also ensures a stable sort in V8 and other engines.
+    // See https://bugs.chromium.org/p/v8/issues/detail?id=90 for more details.
+    return object.index - other.index;
     }
 
     /**
@@ -12734,27 +12748,27 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new array of composed arguments.
      */
     function composeArgs(args, partials, holders, isCurried) {
-      var argsIndex = -1,
-          argsLength = args.length,
-          holdersLength = holders.length,
-          leftIndex = -1,
-          leftLength = partials.length,
-          rangeLength = nativeMax(argsLength - holdersLength, 0),
-          result = Array(leftLength + rangeLength),
-          isUncurried = !isCurried;
+    var argsIndex = -1,
+        argsLength = args.length,
+        holdersLength = holders.length,
+        leftIndex = -1,
+        leftLength = partials.length,
+        rangeLength = nativeMax(argsLength - holdersLength, 0),
+        result = Array(leftLength + rangeLength),
+        isUncurried = !isCurried;
 
-      while (++leftIndex < leftLength) {
+    while (++leftIndex < leftLength) {
         result[leftIndex] = partials[leftIndex];
-      }
-      while (++argsIndex < holdersLength) {
+    }
+    while (++argsIndex < holdersLength) {
         if (isUncurried || argsIndex < argsLength) {
-          result[holders[argsIndex]] = args[argsIndex];
+        result[holders[argsIndex]] = args[argsIndex];
         }
-      }
-      while (rangeLength--) {
+    }
+    while (rangeLength--) {
         result[leftIndex++] = args[argsIndex++];
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -12769,29 +12783,29 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the new array of composed arguments.
      */
     function composeArgsRight(args, partials, holders, isCurried) {
-      var argsIndex = -1,
-          argsLength = args.length,
-          holdersIndex = -1,
-          holdersLength = holders.length,
-          rightIndex = -1,
-          rightLength = partials.length,
-          rangeLength = nativeMax(argsLength - holdersLength, 0),
-          result = Array(rangeLength + rightLength),
-          isUncurried = !isCurried;
+    var argsIndex = -1,
+        argsLength = args.length,
+        holdersIndex = -1,
+        holdersLength = holders.length,
+        rightIndex = -1,
+        rightLength = partials.length,
+        rangeLength = nativeMax(argsLength - holdersLength, 0),
+        result = Array(rangeLength + rightLength),
+        isUncurried = !isCurried;
 
-      while (++argsIndex < rangeLength) {
+    while (++argsIndex < rangeLength) {
         result[argsIndex] = args[argsIndex];
-      }
-      var offset = argsIndex;
-      while (++rightIndex < rightLength) {
+    }
+    var offset = argsIndex;
+    while (++rightIndex < rightLength) {
         result[offset + rightIndex] = partials[rightIndex];
-      }
-      while (++holdersIndex < holdersLength) {
+    }
+    while (++holdersIndex < holdersLength) {
         if (isUncurried || argsIndex < argsLength) {
-          result[offset + holders[holdersIndex]] = args[argsIndex++];
+        result[offset + holders[holdersIndex]] = args[argsIndex++];
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -12803,14 +12817,14 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns `array`.
      */
     function copyArray(source, array) {
-      var index = -1,
-          length = source.length;
+    var index = -1,
+        length = source.length;
 
-      array || (array = Array(length));
-      while (++index < length) {
+    array || (array = Array(length));
+    while (++index < length) {
         array[index] = source[index];
-      }
-      return array;
+    }
+    return array;
     }
 
     /**
@@ -12824,29 +12838,29 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns `object`.
      */
     function copyObject(source, props, object, customizer) {
-      var isNew = !object;
-      object || (object = {});
+    var isNew = !object;
+    object || (object = {});
 
-      var index = -1,
-          length = props.length;
+    var index = -1,
+        length = props.length;
 
-      while (++index < length) {
+    while (++index < length) {
         var key = props[index];
 
         var newValue = customizer
-          ? customizer(object[key], source[key], key, object, source)
-          : undefined;
+        ? customizer(object[key], source[key], key, object, source)
+        : undefined;
 
         if (newValue === undefined) {
-          newValue = source[key];
+        newValue = source[key];
         }
         if (isNew) {
-          baseAssignValue(object, key, newValue);
+        baseAssignValue(object, key, newValue);
         } else {
-          assignValue(object, key, newValue);
+        assignValue(object, key, newValue);
         }
-      }
-      return object;
+    }
+    return object;
     }
 
     /**
@@ -12858,7 +12872,7 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns `object`.
      */
     function copySymbols(source, object) {
-      return copyObject(source, getSymbols(source), object);
+    return copyObject(source, getSymbols(source), object);
     }
 
     /**
@@ -12870,7 +12884,7 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns `object`.
      */
     function copySymbolsIn(source, object) {
-      return copyObject(source, getSymbolsIn(source), object);
+    return copyObject(source, getSymbolsIn(source), object);
     }
 
     /**
@@ -12882,12 +12896,12 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new aggregator function.
      */
     function createAggregator(setter, initializer) {
-      return function(collection, iteratee) {
+    return function(collection, iteratee) {
         var func = isArray(collection) ? arrayAggregator : baseAggregator,
             accumulator = initializer ? initializer() : {};
 
         return func(collection, setter, getIteratee(iteratee, 2), accumulator);
-      };
+    };
     }
 
     /**
@@ -12898,29 +12912,29 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new assigner function.
      */
     function createAssigner(assigner) {
-      return baseRest(function(object, sources) {
+    return baseRest(function(object, sources) {
         var index = -1,
             length = sources.length,
             customizer = length > 1 ? sources[length - 1] : undefined,
             guard = length > 2 ? sources[2] : undefined;
 
         customizer = (assigner.length > 3 && typeof customizer == 'function')
-          ? (length--, customizer)
-          : undefined;
+        ? (length--, customizer)
+        : undefined;
 
         if (guard && isIterateeCall(sources[0], sources[1], guard)) {
-          customizer = length < 3 ? undefined : customizer;
-          length = 1;
+        customizer = length < 3 ? undefined : customizer;
+        length = 1;
         }
         object = Object(object);
         while (++index < length) {
-          var source = sources[index];
-          if (source) {
+        var source = sources[index];
+        if (source) {
             assigner(object, source, index, customizer);
-          }
+        }
         }
         return object;
-      });
+    });
     }
 
     /**
@@ -12932,24 +12946,24 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new base function.
      */
     function createBaseEach(eachFunc, fromRight) {
-      return function(collection, iteratee) {
+    return function(collection, iteratee) {
         if (collection == null) {
-          return collection;
+        return collection;
         }
         if (!isArrayLike(collection)) {
-          return eachFunc(collection, iteratee);
+        return eachFunc(collection, iteratee);
         }
         var length = collection.length,
             index = fromRight ? length : -1,
             iterable = Object(collection);
 
         while ((fromRight ? index-- : ++index < length)) {
-          if (iteratee(iterable[index], index, iterable) === false) {
+        if (iteratee(iterable[index], index, iterable) === false) {
             break;
-          }
+        }
         }
         return collection;
-      };
+    };
     }
 
     /**
@@ -12960,20 +12974,20 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new base function.
      */
     function createBaseFor(fromRight) {
-      return function(object, iteratee, keysFunc) {
+    return function(object, iteratee, keysFunc) {
         var index = -1,
             iterable = Object(object),
             props = keysFunc(object),
             length = props.length;
 
         while (length--) {
-          var key = props[fromRight ? length : ++index];
-          if (iteratee(iterable[key], key, iterable) === false) {
+        var key = props[fromRight ? length : ++index];
+        if (iteratee(iterable[key], key, iterable) === false) {
             break;
-          }
+        }
         }
         return object;
-      };
+    };
     }
 
     /**
@@ -12987,14 +13001,14 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new wrapped function.
      */
     function createBind(func, bitmask, thisArg) {
-      var isBind = bitmask & WRAP_BIND_FLAG,
-          Ctor = createCtor(func);
+    var isBind = bitmask & WRAP_BIND_FLAG,
+        Ctor = createCtor(func);
 
-      function wrapper() {
+    function wrapper() {
         var fn = (this && this !== root && this instanceof wrapper) ? Ctor : func;
         return fn.apply(isBind ? thisArg : this, arguments);
-      }
-      return wrapper;
+    }
+    return wrapper;
     }
 
     /**
@@ -13005,23 +13019,23 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new case function.
      */
     function createCaseFirst(methodName) {
-      return function(string) {
+    return function(string) {
         string = toString(string);
 
         var strSymbols = hasUnicode(string)
-          ? stringToArray(string)
-          : undefined;
+        ? stringToArray(string)
+        : undefined;
 
         var chr = strSymbols
-          ? strSymbols[0]
-          : string.charAt(0);
+        ? strSymbols[0]
+        : string.charAt(0);
 
         var trailing = strSymbols
-          ? castSlice(strSymbols, 1).join('')
-          : string.slice(1);
+        ? castSlice(strSymbols, 1).join('')
+        : string.slice(1);
 
         return chr[methodName]() + trailing;
-      };
+    };
     }
 
     /**
@@ -13032,9 +13046,9 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new compounder function.
      */
     function createCompounder(callback) {
-      return function(string) {
+    return function(string) {
         return arrayReduce(words(deburr(string).replace(reApos, '')), callback, '');
-      };
+    };
     }
 
     /**
@@ -13046,20 +13060,20 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new wrapped function.
      */
     function createCtor(Ctor) {
-      return function() {
+    return function() {
         // Use a `switch` statement to work with class constructors. See
         // http://ecma-international.org/ecma-262/7.0/#sec-ecmascript-function-objects-call-thisargument-argumentslist
         // for more details.
         var args = arguments;
         switch (args.length) {
-          case 0: return new Ctor;
-          case 1: return new Ctor(args[0]);
-          case 2: return new Ctor(args[0], args[1]);
-          case 3: return new Ctor(args[0], args[1], args[2]);
-          case 4: return new Ctor(args[0], args[1], args[2], args[3]);
-          case 5: return new Ctor(args[0], args[1], args[2], args[3], args[4]);
-          case 6: return new Ctor(args[0], args[1], args[2], args[3], args[4], args[5]);
-          case 7: return new Ctor(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+        case 0: return new Ctor;
+        case 1: return new Ctor(args[0]);
+        case 2: return new Ctor(args[0], args[1]);
+        case 3: return new Ctor(args[0], args[1], args[2]);
+        case 4: return new Ctor(args[0], args[1], args[2], args[3]);
+        case 5: return new Ctor(args[0], args[1], args[2], args[3], args[4]);
+        case 6: return new Ctor(args[0], args[1], args[2], args[3], args[4], args[5]);
+        case 7: return new Ctor(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
         }
         var thisBinding = baseCreate(Ctor.prototype),
             result = Ctor.apply(thisBinding, args);
@@ -13067,7 +13081,7 @@ exports.Deprecation = Deprecation;
         // Mimic the constructor's `return` behavior.
         // See https://es5.github.io/#x13.2.2 for more details.
         return isObject(result) ? result : thisBinding;
-      };
+    };
     }
 
     /**
@@ -13080,31 +13094,31 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new wrapped function.
      */
     function createCurry(func, bitmask, arity) {
-      var Ctor = createCtor(func);
+    var Ctor = createCtor(func);
 
-      function wrapper() {
+    function wrapper() {
         var length = arguments.length,
             args = Array(length),
             index = length,
             placeholder = getHolder(wrapper);
 
         while (index--) {
-          args[index] = arguments[index];
+        args[index] = arguments[index];
         }
         var holders = (length < 3 && args[0] !== placeholder && args[length - 1] !== placeholder)
-          ? []
-          : replaceHolders(args, placeholder);
+        ? []
+        : replaceHolders(args, placeholder);
 
         length -= holders.length;
         if (length < arity) {
-          return createRecurry(
+        return createRecurry(
             func, bitmask, createHybrid, wrapper.placeholder, undefined,
             args, holders, undefined, undefined, arity - length);
         }
         var fn = (this && this !== root && this instanceof wrapper) ? Ctor : func;
         return apply(fn, this, args);
-      }
-      return wrapper;
+    }
+    return wrapper;
     }
 
     /**
@@ -13115,16 +13129,16 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new find function.
      */
     function createFind(findIndexFunc) {
-      return function(collection, predicate, fromIndex) {
+    return function(collection, predicate, fromIndex) {
         var iterable = Object(collection);
         if (!isArrayLike(collection)) {
-          var iteratee = getIteratee(predicate, 3);
-          collection = keys(collection);
-          predicate = function(key) { return iteratee(iterable[key], key, iterable); };
+        var iteratee = getIteratee(predicate, 3);
+        collection = keys(collection);
+        predicate = function(key) { return iteratee(iterable[key], key, iterable); };
         }
         var index = findIndexFunc(collection, predicate, fromIndex);
         return index > -1 ? iterable[iteratee ? collection[index] : index] : undefined;
-      };
+    };
     }
 
     /**
@@ -13135,57 +13149,57 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new flow function.
      */
     function createFlow(fromRight) {
-      return flatRest(function(funcs) {
+    return flatRest(function(funcs) {
         var length = funcs.length,
             index = length,
             prereq = LodashWrapper.prototype.thru;
 
         if (fromRight) {
-          funcs.reverse();
+        funcs.reverse();
         }
         while (index--) {
-          var func = funcs[index];
-          if (typeof func != 'function') {
+        var func = funcs[index];
+        if (typeof func != 'function') {
             throw new TypeError(FUNC_ERROR_TEXT);
-          }
-          if (prereq && !wrapper && getFuncName(func) == 'wrapper') {
+        }
+        if (prereq && !wrapper && getFuncName(func) == 'wrapper') {
             var wrapper = new LodashWrapper([], true);
-          }
+        }
         }
         index = wrapper ? index : length;
         while (++index < length) {
-          func = funcs[index];
+        func = funcs[index];
 
-          var funcName = getFuncName(func),
-              data = funcName == 'wrapper' ? getData(func) : undefined;
+        var funcName = getFuncName(func),
+            data = funcName == 'wrapper' ? getData(func) : undefined;
 
-          if (data && isLaziable(data[0]) &&
+        if (data && isLaziable(data[0]) &&
                 data[1] == (WRAP_ARY_FLAG | WRAP_CURRY_FLAG | WRAP_PARTIAL_FLAG | WRAP_REARG_FLAG) &&
                 !data[4].length && data[9] == 1
-              ) {
+            ) {
             wrapper = wrapper[getFuncName(data[0])].apply(wrapper, data[3]);
-          } else {
+        } else {
             wrapper = (func.length == 1 && isLaziable(func))
-              ? wrapper[funcName]()
-              : wrapper.thru(func);
-          }
+            ? wrapper[funcName]()
+            : wrapper.thru(func);
+        }
         }
         return function() {
-          var args = arguments,
-              value = args[0];
+        var args = arguments,
+            value = args[0];
 
-          if (wrapper && args.length == 1 && isArray(value)) {
+        if (wrapper && args.length == 1 && isArray(value)) {
             return wrapper.plant(value).value();
-          }
-          var index = 0,
-              result = length ? funcs[index].apply(this, args) : value;
+        }
+        var index = 0,
+            result = length ? funcs[index].apply(this, args) : value;
 
-          while (++index < length) {
+        while (++index < length) {
             result = funcs[index].call(this, result);
-          }
-          return result;
+        }
+        return result;
         };
-      });
+    });
     }
 
     /**
@@ -13208,57 +13222,57 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new wrapped function.
      */
     function createHybrid(func, bitmask, thisArg, partials, holders, partialsRight, holdersRight, argPos, ary, arity) {
-      var isAry = bitmask & WRAP_ARY_FLAG,
-          isBind = bitmask & WRAP_BIND_FLAG,
-          isBindKey = bitmask & WRAP_BIND_KEY_FLAG,
-          isCurried = bitmask & (WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG),
-          isFlip = bitmask & WRAP_FLIP_FLAG,
-          Ctor = isBindKey ? undefined : createCtor(func);
+    var isAry = bitmask & WRAP_ARY_FLAG,
+        isBind = bitmask & WRAP_BIND_FLAG,
+        isBindKey = bitmask & WRAP_BIND_KEY_FLAG,
+        isCurried = bitmask & (WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG),
+        isFlip = bitmask & WRAP_FLIP_FLAG,
+        Ctor = isBindKey ? undefined : createCtor(func);
 
-      function wrapper() {
+    function wrapper() {
         var length = arguments.length,
             args = Array(length),
             index = length;
 
         while (index--) {
-          args[index] = arguments[index];
+        args[index] = arguments[index];
         }
         if (isCurried) {
-          var placeholder = getHolder(wrapper),
-              holdersCount = countHolders(args, placeholder);
+        var placeholder = getHolder(wrapper),
+            holdersCount = countHolders(args, placeholder);
         }
         if (partials) {
-          args = composeArgs(args, partials, holders, isCurried);
+        args = composeArgs(args, partials, holders, isCurried);
         }
         if (partialsRight) {
-          args = composeArgsRight(args, partialsRight, holdersRight, isCurried);
+        args = composeArgsRight(args, partialsRight, holdersRight, isCurried);
         }
         length -= holdersCount;
         if (isCurried && length < arity) {
-          var newHolders = replaceHolders(args, placeholder);
-          return createRecurry(
+        var newHolders = replaceHolders(args, placeholder);
+        return createRecurry(
             func, bitmask, createHybrid, wrapper.placeholder, thisArg,
             args, newHolders, argPos, ary, arity - length
-          );
+        );
         }
         var thisBinding = isBind ? thisArg : this,
             fn = isBindKey ? thisBinding[func] : func;
 
         length = args.length;
         if (argPos) {
-          args = reorder(args, argPos);
+        args = reorder(args, argPos);
         } else if (isFlip && length > 1) {
-          args.reverse();
+        args.reverse();
         }
         if (isAry && ary < length) {
-          args.length = ary;
+        args.length = ary;
         }
         if (this && this !== root && this instanceof wrapper) {
-          fn = Ctor || createCtor(fn);
+        fn = Ctor || createCtor(fn);
         }
         return fn.apply(thisBinding, args);
-      }
-      return wrapper;
+    }
+    return wrapper;
     }
 
     /**
@@ -13270,9 +13284,9 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new inverter function.
      */
     function createInverter(setter, toIteratee) {
-      return function(object, iteratee) {
+    return function(object, iteratee) {
         return baseInverter(object, setter, toIteratee(iteratee), {});
-      };
+    };
     }
 
     /**
@@ -13284,29 +13298,29 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new mathematical operation function.
      */
     function createMathOperation(operator, defaultValue) {
-      return function(value, other) {
+    return function(value, other) {
         var result;
         if (value === undefined && other === undefined) {
-          return defaultValue;
+        return defaultValue;
         }
         if (value !== undefined) {
-          result = value;
+        result = value;
         }
         if (other !== undefined) {
-          if (result === undefined) {
+        if (result === undefined) {
             return other;
-          }
-          if (typeof value == 'string' || typeof other == 'string') {
+        }
+        if (typeof value == 'string' || typeof other == 'string') {
             value = baseToString(value);
             other = baseToString(other);
-          } else {
+        } else {
             value = baseToNumber(value);
             other = baseToNumber(other);
-          }
-          result = operator(value, other);
+        }
+        result = operator(value, other);
         }
         return result;
-      };
+    };
     }
 
     /**
@@ -13317,15 +13331,15 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new over function.
      */
     function createOver(arrayFunc) {
-      return flatRest(function(iteratees) {
+    return flatRest(function(iteratees) {
         iteratees = arrayMap(iteratees, baseUnary(getIteratee()));
         return baseRest(function(args) {
-          var thisArg = this;
-          return arrayFunc(iteratees, function(iteratee) {
+        var thisArg = this;
+        return arrayFunc(iteratees, function(iteratee) {
             return apply(iteratee, thisArg, args);
-          });
         });
-      });
+        });
+    });
     }
 
     /**
@@ -13338,14 +13352,14 @@ exports.Deprecation = Deprecation;
      * @returns {string} Returns the padding for `string`.
      */
     function createPadding(length, chars) {
-      chars = chars === undefined ? ' ' : baseToString(chars);
+    chars = chars === undefined ? ' ' : baseToString(chars);
 
-      var charsLength = chars.length;
-      if (charsLength < 2) {
+    var charsLength = chars.length;
+    if (charsLength < 2) {
         return charsLength ? baseRepeat(chars, length) : chars;
-      }
-      var result = baseRepeat(chars, nativeCeil(length / stringSize(chars)));
-      return hasUnicode(chars)
+    }
+    var result = baseRepeat(chars, nativeCeil(length / stringSize(chars)));
+    return hasUnicode(chars)
         ? castSlice(stringToArray(result), 0, length).join('')
         : result.slice(0, length);
     }
@@ -13363,10 +13377,10 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new wrapped function.
      */
     function createPartial(func, bitmask, thisArg, partials) {
-      var isBind = bitmask & WRAP_BIND_FLAG,
-          Ctor = createCtor(func);
+    var isBind = bitmask & WRAP_BIND_FLAG,
+        Ctor = createCtor(func);
 
-      function wrapper() {
+    function wrapper() {
         var argsIndex = -1,
             argsLength = arguments.length,
             leftIndex = -1,
@@ -13375,14 +13389,14 @@ exports.Deprecation = Deprecation;
             fn = (this && this !== root && this instanceof wrapper) ? Ctor : func;
 
         while (++leftIndex < leftLength) {
-          args[leftIndex] = partials[leftIndex];
+        args[leftIndex] = partials[leftIndex];
         }
         while (argsLength--) {
-          args[leftIndex++] = arguments[++argsIndex];
+        args[leftIndex++] = arguments[++argsIndex];
         }
         return apply(fn, isBind ? thisArg : this, args);
-      }
-      return wrapper;
+    }
+    return wrapper;
     }
 
     /**
@@ -13393,21 +13407,21 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new range function.
      */
     function createRange(fromRight) {
-      return function(start, end, step) {
+    return function(start, end, step) {
         if (step && typeof step != 'number' && isIterateeCall(start, end, step)) {
-          end = step = undefined;
+        end = step = undefined;
         }
         // Ensure the sign of `-0` is preserved.
         start = toFinite(start);
         if (end === undefined) {
-          end = start;
-          start = 0;
+        end = start;
+        start = 0;
         } else {
-          end = toFinite(end);
+        end = toFinite(end);
         }
         step = step === undefined ? (start < end ? 1 : -1) : toFinite(step);
         return baseRange(start, end, step, fromRight);
-      };
+    };
     }
 
     /**
@@ -13418,13 +13432,13 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new relational operation function.
      */
     function createRelationalOperation(operator) {
-      return function(value, other) {
+    return function(value, other) {
         if (!(typeof value == 'string' && typeof other == 'string')) {
-          value = toNumber(value);
-          other = toNumber(other);
+        value = toNumber(value);
+        other = toNumber(other);
         }
         return operator(value, other);
-      };
+    };
     }
 
     /**
@@ -13445,29 +13459,29 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new wrapped function.
      */
     function createRecurry(func, bitmask, wrapFunc, placeholder, thisArg, partials, holders, argPos, ary, arity) {
-      var isCurry = bitmask & WRAP_CURRY_FLAG,
-          newHolders = isCurry ? holders : undefined,
-          newHoldersRight = isCurry ? undefined : holders,
-          newPartials = isCurry ? partials : undefined,
-          newPartialsRight = isCurry ? undefined : partials;
+    var isCurry = bitmask & WRAP_CURRY_FLAG,
+        newHolders = isCurry ? holders : undefined,
+        newHoldersRight = isCurry ? undefined : holders,
+        newPartials = isCurry ? partials : undefined,
+        newPartialsRight = isCurry ? undefined : partials;
 
-      bitmask |= (isCurry ? WRAP_PARTIAL_FLAG : WRAP_PARTIAL_RIGHT_FLAG);
-      bitmask &= ~(isCurry ? WRAP_PARTIAL_RIGHT_FLAG : WRAP_PARTIAL_FLAG);
+    bitmask |= (isCurry ? WRAP_PARTIAL_FLAG : WRAP_PARTIAL_RIGHT_FLAG);
+    bitmask &= ~(isCurry ? WRAP_PARTIAL_RIGHT_FLAG : WRAP_PARTIAL_FLAG);
 
-      if (!(bitmask & WRAP_CURRY_BOUND_FLAG)) {
+    if (!(bitmask & WRAP_CURRY_BOUND_FLAG)) {
         bitmask &= ~(WRAP_BIND_FLAG | WRAP_BIND_KEY_FLAG);
-      }
-      var newData = [
+    }
+    var newData = [
         func, bitmask, thisArg, newPartials, newHolders, newPartialsRight,
         newHoldersRight, argPos, ary, arity
-      ];
+    ];
 
-      var result = wrapFunc.apply(undefined, newData);
-      if (isLaziable(func)) {
+    var result = wrapFunc.apply(undefined, newData);
+    if (isLaziable(func)) {
         setData(result, newData);
-      }
-      result.placeholder = placeholder;
-      return setWrapToString(result, func, bitmask);
+    }
+    result.placeholder = placeholder;
+    return setWrapToString(result, func, bitmask);
     }
 
     /**
@@ -13478,21 +13492,21 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new round function.
      */
     function createRound(methodName) {
-      var func = Math[methodName];
-      return function(number, precision) {
+    var func = Math[methodName];
+    return function(number, precision) {
         number = toNumber(number);
         precision = precision == null ? 0 : nativeMin(toInteger(precision), 292);
         if (precision && nativeIsFinite(number)) {
-          // Shift with exponential notation to avoid floating-point issues.
-          // See [MDN](https://mdn.io/round#Examples) for more details.
-          var pair = (toString(number) + 'e').split('e'),
-              value = func(pair[0] + 'e' + (+pair[1] + precision));
+        // Shift with exponential notation to avoid floating-point issues.
+        // See [MDN](https://mdn.io/round#Examples) for more details.
+        var pair = (toString(number) + 'e').split('e'),
+            value = func(pair[0] + 'e' + (+pair[1] + precision));
 
-          pair = (toString(value) + 'e').split('e');
-          return +(pair[0] + 'e' + (+pair[1] - precision));
+        pair = (toString(value) + 'e').split('e');
+        return +(pair[0] + 'e' + (+pair[1] - precision));
         }
         return func(number);
-      };
+    };
     }
 
     /**
@@ -13503,7 +13517,7 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the new set.
      */
     var createSet = !(Set && (1 / setToArray(new Set([,-0]))[1]) == INFINITY) ? noop : function(values) {
-      return new Set(values);
+    return new Set(values);
     };
 
     /**
@@ -13514,16 +13528,16 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new pairs function.
      */
     function createToPairs(keysFunc) {
-      return function(object) {
+    return function(object) {
         var tag = getTag(object);
         if (tag == mapTag) {
-          return mapToArray(object);
+        return mapToArray(object);
         }
         if (tag == setTag) {
-          return setToPairs(object);
+        return setToPairs(object);
         }
         return baseToPairs(object, keysFunc(object));
-      };
+    };
     }
 
     /**
@@ -13552,58 +13566,58 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new wrapped function.
      */
     function createWrap(func, bitmask, thisArg, partials, holders, argPos, ary, arity) {
-      var isBindKey = bitmask & WRAP_BIND_KEY_FLAG;
-      if (!isBindKey && typeof func != 'function') {
+    var isBindKey = bitmask & WRAP_BIND_KEY_FLAG;
+    if (!isBindKey && typeof func != 'function') {
         throw new TypeError(FUNC_ERROR_TEXT);
-      }
-      var length = partials ? partials.length : 0;
-      if (!length) {
+    }
+    var length = partials ? partials.length : 0;
+    if (!length) {
         bitmask &= ~(WRAP_PARTIAL_FLAG | WRAP_PARTIAL_RIGHT_FLAG);
         partials = holders = undefined;
-      }
-      ary = ary === undefined ? ary : nativeMax(toInteger(ary), 0);
-      arity = arity === undefined ? arity : toInteger(arity);
-      length -= holders ? holders.length : 0;
+    }
+    ary = ary === undefined ? ary : nativeMax(toInteger(ary), 0);
+    arity = arity === undefined ? arity : toInteger(arity);
+    length -= holders ? holders.length : 0;
 
-      if (bitmask & WRAP_PARTIAL_RIGHT_FLAG) {
+    if (bitmask & WRAP_PARTIAL_RIGHT_FLAG) {
         var partialsRight = partials,
             holdersRight = holders;
 
         partials = holders = undefined;
-      }
-      var data = isBindKey ? undefined : getData(func);
+    }
+    var data = isBindKey ? undefined : getData(func);
 
-      var newData = [
+    var newData = [
         func, bitmask, thisArg, partials, holders, partialsRight, holdersRight,
         argPos, ary, arity
-      ];
+    ];
 
-      if (data) {
+    if (data) {
         mergeData(newData, data);
-      }
-      func = newData[0];
-      bitmask = newData[1];
-      thisArg = newData[2];
-      partials = newData[3];
-      holders = newData[4];
-      arity = newData[9] = newData[9] === undefined
+    }
+    func = newData[0];
+    bitmask = newData[1];
+    thisArg = newData[2];
+    partials = newData[3];
+    holders = newData[4];
+    arity = newData[9] = newData[9] === undefined
         ? (isBindKey ? 0 : func.length)
         : nativeMax(newData[9] - length, 0);
 
-      if (!arity && bitmask & (WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG)) {
+    if (!arity && bitmask & (WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG)) {
         bitmask &= ~(WRAP_CURRY_FLAG | WRAP_CURRY_RIGHT_FLAG);
-      }
-      if (!bitmask || bitmask == WRAP_BIND_FLAG) {
+    }
+    if (!bitmask || bitmask == WRAP_BIND_FLAG) {
         var result = createBind(func, bitmask, thisArg);
-      } else if (bitmask == WRAP_CURRY_FLAG || bitmask == WRAP_CURRY_RIGHT_FLAG) {
+    } else if (bitmask == WRAP_CURRY_FLAG || bitmask == WRAP_CURRY_RIGHT_FLAG) {
         result = createCurry(func, bitmask, arity);
-      } else if ((bitmask == WRAP_PARTIAL_FLAG || bitmask == (WRAP_BIND_FLAG | WRAP_PARTIAL_FLAG)) && !holders.length) {
+    } else if ((bitmask == WRAP_PARTIAL_FLAG || bitmask == (WRAP_BIND_FLAG | WRAP_PARTIAL_FLAG)) && !holders.length) {
         result = createPartial(func, bitmask, thisArg, partials);
-      } else {
+    } else {
         result = createHybrid.apply(undefined, newData);
-      }
-      var setter = data ? baseSetData : setData;
-      return setWrapToString(setter(result, newData), func, bitmask);
+    }
+    var setter = data ? baseSetData : setData;
+    return setWrapToString(setter(result, newData), func, bitmask);
     }
 
     /**
@@ -13619,11 +13633,11 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the value to assign.
      */
     function customDefaultsAssignIn(objValue, srcValue, key, object) {
-      if (objValue === undefined ||
-          (eq(objValue, objectProto[key]) && !hasOwnProperty.call(object, key))) {
+    if (objValue === undefined ||
+        (eq(objValue, objectProto[key]) && !hasOwnProperty.call(object, key))) {
         return srcValue;
-      }
-      return objValue;
+    }
+    return objValue;
     }
 
     /**
@@ -13641,13 +13655,13 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the value to assign.
      */
     function customDefaultsMerge(objValue, srcValue, key, object, source, stack) {
-      if (isObject(objValue) && isObject(srcValue)) {
+    if (isObject(objValue) && isObject(srcValue)) {
         // Recursively merge objects and arrays (susceptible to call stack limits).
         stack.set(srcValue, objValue);
         baseMerge(objValue, srcValue, undefined, customDefaultsMerge, stack);
         stack['delete'](srcValue);
-      }
-      return objValue;
+    }
+    return objValue;
     }
 
     /**
@@ -13660,7 +13674,7 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the uncloned value or `undefined` to defer cloning to `_.cloneDeep`.
      */
     function customOmitClone(value) {
-      return isPlainObject(value) ? undefined : value;
+    return isPlainObject(value) ? undefined : value;
     }
 
     /**
@@ -13677,65 +13691,65 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if the arrays are equivalent, else `false`.
      */
     function equalArrays(array, other, bitmask, customizer, equalFunc, stack) {
-      var isPartial = bitmask & COMPARE_PARTIAL_FLAG,
-          arrLength = array.length,
-          othLength = other.length;
+    var isPartial = bitmask & COMPARE_PARTIAL_FLAG,
+        arrLength = array.length,
+        othLength = other.length;
 
-      if (arrLength != othLength && !(isPartial && othLength > arrLength)) {
+    if (arrLength != othLength && !(isPartial && othLength > arrLength)) {
         return false;
-      }
-      // Check that cyclic values are equal.
-      var arrStacked = stack.get(array);
-      var othStacked = stack.get(other);
-      if (arrStacked && othStacked) {
+    }
+    // Check that cyclic values are equal.
+    var arrStacked = stack.get(array);
+    var othStacked = stack.get(other);
+    if (arrStacked && othStacked) {
         return arrStacked == other && othStacked == array;
-      }
-      var index = -1,
-          result = true,
-          seen = (bitmask & COMPARE_UNORDERED_FLAG) ? new SetCache : undefined;
+    }
+    var index = -1,
+        result = true,
+        seen = (bitmask & COMPARE_UNORDERED_FLAG) ? new SetCache : undefined;
 
-      stack.set(array, other);
-      stack.set(other, array);
+    stack.set(array, other);
+    stack.set(other, array);
 
-      // Ignore non-index properties.
-      while (++index < arrLength) {
+    // Ignore non-index properties.
+    while (++index < arrLength) {
         var arrValue = array[index],
             othValue = other[index];
 
         if (customizer) {
-          var compared = isPartial
+        var compared = isPartial
             ? customizer(othValue, arrValue, index, other, array, stack)
             : customizer(arrValue, othValue, index, array, other, stack);
         }
         if (compared !== undefined) {
-          if (compared) {
+        if (compared) {
             continue;
-          }
-          result = false;
-          break;
+        }
+        result = false;
+        break;
         }
         // Recursively compare arrays (susceptible to call stack limits).
         if (seen) {
-          if (!arraySome(other, function(othValue, othIndex) {
+        if (!arraySome(other, function(othValue, othIndex) {
                 if (!cacheHas(seen, othIndex) &&
                     (arrValue === othValue || equalFunc(arrValue, othValue, bitmask, customizer, stack))) {
-                  return seen.push(othIndex);
+                return seen.push(othIndex);
                 }
-              })) {
+            })) {
             result = false;
             break;
-          }
+        }
         } else if (!(
-              arrValue === othValue ||
+            arrValue === othValue ||
                 equalFunc(arrValue, othValue, bitmask, customizer, stack)
             )) {
-          result = false;
-          break;
+        result = false;
+        break;
         }
-      }
-      stack['delete'](array);
-      stack['delete'](other);
-      return result;
+    }
+    stack['delete'](array);
+    stack['delete'](other);
+    return result;
     }
 
     /**
@@ -13756,68 +13770,68 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
      */
     function equalByTag(object, other, tag, bitmask, customizer, equalFunc, stack) {
-      switch (tag) {
+    switch (tag) {
         case dataViewTag:
-          if ((object.byteLength != other.byteLength) ||
-              (object.byteOffset != other.byteOffset)) {
+        if ((object.byteLength != other.byteLength) ||
+            (object.byteOffset != other.byteOffset)) {
             return false;
-          }
-          object = object.buffer;
-          other = other.buffer;
+        }
+        object = object.buffer;
+        other = other.buffer;
 
         case arrayBufferTag:
-          if ((object.byteLength != other.byteLength) ||
-              !equalFunc(new Uint8Array(object), new Uint8Array(other))) {
+        if ((object.byteLength != other.byteLength) ||
+            !equalFunc(new Uint8Array(object), new Uint8Array(other))) {
             return false;
-          }
-          return true;
+        }
+        return true;
 
         case boolTag:
         case dateTag:
         case numberTag:
-          // Coerce booleans to `1` or `0` and dates to milliseconds.
-          // Invalid dates are coerced to `NaN`.
-          return eq(+object, +other);
+        // Coerce booleans to `1` or `0` and dates to milliseconds.
+        // Invalid dates are coerced to `NaN`.
+        return eq(+object, +other);
 
         case errorTag:
-          return object.name == other.name && object.message == other.message;
+        return object.name == other.name && object.message == other.message;
 
         case regexpTag:
         case stringTag:
-          // Coerce regexes to strings and treat strings, primitives and objects,
-          // as equal. See http://www.ecma-international.org/ecma-262/7.0/#sec-regexp.prototype.tostring
-          // for more details.
-          return object == (other + '');
+        // Coerce regexes to strings and treat strings, primitives and objects,
+        // as equal. See http://www.ecma-international.org/ecma-262/7.0/#sec-regexp.prototype.tostring
+        // for more details.
+        return object == (other + '');
 
         case mapTag:
-          var convert = mapToArray;
+        var convert = mapToArray;
 
         case setTag:
-          var isPartial = bitmask & COMPARE_PARTIAL_FLAG;
-          convert || (convert = setToArray);
+        var isPartial = bitmask & COMPARE_PARTIAL_FLAG;
+        convert || (convert = setToArray);
 
-          if (object.size != other.size && !isPartial) {
+        if (object.size != other.size && !isPartial) {
             return false;
-          }
-          // Assume cyclic values are equal.
-          var stacked = stack.get(object);
-          if (stacked) {
+        }
+        // Assume cyclic values are equal.
+        var stacked = stack.get(object);
+        if (stacked) {
             return stacked == other;
-          }
-          bitmask |= COMPARE_UNORDERED_FLAG;
+        }
+        bitmask |= COMPARE_UNORDERED_FLAG;
 
-          // Recursively compare objects (susceptible to call stack limits).
-          stack.set(object, other);
-          var result = equalArrays(convert(object), convert(other), bitmask, customizer, equalFunc, stack);
-          stack['delete'](object);
-          return result;
+        // Recursively compare objects (susceptible to call stack limits).
+        stack.set(object, other);
+        var result = equalArrays(convert(object), convert(other), bitmask, customizer, equalFunc, stack);
+        stack['delete'](object);
+        return result;
 
         case symbolTag:
-          if (symbolValueOf) {
+        if (symbolValueOf) {
             return symbolValueOf.call(object) == symbolValueOf.call(other);
-          }
-      }
-      return false;
+        }
+    }
+    return false;
     }
 
     /**
@@ -13834,54 +13848,54 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
      */
     function equalObjects(object, other, bitmask, customizer, equalFunc, stack) {
-      var isPartial = bitmask & COMPARE_PARTIAL_FLAG,
-          objProps = getAllKeys(object),
-          objLength = objProps.length,
-          othProps = getAllKeys(other),
-          othLength = othProps.length;
+    var isPartial = bitmask & COMPARE_PARTIAL_FLAG,
+        objProps = getAllKeys(object),
+        objLength = objProps.length,
+        othProps = getAllKeys(other),
+        othLength = othProps.length;
 
-      if (objLength != othLength && !isPartial) {
+    if (objLength != othLength && !isPartial) {
         return false;
-      }
-      var index = objLength;
-      while (index--) {
+    }
+    var index = objLength;
+    while (index--) {
         var key = objProps[index];
         if (!(isPartial ? key in other : hasOwnProperty.call(other, key))) {
-          return false;
+        return false;
         }
-      }
-      // Check that cyclic values are equal.
-      var objStacked = stack.get(object);
-      var othStacked = stack.get(other);
-      if (objStacked && othStacked) {
+    }
+    // Check that cyclic values are equal.
+    var objStacked = stack.get(object);
+    var othStacked = stack.get(other);
+    if (objStacked && othStacked) {
         return objStacked == other && othStacked == object;
-      }
-      var result = true;
-      stack.set(object, other);
-      stack.set(other, object);
+    }
+    var result = true;
+    stack.set(object, other);
+    stack.set(other, object);
 
-      var skipCtor = isPartial;
-      while (++index < objLength) {
+    var skipCtor = isPartial;
+    while (++index < objLength) {
         key = objProps[index];
         var objValue = object[key],
             othValue = other[key];
 
         if (customizer) {
-          var compared = isPartial
+        var compared = isPartial
             ? customizer(othValue, objValue, key, other, object, stack)
             : customizer(objValue, othValue, key, object, other, stack);
         }
         // Recursively compare objects (susceptible to call stack limits).
         if (!(compared === undefined
-              ? (objValue === othValue || equalFunc(objValue, othValue, bitmask, customizer, stack))
-              : compared
+            ? (objValue === othValue || equalFunc(objValue, othValue, bitmask, customizer, stack))
+            : compared
             )) {
-          result = false;
-          break;
+        result = false;
+        break;
         }
         skipCtor || (skipCtor = key == 'constructor');
-      }
-      if (result && !skipCtor) {
+    }
+    if (result && !skipCtor) {
         var objCtor = object.constructor,
             othCtor = other.constructor;
 
@@ -13889,13 +13903,13 @@ exports.Deprecation = Deprecation;
         if (objCtor != othCtor &&
             ('constructor' in object && 'constructor' in other) &&
             !(typeof objCtor == 'function' && objCtor instanceof objCtor &&
-              typeof othCtor == 'function' && othCtor instanceof othCtor)) {
-          result = false;
+            typeof othCtor == 'function' && othCtor instanceof othCtor)) {
+        result = false;
         }
-      }
-      stack['delete'](object);
-      stack['delete'](other);
-      return result;
+    }
+    stack['delete'](object);
+    stack['delete'](other);
+    return result;
     }
 
     /**
@@ -13906,7 +13920,7 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new function.
      */
     function flatRest(func) {
-      return setToString(overRest(func, undefined, flatten), func + '');
+    return setToString(overRest(func, undefined, flatten), func + '');
     }
 
     /**
@@ -13917,7 +13931,7 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the array of property names and symbols.
      */
     function getAllKeys(object) {
-      return baseGetAllKeys(object, keys, getSymbols);
+    return baseGetAllKeys(object, keys, getSymbols);
     }
 
     /**
@@ -13929,7 +13943,7 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the array of property names and symbols.
      */
     function getAllKeysIn(object) {
-      return baseGetAllKeys(object, keysIn, getSymbolsIn);
+    return baseGetAllKeys(object, keysIn, getSymbolsIn);
     }
 
     /**
@@ -13940,7 +13954,7 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the metadata for `func`.
      */
     var getData = !metaMap ? noop : function(func) {
-      return metaMap.get(func);
+    return metaMap.get(func);
     };
 
     /**
@@ -13951,18 +13965,18 @@ exports.Deprecation = Deprecation;
      * @returns {string} Returns the function name.
      */
     function getFuncName(func) {
-      var result = (func.name + ''),
-          array = realNames[result],
-          length = hasOwnProperty.call(realNames, result) ? array.length : 0;
+    var result = (func.name + ''),
+        array = realNames[result],
+        length = hasOwnProperty.call(realNames, result) ? array.length : 0;
 
-      while (length--) {
+    while (length--) {
         var data = array[length],
             otherFunc = data.func;
         if (otherFunc == null || otherFunc == func) {
-          return data.name;
+        return data.name;
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -13973,8 +13987,8 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the placeholder value.
      */
     function getHolder(func) {
-      var object = hasOwnProperty.call(lodash, 'placeholder') ? lodash : func;
-      return object.placeholder;
+    var object = hasOwnProperty.call(lodash, 'placeholder') ? lodash : func;
+    return object.placeholder;
     }
 
     /**
@@ -13989,9 +14003,9 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the chosen function or its result.
      */
     function getIteratee() {
-      var result = lodash.iteratee || iteratee;
-      result = result === iteratee ? baseIteratee : result;
-      return arguments.length ? result(arguments[0], arguments[1]) : result;
+    var result = lodash.iteratee || iteratee;
+    result = result === iteratee ? baseIteratee : result;
+    return arguments.length ? result(arguments[0], arguments[1]) : result;
     }
 
     /**
@@ -14003,8 +14017,8 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the map data.
      */
     function getMapData(map, key) {
-      var data = map.__data__;
-      return isKeyable(key)
+    var data = map.__data__;
+    return isKeyable(key)
         ? data[typeof key == 'string' ? 'string' : 'hash']
         : data.map;
     }
@@ -14017,16 +14031,16 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the match data of `object`.
      */
     function getMatchData(object) {
-      var result = keys(object),
-          length = result.length;
+    var result = keys(object),
+        length = result.length;
 
-      while (length--) {
+    while (length--) {
         var key = result[length],
             value = object[key];
 
         result[length] = [key, value, isStrictComparable(value)];
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -14038,8 +14052,8 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the function if it's native, else `undefined`.
      */
     function getNative(object, key) {
-      var value = getValue(object, key);
-      return baseIsNative(value) ? value : undefined;
+    var value = getValue(object, key);
+    return baseIsNative(value) ? value : undefined;
     }
 
     /**
@@ -14050,23 +14064,23 @@ exports.Deprecation = Deprecation;
      * @returns {string} Returns the raw `toStringTag`.
      */
     function getRawTag(value) {
-      var isOwn = hasOwnProperty.call(value, symToStringTag),
-          tag = value[symToStringTag];
+    var isOwn = hasOwnProperty.call(value, symToStringTag),
+        tag = value[symToStringTag];
 
-      try {
+    try {
         value[symToStringTag] = undefined;
         var unmasked = true;
-      } catch (e) {}
+    } catch (e) {}
 
-      var result = nativeObjectToString.call(value);
-      if (unmasked) {
+    var result = nativeObjectToString.call(value);
+    if (unmasked) {
         if (isOwn) {
-          value[symToStringTag] = tag;
+        value[symToStringTag] = tag;
         } else {
-          delete value[symToStringTag];
+        delete value[symToStringTag];
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -14077,13 +14091,13 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the array of symbols.
      */
     var getSymbols = !nativeGetSymbols ? stubArray : function(object) {
-      if (object == null) {
+    if (object == null) {
         return [];
-      }
-      object = Object(object);
-      return arrayFilter(nativeGetSymbols(object), function(symbol) {
+    }
+    object = Object(object);
+    return arrayFilter(nativeGetSymbols(object), function(symbol) {
         return propertyIsEnumerable.call(object, symbol);
-      });
+    });
     };
 
     /**
@@ -14094,12 +14108,12 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the array of symbols.
      */
     var getSymbolsIn = !nativeGetSymbols ? stubArray : function(object) {
-      var result = [];
-      while (object) {
+    var result = [];
+    while (object) {
         arrayPush(result, getSymbols(object));
         object = getPrototype(object);
-      }
-      return result;
+    }
+    return result;
     };
 
     /**
@@ -14117,22 +14131,22 @@ exports.Deprecation = Deprecation;
         (Promise && getTag(Promise.resolve()) != promiseTag) ||
         (Set && getTag(new Set) != setTag) ||
         (WeakMap && getTag(new WeakMap) != weakMapTag)) {
-      getTag = function(value) {
+    getTag = function(value) {
         var result = baseGetTag(value),
             Ctor = result == objectTag ? value.constructor : undefined,
             ctorString = Ctor ? toSource(Ctor) : '';
 
         if (ctorString) {
-          switch (ctorString) {
+        switch (ctorString) {
             case dataViewCtorString: return dataViewTag;
             case mapCtorString: return mapTag;
             case promiseCtorString: return promiseTag;
             case setCtorString: return setTag;
             case weakMapCtorString: return weakMapTag;
-          }
+        }
         }
         return result;
-      };
+    };
     }
 
     /**
@@ -14146,21 +14160,21 @@ exports.Deprecation = Deprecation;
      *  positions of the view.
      */
     function getView(start, end, transforms) {
-      var index = -1,
-          length = transforms.length;
+    var index = -1,
+        length = transforms.length;
 
-      while (++index < length) {
+    while (++index < length) {
         var data = transforms[index],
             size = data.size;
 
         switch (data.type) {
-          case 'drop':      start += size; break;
-          case 'dropRight': end -= size; break;
-          case 'take':      end = nativeMin(end, start + size); break;
-          case 'takeRight': start = nativeMax(start, end - size); break;
+        case 'drop':      start += size; break;
+        case 'dropRight': end -= size; break;
+        case 'take':      end = nativeMin(end, start + size); break;
+        case 'takeRight': start = nativeMax(start, end - size); break;
         }
-      }
-      return { 'start': start, 'end': end };
+    }
+    return { 'start': start, 'end': end };
     }
 
     /**
@@ -14171,8 +14185,8 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the wrapper details.
      */
     function getWrapDetails(source) {
-      var match = source.match(reWrapDetails);
-      return match ? match[1].split(reSplitDetails) : [];
+    var match = source.match(reWrapDetails);
+    return match ? match[1].split(reSplitDetails) : [];
     }
 
     /**
@@ -14185,24 +14199,24 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `path` exists, else `false`.
      */
     function hasPath(object, path, hasFunc) {
-      path = castPath(path, object);
+    path = castPath(path, object);
 
-      var index = -1,
-          length = path.length,
-          result = false;
+    var index = -1,
+        length = path.length,
+        result = false;
 
-      while (++index < length) {
+    while (++index < length) {
         var key = toKey(path[index]);
         if (!(result = object != null && hasFunc(object, key))) {
-          break;
+        break;
         }
         object = object[key];
-      }
-      if (result || ++index != length) {
+    }
+    if (result || ++index != length) {
         return result;
-      }
-      length = object == null ? 0 : object.length;
-      return !!length && isLength(length) && isIndex(key, length) &&
+    }
+    length = object == null ? 0 : object.length;
+    return !!length && isLength(length) && isIndex(key, length) &&
         (isArray(object) || isArguments(object));
     }
 
@@ -14214,15 +14228,15 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the initialized clone.
      */
     function initCloneArray(array) {
-      var length = array.length,
-          result = new array.constructor(length);
+    var length = array.length,
+        result = new array.constructor(length);
 
-      // Add properties assigned by `RegExp#exec`.
-      if (length && typeof array[0] == 'string' && hasOwnProperty.call(array, 'index')) {
+    // Add properties assigned by `RegExp#exec`.
+    if (length && typeof array[0] == 'string' && hasOwnProperty.call(array, 'index')) {
         result.index = array.index;
         result.input = array.input;
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -14233,7 +14247,7 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the initialized clone.
      */
     function initCloneObject(object) {
-      return (typeof object.constructor == 'function' && !isPrototype(object))
+    return (typeof object.constructor == 'function' && !isPrototype(object))
         ? baseCreate(getPrototype(object))
         : {};
     }
@@ -14251,39 +14265,39 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the initialized clone.
      */
     function initCloneByTag(object, tag, isDeep) {
-      var Ctor = object.constructor;
-      switch (tag) {
+    var Ctor = object.constructor;
+    switch (tag) {
         case arrayBufferTag:
-          return cloneArrayBuffer(object);
+        return cloneArrayBuffer(object);
 
         case boolTag:
         case dateTag:
-          return new Ctor(+object);
+        return new Ctor(+object);
 
         case dataViewTag:
-          return cloneDataView(object, isDeep);
+        return cloneDataView(object, isDeep);
 
         case float32Tag: case float64Tag:
         case int8Tag: case int16Tag: case int32Tag:
         case uint8Tag: case uint8ClampedTag: case uint16Tag: case uint32Tag:
-          return cloneTypedArray(object, isDeep);
+        return cloneTypedArray(object, isDeep);
 
         case mapTag:
-          return new Ctor;
+        return new Ctor;
 
         case numberTag:
         case stringTag:
-          return new Ctor(object);
+        return new Ctor(object);
 
         case regexpTag:
-          return cloneRegExp(object);
+        return cloneRegExp(object);
 
         case setTag:
-          return new Ctor;
+        return new Ctor;
 
         case symbolTag:
-          return cloneSymbol(object);
-      }
+        return cloneSymbol(object);
+    }
     }
 
     /**
@@ -14295,14 +14309,14 @@ exports.Deprecation = Deprecation;
      * @returns {string} Returns the modified source.
      */
     function insertWrapDetails(source, details) {
-      var length = details.length;
-      if (!length) {
+    var length = details.length;
+    if (!length) {
         return source;
-      }
-      var lastIndex = length - 1;
-      details[lastIndex] = (length > 1 ? '& ' : '') + details[lastIndex];
-      details = details.join(length > 2 ? ', ' : ' ');
-      return source.replace(reWrapComment, '{\n/* [wrapped with ' + details + '] */\n');
+    }
+    var lastIndex = length - 1;
+    details[lastIndex] = (length > 1 ? '& ' : '') + details[lastIndex];
+    details = details.join(length > 2 ? ', ' : ' ');
+    return source.replace(reWrapComment, '{\n/* [wrapped with ' + details + '] */\n');
     }
 
     /**
@@ -14313,7 +14327,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is flattenable, else `false`.
      */
     function isFlattenable(value) {
-      return isArray(value) || isArguments(value) ||
+    return isArray(value) || isArguments(value) ||
         !!(spreadableSymbol && value && value[spreadableSymbol]);
     }
 
@@ -14326,12 +14340,12 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
      */
     function isIndex(value, length) {
-      var type = typeof value;
-      length = length == null ? MAX_SAFE_INTEGER : length;
+    var type = typeof value;
+    length = length == null ? MAX_SAFE_INTEGER : length;
 
-      return !!length &&
+    return !!length &&
         (type == 'number' ||
-          (type != 'symbol' && reIsUint.test(value))) &&
+        (type != 'symbol' && reIsUint.test(value))) &&
             (value > -1 && value % 1 == 0 && value < length);
     }
 
@@ -14346,17 +14360,17 @@ exports.Deprecation = Deprecation;
      *  else `false`.
      */
     function isIterateeCall(value, index, object) {
-      if (!isObject(object)) {
+    if (!isObject(object)) {
         return false;
-      }
-      var type = typeof index;
-      if (type == 'number'
+    }
+    var type = typeof index;
+    if (type == 'number'
             ? (isArrayLike(object) && isIndex(index, object.length))
             : (type == 'string' && index in object)
-          ) {
+        ) {
         return eq(object[index], value);
-      }
-      return false;
+    }
+    return false;
     }
 
     /**
@@ -14368,15 +14382,15 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
      */
     function isKey(value, object) {
-      if (isArray(value)) {
+    if (isArray(value)) {
         return false;
-      }
-      var type = typeof value;
-      if (type == 'number' || type == 'symbol' || type == 'boolean' ||
-          value == null || isSymbol(value)) {
+    }
+    var type = typeof value;
+    if (type == 'number' || type == 'symbol' || type == 'boolean' ||
+        value == null || isSymbol(value)) {
         return true;
-      }
-      return reIsPlainProp.test(value) || !reIsDeepProp.test(value) ||
+    }
+    return reIsPlainProp.test(value) || !reIsDeepProp.test(value) ||
         (object != null && value in Object(object));
     }
 
@@ -14388,8 +14402,8 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is suitable, else `false`.
      */
     function isKeyable(value) {
-      var type = typeof value;
-      return (type == 'string' || type == 'number' || type == 'symbol' || type == 'boolean')
+    var type = typeof value;
+    return (type == 'string' || type == 'number' || type == 'symbol' || type == 'boolean')
         ? (value !== '__proto__')
         : (value === null);
     }
@@ -14403,17 +14417,17 @@ exports.Deprecation = Deprecation;
      *  else `false`.
      */
     function isLaziable(func) {
-      var funcName = getFuncName(func),
-          other = lodash[funcName];
+    var funcName = getFuncName(func),
+        other = lodash[funcName];
 
-      if (typeof other != 'function' || !(funcName in LazyWrapper.prototype)) {
+    if (typeof other != 'function' || !(funcName in LazyWrapper.prototype)) {
         return false;
-      }
-      if (func === other) {
+    }
+    if (func === other) {
         return true;
-      }
-      var data = getData(other);
-      return !!data && func === data[0];
+    }
+    var data = getData(other);
+    return !!data && func === data[0];
     }
 
     /**
@@ -14424,7 +14438,7 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `func` is masked, else `false`.
      */
     function isMasked(func) {
-      return !!maskSrcKey && (maskSrcKey in func);
+    return !!maskSrcKey && (maskSrcKey in func);
     }
 
     /**
@@ -14444,10 +14458,10 @@ exports.Deprecation = Deprecation;
      * @returns {boolean} Returns `true` if `value` is a prototype, else `false`.
      */
     function isPrototype(value) {
-      var Ctor = value && value.constructor,
-          proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto;
+    var Ctor = value && value.constructor,
+        proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto;
 
-      return value === proto;
+    return value === proto;
     }
 
     /**
@@ -14459,7 +14473,7 @@ exports.Deprecation = Deprecation;
      *  equality comparisons, else `false`.
      */
     function isStrictComparable(value) {
-      return value === value && !isObject(value);
+    return value === value && !isObject(value);
     }
 
     /**
@@ -14472,13 +14486,13 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new spec function.
      */
     function matchesStrictComparable(key, srcValue) {
-      return function(object) {
+    return function(object) {
         if (object == null) {
-          return false;
+        return false;
         }
         return object[key] === srcValue &&
-          (srcValue !== undefined || (key in Object(object)));
-      };
+        (srcValue !== undefined || (key in Object(object)));
+    };
     }
 
     /**
@@ -14490,15 +14504,15 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new memoized function.
      */
     function memoizeCapped(func) {
-      var result = memoize(func, function(key) {
+    var result = memoize(func, function(key) {
         if (cache.size === MAX_MEMOIZE_SIZE) {
-          cache.clear();
+        cache.clear();
         }
         return key;
-      });
+    });
 
-      var cache = result.cache;
-      return result;
+    var cache = result.cache;
+    return result;
     }
 
     /**
@@ -14518,58 +14532,58 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns `data`.
      */
     function mergeData(data, source) {
-      var bitmask = data[1],
-          srcBitmask = source[1],
-          newBitmask = bitmask | srcBitmask,
-          isCommon = newBitmask < (WRAP_BIND_FLAG | WRAP_BIND_KEY_FLAG | WRAP_ARY_FLAG);
+    var bitmask = data[1],
+        srcBitmask = source[1],
+        newBitmask = bitmask | srcBitmask,
+        isCommon = newBitmask < (WRAP_BIND_FLAG | WRAP_BIND_KEY_FLAG | WRAP_ARY_FLAG);
 
-      var isCombo =
+    var isCombo =
         ((srcBitmask == WRAP_ARY_FLAG) && (bitmask == WRAP_CURRY_FLAG)) ||
         ((srcBitmask == WRAP_ARY_FLAG) && (bitmask == WRAP_REARG_FLAG) && (data[7].length <= source[8])) ||
         ((srcBitmask == (WRAP_ARY_FLAG | WRAP_REARG_FLAG)) && (source[7].length <= source[8]) && (bitmask == WRAP_CURRY_FLAG));
 
-      // Exit early if metadata can't be merged.
-      if (!(isCommon || isCombo)) {
+    // Exit early if metadata can't be merged.
+    if (!(isCommon || isCombo)) {
         return data;
-      }
-      // Use source `thisArg` if available.
-      if (srcBitmask & WRAP_BIND_FLAG) {
+    }
+    // Use source `thisArg` if available.
+    if (srcBitmask & WRAP_BIND_FLAG) {
         data[2] = source[2];
         // Set when currying a bound function.
         newBitmask |= bitmask & WRAP_BIND_FLAG ? 0 : WRAP_CURRY_BOUND_FLAG;
-      }
-      // Compose partial arguments.
-      var value = source[3];
-      if (value) {
+    }
+    // Compose partial arguments.
+    var value = source[3];
+    if (value) {
         var partials = data[3];
         data[3] = partials ? composeArgs(partials, value, source[4]) : value;
         data[4] = partials ? replaceHolders(data[3], PLACEHOLDER) : source[4];
-      }
-      // Compose partial right arguments.
-      value = source[5];
-      if (value) {
+    }
+    // Compose partial right arguments.
+    value = source[5];
+    if (value) {
         partials = data[5];
         data[5] = partials ? composeArgsRight(partials, value, source[6]) : value;
         data[6] = partials ? replaceHolders(data[5], PLACEHOLDER) : source[6];
-      }
-      // Use source `argPos` if available.
-      value = source[7];
-      if (value) {
+    }
+    // Use source `argPos` if available.
+    value = source[7];
+    if (value) {
         data[7] = value;
-      }
-      // Use source `ary` if it's smaller.
-      if (srcBitmask & WRAP_ARY_FLAG) {
+    }
+    // Use source `ary` if it's smaller.
+    if (srcBitmask & WRAP_ARY_FLAG) {
         data[8] = data[8] == null ? source[8] : nativeMin(data[8], source[8]);
-      }
-      // Use source `arity` if one is not provided.
-      if (data[9] == null) {
+    }
+    // Use source `arity` if one is not provided.
+    if (data[9] == null) {
         data[9] = source[9];
-      }
-      // Use source `func` and merge bitmasks.
-      data[0] = source[0];
-      data[1] = newBitmask;
+    }
+    // Use source `func` and merge bitmasks.
+    data[0] = source[0];
+    data[1] = newBitmask;
 
-      return data;
+    return data;
     }
 
     /**
@@ -14582,13 +14596,13 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the array of property names.
      */
     function nativeKeysIn(object) {
-      var result = [];
-      if (object != null) {
+    var result = [];
+    if (object != null) {
         for (var key in Object(object)) {
-          result.push(key);
+        result.push(key);
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -14599,7 +14613,7 @@ exports.Deprecation = Deprecation;
      * @returns {string} Returns the converted string.
      */
     function objectToString(value) {
-      return nativeObjectToString.call(value);
+    return nativeObjectToString.call(value);
     }
 
     /**
@@ -14612,24 +14626,24 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new function.
      */
     function overRest(func, start, transform) {
-      start = nativeMax(start === undefined ? (func.length - 1) : start, 0);
-      return function() {
+    start = nativeMax(start === undefined ? (func.length - 1) : start, 0);
+    return function() {
         var args = arguments,
             index = -1,
             length = nativeMax(args.length - start, 0),
             array = Array(length);
 
         while (++index < length) {
-          array[index] = args[start + index];
+        array[index] = args[start + index];
         }
         index = -1;
         var otherArgs = Array(start + 1);
         while (++index < start) {
-          otherArgs[index] = args[index];
+        otherArgs[index] = args[index];
         }
         otherArgs[start] = transform(array);
         return apply(func, this, otherArgs);
-      };
+    };
     }
 
     /**
@@ -14641,7 +14655,7 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the parent value.
      */
     function parent(object, path) {
-      return path.length < 2 ? object : baseGet(object, baseSlice(path, 0, -1));
+    return path.length < 2 ? object : baseGet(object, baseSlice(path, 0, -1));
     }
 
     /**
@@ -14655,15 +14669,15 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns `array`.
      */
     function reorder(array, indexes) {
-      var arrLength = array.length,
-          length = nativeMin(indexes.length, arrLength),
-          oldArray = copyArray(array);
+    var arrLength = array.length,
+        length = nativeMin(indexes.length, arrLength),
+        oldArray = copyArray(array);
 
-      while (length--) {
+    while (length--) {
         var index = indexes[length];
         array[length] = isIndex(index, arrLength) ? oldArray[index] : undefined;
-      }
-      return array;
+    }
+    return array;
     }
 
     /**
@@ -14675,15 +14689,15 @@ exports.Deprecation = Deprecation;
      * @returns {*} Returns the property value.
      */
     function safeGet(object, key) {
-      if (key === 'constructor' && typeof object[key] === 'function') {
+    if (key === 'constructor' && typeof object[key] === 'function') {
         return;
-      }
+    }
 
-      if (key == '__proto__') {
+    if (key == '__proto__') {
         return;
-      }
+    }
 
-      return object[key];
+    return object[key];
     }
 
     /**
@@ -14711,7 +14725,7 @@ exports.Deprecation = Deprecation;
      * @returns {number|Object} Returns the timer id or timeout object.
      */
     var setTimeout = ctxSetTimeout || function(func, wait) {
-      return root.setTimeout(func, wait);
+    return root.setTimeout(func, wait);
     };
 
     /**
@@ -14735,8 +14749,8 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns `wrapper`.
      */
     function setWrapToString(wrapper, reference, bitmask) {
-      var source = (reference + '');
-      return setToString(wrapper, insertWrapDetails(source, updateWrapDetails(getWrapDetails(source), bitmask)));
+    var source = (reference + '');
+    return setToString(wrapper, insertWrapDetails(source, updateWrapDetails(getWrapDetails(source), bitmask)));
     }
 
     /**
@@ -14749,23 +14763,23 @@ exports.Deprecation = Deprecation;
      * @returns {Function} Returns the new shortable function.
      */
     function shortOut(func) {
-      var count = 0,
-          lastCalled = 0;
+    var count = 0,
+        lastCalled = 0;
 
-      return function() {
+    return function() {
         var stamp = nativeNow(),
             remaining = HOT_SPAN - (stamp - lastCalled);
 
         lastCalled = stamp;
         if (remaining > 0) {
-          if (++count >= HOT_COUNT) {
+        if (++count >= HOT_COUNT) {
             return arguments[0];
-          }
+        }
         } else {
-          count = 0;
+        count = 0;
         }
         return func.apply(undefined, arguments);
-      };
+    };
     }
 
     /**
@@ -14777,20 +14791,20 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns `array`.
      */
     function shuffleSelf(array, size) {
-      var index = -1,
-          length = array.length,
-          lastIndex = length - 1;
+    var index = -1,
+        length = array.length,
+        lastIndex = length - 1;
 
-      size = size === undefined ? length : size;
-      while (++index < size) {
+    size = size === undefined ? length : size;
+    while (++index < size) {
         var rand = baseRandom(index, lastIndex),
             value = array[rand];
 
         array[rand] = array[index];
         array[index] = value;
-      }
-      array.length = size;
-      return array;
+    }
+    array.length = size;
+    return array;
     }
 
     /**
@@ -14801,14 +14815,14 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the property path array.
      */
     var stringToPath = memoizeCapped(function(string) {
-      var result = [];
-      if (string.charCodeAt(0) === 46 /* . */) {
+    var result = [];
+    if (string.charCodeAt(0) === 46 /* . */) {
         result.push('');
-      }
-      string.replace(rePropName, function(match, number, quote, subString) {
+    }
+    string.replace(rePropName, function(match, number, quote, subString) {
         result.push(quote ? subString.replace(reEscapeChar, '$1') : (number || match));
-      });
-      return result;
+    });
+    return result;
     });
 
     /**
@@ -14819,11 +14833,11 @@ exports.Deprecation = Deprecation;
      * @returns {string|symbol} Returns the key.
      */
     function toKey(value) {
-      if (typeof value == 'string' || isSymbol(value)) {
+    if (typeof value == 'string' || isSymbol(value)) {
         return value;
-      }
-      var result = (value + '');
-      return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+    }
+    var result = (value + '');
+    return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
     }
 
     /**
@@ -14834,15 +14848,15 @@ exports.Deprecation = Deprecation;
      * @returns {string} Returns the source code.
      */
     function toSource(func) {
-      if (func != null) {
+    if (func != null) {
         try {
-          return funcToString.call(func);
+        return funcToString.call(func);
         } catch (e) {}
         try {
-          return (func + '');
+        return (func + '');
         } catch (e) {}
-      }
-      return '';
+    }
+    return '';
     }
 
     /**
@@ -14854,13 +14868,13 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns `details`.
      */
     function updateWrapDetails(details, bitmask) {
-      arrayEach(wrapFlags, function(pair) {
+    arrayEach(wrapFlags, function(pair) {
         var value = '_.' + pair[0];
         if ((bitmask & pair[1]) && !arrayIncludes(details, value)) {
-          details.push(value);
+        details.push(value);
         }
-      });
-      return details.sort();
+    });
+    return details.sort();
     }
 
     /**
@@ -14871,14 +14885,14 @@ exports.Deprecation = Deprecation;
      * @returns {Object} Returns the cloned wrapper.
      */
     function wrapperClone(wrapper) {
-      if (wrapper instanceof LazyWrapper) {
+    if (wrapper instanceof LazyWrapper) {
         return wrapper.clone();
-      }
-      var result = new LodashWrapper(wrapper.__wrapped__, wrapper.__chain__);
-      result.__actions__ = copyArray(wrapper.__actions__);
-      result.__index__  = wrapper.__index__;
-      result.__values__ = wrapper.__values__;
-      return result;
+    }
+    var result = new LodashWrapper(wrapper.__wrapped__, wrapper.__chain__);
+    result.__actions__ = copyArray(wrapper.__actions__);
+    result.__index__  = wrapper.__index__;
+    result.__values__ = wrapper.__values__;
+    return result;
     }
 
     /*------------------------------------------------------------------------*/
@@ -14905,23 +14919,23 @@ exports.Deprecation = Deprecation;
      * // => [['a', 'b', 'c'], ['d']]
      */
     function chunk(array, size, guard) {
-      if ((guard ? isIterateeCall(array, size, guard) : size === undefined)) {
+    if ((guard ? isIterateeCall(array, size, guard) : size === undefined)) {
         size = 1;
-      } else {
+    } else {
         size = nativeMax(toInteger(size), 0);
-      }
-      var length = array == null ? 0 : array.length;
-      if (!length || size < 1) {
+    }
+    var length = array == null ? 0 : array.length;
+    if (!length || size < 1) {
         return [];
-      }
-      var index = 0,
-          resIndex = 0,
-          result = Array(nativeCeil(length / size));
+    }
+    var index = 0,
+        resIndex = 0,
+        result = Array(nativeCeil(length / size));
 
-      while (index < length) {
+    while (index < length) {
         result[resIndex++] = baseSlice(array, index, (index += size));
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -14940,18 +14954,18 @@ exports.Deprecation = Deprecation;
      * // => [1, 2, 3]
      */
     function compact(array) {
-      var index = -1,
-          length = array == null ? 0 : array.length,
-          resIndex = 0,
-          result = [];
+    var index = -1,
+        length = array == null ? 0 : array.length,
+        resIndex = 0,
+        result = [];
 
-      while (++index < length) {
+    while (++index < length) {
         var value = array[index];
         if (value) {
-          result[resIndex++] = value;
+        result[resIndex++] = value;
         }
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -14977,18 +14991,18 @@ exports.Deprecation = Deprecation;
      * // => [1]
      */
     function concat() {
-      var length = arguments.length;
-      if (!length) {
+    var length = arguments.length;
+    if (!length) {
         return [];
-      }
-      var args = Array(length - 1),
-          array = arguments[0],
-          index = length;
+    }
+    var args = Array(length - 1),
+        array = arguments[0],
+        index = length;
 
-      while (index--) {
+    while (index--) {
         args[index - 1] = arguments[index];
-      }
-      return arrayPush(isArray(array) ? copyArray(array) : [array], baseFlatten(args, 1));
+    }
+    return arrayPush(isArray(array) ? copyArray(array) : [array], baseFlatten(args, 1));
     }
 
     /**
@@ -15013,7 +15027,7 @@ exports.Deprecation = Deprecation;
      * // => [1]
      */
     var difference = baseRest(function(array, values) {
-      return isArrayLikeObject(array)
+    return isArrayLikeObject(array)
         ? baseDifference(array, baseFlatten(values, 1, isArrayLikeObject, true))
         : [];
     });
@@ -15045,11 +15059,11 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 2 }]
      */
     var differenceBy = baseRest(function(array, values) {
-      var iteratee = last(values);
-      if (isArrayLikeObject(iteratee)) {
+    var iteratee = last(values);
+    if (isArrayLikeObject(iteratee)) {
         iteratee = undefined;
-      }
-      return isArrayLikeObject(array)
+    }
+    return isArrayLikeObject(array)
         ? baseDifference(array, baseFlatten(values, 1, isArrayLikeObject, true), getIteratee(iteratee, 2))
         : [];
     });
@@ -15078,11 +15092,11 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 2, 'y': 1 }]
      */
     var differenceWith = baseRest(function(array, values) {
-      var comparator = last(values);
-      if (isArrayLikeObject(comparator)) {
+    var comparator = last(values);
+    if (isArrayLikeObject(comparator)) {
         comparator = undefined;
-      }
-      return isArrayLikeObject(array)
+    }
+    return isArrayLikeObject(array)
         ? baseDifference(array, baseFlatten(values, 1, isArrayLikeObject, true), undefined, comparator)
         : [];
     });
@@ -15113,12 +15127,12 @@ exports.Deprecation = Deprecation;
      * // => [1, 2, 3]
      */
     function drop(array, n, guard) {
-      var length = array == null ? 0 : array.length;
-      if (!length) {
+    var length = array == null ? 0 : array.length;
+    if (!length) {
         return [];
-      }
-      n = (guard || n === undefined) ? 1 : toInteger(n);
-      return baseSlice(array, n < 0 ? 0 : n, length);
+    }
+    n = (guard || n === undefined) ? 1 : toInteger(n);
+    return baseSlice(array, n < 0 ? 0 : n, length);
     }
 
     /**
@@ -15147,13 +15161,13 @@ exports.Deprecation = Deprecation;
      * // => [1, 2, 3]
      */
     function dropRight(array, n, guard) {
-      var length = array == null ? 0 : array.length;
-      if (!length) {
+    var length = array == null ? 0 : array.length;
+    if (!length) {
         return [];
-      }
-      n = (guard || n === undefined) ? 1 : toInteger(n);
-      n = length - n;
-      return baseSlice(array, 0, n < 0 ? 0 : n);
+    }
+    n = (guard || n === undefined) ? 1 : toInteger(n);
+    n = length - n;
+    return baseSlice(array, 0, n < 0 ? 0 : n);
     }
 
     /**
@@ -15192,7 +15206,7 @@ exports.Deprecation = Deprecation;
      * // => objects for ['barney', 'fred', 'pebbles']
      */
     function dropRightWhile(array, predicate) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseWhile(array, getIteratee(predicate, 3), true, true)
         : [];
     }
@@ -15233,7 +15247,7 @@ exports.Deprecation = Deprecation;
      * // => objects for ['barney', 'fred', 'pebbles']
      */
     function dropWhile(array, predicate) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseWhile(array, getIteratee(predicate, 3), true)
         : [];
     }
@@ -15268,15 +15282,15 @@ exports.Deprecation = Deprecation;
      * // => [4, '*', '*', 10]
      */
     function fill(array, value, start, end) {
-      var length = array == null ? 0 : array.length;
-      if (!length) {
+    var length = array == null ? 0 : array.length;
+    if (!length) {
         return [];
-      }
-      if (start && typeof start != 'number' && isIterateeCall(array, value, start)) {
+    }
+    if (start && typeof start != 'number' && isIterateeCall(array, value, start)) {
         start = 0;
         end = length;
-      }
-      return baseFill(array, value, start, end);
+    }
+    return baseFill(array, value, start, end);
     }
 
     /**
@@ -15315,15 +15329,15 @@ exports.Deprecation = Deprecation;
      * // => 2
      */
     function findIndex(array, predicate, fromIndex) {
-      var length = array == null ? 0 : array.length;
-      if (!length) {
+    var length = array == null ? 0 : array.length;
+    if (!length) {
         return -1;
-      }
-      var index = fromIndex == null ? 0 : toInteger(fromIndex);
-      if (index < 0) {
+    }
+    var index = fromIndex == null ? 0 : toInteger(fromIndex);
+    if (index < 0) {
         index = nativeMax(length + index, 0);
-      }
-      return baseFindIndex(array, getIteratee(predicate, 3), index);
+    }
+    return baseFindIndex(array, getIteratee(predicate, 3), index);
     }
 
     /**
@@ -15362,18 +15376,18 @@ exports.Deprecation = Deprecation;
      * // => 0
      */
     function findLastIndex(array, predicate, fromIndex) {
-      var length = array == null ? 0 : array.length;
-      if (!length) {
+    var length = array == null ? 0 : array.length;
+    if (!length) {
         return -1;
-      }
-      var index = length - 1;
-      if (fromIndex !== undefined) {
+    }
+    var index = length - 1;
+    if (fromIndex !== undefined) {
         index = toInteger(fromIndex);
         index = fromIndex < 0
-          ? nativeMax(length + index, 0)
-          : nativeMin(index, length - 1);
-      }
-      return baseFindIndex(array, getIteratee(predicate, 3), index, true);
+        ? nativeMax(length + index, 0)
+        : nativeMin(index, length - 1);
+    }
+    return baseFindIndex(array, getIteratee(predicate, 3), index, true);
     }
 
     /**
@@ -15391,8 +15405,8 @@ exports.Deprecation = Deprecation;
      * // => [1, 2, [3, [4]], 5]
      */
     function flatten(array) {
-      var length = array == null ? 0 : array.length;
-      return length ? baseFlatten(array, 1) : [];
+    var length = array == null ? 0 : array.length;
+    return length ? baseFlatten(array, 1) : [];
     }
 
     /**
@@ -15410,8 +15424,8 @@ exports.Deprecation = Deprecation;
      * // => [1, 2, 3, 4, 5]
      */
     function flattenDeep(array) {
-      var length = array == null ? 0 : array.length;
-      return length ? baseFlatten(array, INFINITY) : [];
+    var length = array == null ? 0 : array.length;
+    return length ? baseFlatten(array, INFINITY) : [];
     }
 
     /**
@@ -15435,12 +15449,12 @@ exports.Deprecation = Deprecation;
      * // => [1, 2, 3, [4], 5]
      */
     function flattenDepth(array, depth) {
-      var length = array == null ? 0 : array.length;
-      if (!length) {
+    var length = array == null ? 0 : array.length;
+    if (!length) {
         return [];
-      }
-      depth = depth === undefined ? 1 : toInteger(depth);
-      return baseFlatten(array, depth);
+    }
+    depth = depth === undefined ? 1 : toInteger(depth);
+    return baseFlatten(array, depth);
     }
 
     /**
@@ -15459,15 +15473,15 @@ exports.Deprecation = Deprecation;
      * // => { 'a': 1, 'b': 2 }
      */
     function fromPairs(pairs) {
-      var index = -1,
-          length = pairs == null ? 0 : pairs.length,
-          result = {};
+    var index = -1,
+        length = pairs == null ? 0 : pairs.length,
+        result = {};
 
-      while (++index < length) {
+    while (++index < length) {
         var pair = pairs[index];
         result[pair[0]] = pair[1];
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -15489,7 +15503,7 @@ exports.Deprecation = Deprecation;
      * // => undefined
      */
     function head(array) {
-      return (array && array.length) ? array[0] : undefined;
+    return (array && array.length) ? array[0] : undefined;
     }
 
     /**
@@ -15516,15 +15530,15 @@ exports.Deprecation = Deprecation;
      * // => 3
      */
     function indexOf(array, value, fromIndex) {
-      var length = array == null ? 0 : array.length;
-      if (!length) {
+    var length = array == null ? 0 : array.length;
+    if (!length) {
         return -1;
-      }
-      var index = fromIndex == null ? 0 : toInteger(fromIndex);
-      if (index < 0) {
+    }
+    var index = fromIndex == null ? 0 : toInteger(fromIndex);
+    if (index < 0) {
         index = nativeMax(length + index, 0);
-      }
-      return baseIndexOf(array, value, index);
+    }
+    return baseIndexOf(array, value, index);
     }
 
     /**
@@ -15542,8 +15556,8 @@ exports.Deprecation = Deprecation;
      * // => [1, 2]
      */
     function initial(array) {
-      var length = array == null ? 0 : array.length;
-      return length ? baseSlice(array, 0, -1) : [];
+    var length = array == null ? 0 : array.length;
+    return length ? baseSlice(array, 0, -1) : [];
     }
 
     /**
@@ -15564,8 +15578,8 @@ exports.Deprecation = Deprecation;
      * // => [2]
      */
     var intersection = baseRest(function(arrays) {
-      var mapped = arrayMap(arrays, castArrayLikeObject);
-      return (mapped.length && mapped[0] === arrays[0])
+    var mapped = arrayMap(arrays, castArrayLikeObject);
+    return (mapped.length && mapped[0] === arrays[0])
         ? baseIntersection(mapped)
         : [];
     });
@@ -15594,15 +15608,15 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 1 }]
      */
     var intersectionBy = baseRest(function(arrays) {
-      var iteratee = last(arrays),
-          mapped = arrayMap(arrays, castArrayLikeObject);
+    var iteratee = last(arrays),
+        mapped = arrayMap(arrays, castArrayLikeObject);
 
-      if (iteratee === last(mapped)) {
+    if (iteratee === last(mapped)) {
         iteratee = undefined;
-      } else {
+    } else {
         mapped.pop();
-      }
-      return (mapped.length && mapped[0] === arrays[0])
+    }
+    return (mapped.length && mapped[0] === arrays[0])
         ? baseIntersection(mapped, getIteratee(iteratee, 2))
         : [];
     });
@@ -15629,14 +15643,14 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 1, 'y': 2 }]
      */
     var intersectionWith = baseRest(function(arrays) {
-      var comparator = last(arrays),
-          mapped = arrayMap(arrays, castArrayLikeObject);
+    var comparator = last(arrays),
+        mapped = arrayMap(arrays, castArrayLikeObject);
 
-      comparator = typeof comparator == 'function' ? comparator : undefined;
-      if (comparator) {
+    comparator = typeof comparator == 'function' ? comparator : undefined;
+    if (comparator) {
         mapped.pop();
-      }
-      return (mapped.length && mapped[0] === arrays[0])
+    }
+    return (mapped.length && mapped[0] === arrays[0])
         ? baseIntersection(mapped, undefined, comparator)
         : [];
     });
@@ -15657,7 +15671,7 @@ exports.Deprecation = Deprecation;
      * // => 'a~b~c'
      */
     function join(array, separator) {
-      return array == null ? '' : nativeJoin.call(array, separator);
+    return array == null ? '' : nativeJoin.call(array, separator);
     }
 
     /**
@@ -15675,8 +15689,8 @@ exports.Deprecation = Deprecation;
      * // => 3
      */
     function last(array) {
-      var length = array == null ? 0 : array.length;
-      return length ? array[length - 1] : undefined;
+    var length = array == null ? 0 : array.length;
+    return length ? array[length - 1] : undefined;
     }
 
     /**
@@ -15701,16 +15715,16 @@ exports.Deprecation = Deprecation;
      * // => 1
      */
     function lastIndexOf(array, value, fromIndex) {
-      var length = array == null ? 0 : array.length;
-      if (!length) {
+    var length = array == null ? 0 : array.length;
+    if (!length) {
         return -1;
-      }
-      var index = length;
-      if (fromIndex !== undefined) {
+    }
+    var index = length;
+    if (fromIndex !== undefined) {
         index = toInteger(fromIndex);
         index = index < 0 ? nativeMax(length + index, 0) : nativeMin(index, length - 1);
-      }
-      return value === value
+    }
+    return value === value
         ? strictLastIndexOf(array, value, index)
         : baseFindIndex(array, baseIsNaN, index, true);
     }
@@ -15737,7 +15751,7 @@ exports.Deprecation = Deprecation;
      * // => 'c';
      */
     function nth(array, n) {
-      return (array && array.length) ? baseNth(array, toInteger(n)) : undefined;
+    return (array && array.length) ? baseNth(array, toInteger(n)) : undefined;
     }
 
     /**
@@ -15786,7 +15800,7 @@ exports.Deprecation = Deprecation;
      * // => ['b', 'b']
      */
     function pullAll(array, values) {
-      return (array && array.length && values && values.length)
+    return (array && array.length && values && values.length)
         ? basePullAll(array, values)
         : array;
     }
@@ -15815,7 +15829,7 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 2 }]
      */
     function pullAllBy(array, values, iteratee) {
-      return (array && array.length && values && values.length)
+    return (array && array.length && values && values.length)
         ? basePullAll(array, values, getIteratee(iteratee, 2))
         : array;
     }
@@ -15844,7 +15858,7 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 1, 'y': 2 }, { 'x': 5, 'y': 6 }]
      */
     function pullAllWith(array, values, comparator) {
-      return (array && array.length && values && values.length)
+    return (array && array.length && values && values.length)
         ? basePullAll(array, values, undefined, comparator)
         : array;
     }
@@ -15874,14 +15888,14 @@ exports.Deprecation = Deprecation;
      * // => ['b', 'd']
      */
     var pullAt = flatRest(function(array, indexes) {
-      var length = array == null ? 0 : array.length,
-          result = baseAt(array, indexes);
+    var length = array == null ? 0 : array.length,
+        result = baseAt(array, indexes);
 
-      basePullAt(array, arrayMap(indexes, function(index) {
+    basePullAt(array, arrayMap(indexes, function(index) {
         return isIndex(index, length) ? +index : index;
-      }).sort(compareAscending));
+    }).sort(compareAscending));
 
-      return result;
+    return result;
     });
 
     /**
@@ -15913,24 +15927,24 @@ exports.Deprecation = Deprecation;
      * // => [2, 4]
      */
     function remove(array, predicate) {
-      var result = [];
-      if (!(array && array.length)) {
+    var result = [];
+    if (!(array && array.length)) {
         return result;
-      }
-      var index = -1,
-          indexes = [],
-          length = array.length;
+    }
+    var index = -1,
+        indexes = [],
+        length = array.length;
 
-      predicate = getIteratee(predicate, 3);
-      while (++index < length) {
+    predicate = getIteratee(predicate, 3);
+    while (++index < length) {
         var value = array[index];
         if (predicate(value, index, array)) {
-          result.push(value);
-          indexes.push(index);
+        result.push(value);
+        indexes.push(index);
         }
-      }
-      basePullAt(array, indexes);
-      return result;
+    }
+    basePullAt(array, indexes);
+    return result;
     }
 
     /**
@@ -15957,7 +15971,7 @@ exports.Deprecation = Deprecation;
      * // => [3, 2, 1]
      */
     function reverse(array) {
-      return array == null ? array : nativeReverse.call(array);
+    return array == null ? array : nativeReverse.call(array);
     }
 
     /**
@@ -15977,19 +15991,19 @@ exports.Deprecation = Deprecation;
      * @returns {Array} Returns the slice of `array`.
      */
     function slice(array, start, end) {
-      var length = array == null ? 0 : array.length;
-      if (!length) {
+    var length = array == null ? 0 : array.length;
+    if (!length) {
         return [];
-      }
-      if (end && typeof end != 'number' && isIterateeCall(array, start, end)) {
+    }
+    if (end && typeof end != 'number' && isIterateeCall(array, start, end)) {
         start = 0;
         end = length;
-      }
-      else {
+    }
+    else {
         start = start == null ? 0 : toInteger(start);
         end = end === undefined ? length : toInteger(end);
-      }
-      return baseSlice(array, start, end);
+    }
+    return baseSlice(array, start, end);
     }
 
     /**
@@ -16010,7 +16024,7 @@ exports.Deprecation = Deprecation;
      * // => 1
      */
     function sortedIndex(array, value) {
-      return baseSortedIndex(array, value);
+    return baseSortedIndex(array, value);
     }
 
     /**
@@ -16039,7 +16053,7 @@ exports.Deprecation = Deprecation;
      * // => 0
      */
     function sortedIndexBy(array, value, iteratee) {
-      return baseSortedIndexBy(array, value, getIteratee(iteratee, 2));
+    return baseSortedIndexBy(array, value, getIteratee(iteratee, 2));
     }
 
     /**
@@ -16059,14 +16073,14 @@ exports.Deprecation = Deprecation;
      * // => 1
      */
     function sortedIndexOf(array, value) {
-      var length = array == null ? 0 : array.length;
-      if (length) {
+    var length = array == null ? 0 : array.length;
+    if (length) {
         var index = baseSortedIndex(array, value);
         if (index < length && eq(array[index], value)) {
-          return index;
+        return index;
         }
-      }
-      return -1;
+    }
+    return -1;
     }
 
     /**
@@ -16088,7 +16102,7 @@ exports.Deprecation = Deprecation;
      * // => 4
      */
     function sortedLastIndex(array, value) {
-      return baseSortedIndex(array, value, true);
+    return baseSortedIndex(array, value, true);
     }
 
     /**
@@ -16117,7 +16131,7 @@ exports.Deprecation = Deprecation;
      * // => 1
      */
     function sortedLastIndexBy(array, value, iteratee) {
-      return baseSortedIndexBy(array, value, getIteratee(iteratee, 2), true);
+    return baseSortedIndexBy(array, value, getIteratee(iteratee, 2), true);
     }
 
     /**
@@ -16137,14 +16151,14 @@ exports.Deprecation = Deprecation;
      * // => 3
      */
     function sortedLastIndexOf(array, value) {
-      var length = array == null ? 0 : array.length;
-      if (length) {
+    var length = array == null ? 0 : array.length;
+    if (length) {
         var index = baseSortedIndex(array, value, true) - 1;
         if (eq(array[index], value)) {
-          return index;
+        return index;
         }
-      }
-      return -1;
+    }
+    return -1;
     }
 
     /**
@@ -16163,7 +16177,7 @@ exports.Deprecation = Deprecation;
      * // => [1, 2]
      */
     function sortedUniq(array) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseSortedUniq(array)
         : [];
     }
@@ -16185,7 +16199,7 @@ exports.Deprecation = Deprecation;
      * // => [1.1, 2.3]
      */
     function sortedUniqBy(array, iteratee) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseSortedUniq(array, getIteratee(iteratee, 2))
         : [];
     }
@@ -16205,8 +16219,8 @@ exports.Deprecation = Deprecation;
      * // => [2, 3]
      */
     function tail(array) {
-      var length = array == null ? 0 : array.length;
-      return length ? baseSlice(array, 1, length) : [];
+    var length = array == null ? 0 : array.length;
+    return length ? baseSlice(array, 1, length) : [];
     }
 
     /**
@@ -16235,11 +16249,11 @@ exports.Deprecation = Deprecation;
      * // => []
      */
     function take(array, n, guard) {
-      if (!(array && array.length)) {
+    if (!(array && array.length)) {
         return [];
-      }
-      n = (guard || n === undefined) ? 1 : toInteger(n);
-      return baseSlice(array, 0, n < 0 ? 0 : n);
+    }
+    n = (guard || n === undefined) ? 1 : toInteger(n);
+    return baseSlice(array, 0, n < 0 ? 0 : n);
     }
 
     /**
@@ -16268,13 +16282,13 @@ exports.Deprecation = Deprecation;
      * // => []
      */
     function takeRight(array, n, guard) {
-      var length = array == null ? 0 : array.length;
-      if (!length) {
+    var length = array == null ? 0 : array.length;
+    if (!length) {
         return [];
-      }
-      n = (guard || n === undefined) ? 1 : toInteger(n);
-      n = length - n;
-      return baseSlice(array, n < 0 ? 0 : n, length);
+    }
+    n = (guard || n === undefined) ? 1 : toInteger(n);
+    n = length - n;
+    return baseSlice(array, n < 0 ? 0 : n, length);
     }
 
     /**
@@ -16313,7 +16327,7 @@ exports.Deprecation = Deprecation;
      * // => []
      */
     function takeRightWhile(array, predicate) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseWhile(array, getIteratee(predicate, 3), false, true)
         : [];
     }
@@ -16354,7 +16368,7 @@ exports.Deprecation = Deprecation;
      * // => []
      */
     function takeWhile(array, predicate) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseWhile(array, getIteratee(predicate, 3))
         : [];
     }
@@ -16376,7 +16390,7 @@ exports.Deprecation = Deprecation;
      * // => [2, 1]
      */
     var union = baseRest(function(arrays) {
-      return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true));
+    return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true));
     });
 
     /**
@@ -16403,11 +16417,11 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 1 }, { 'x': 2 }]
      */
     var unionBy = baseRest(function(arrays) {
-      var iteratee = last(arrays);
-      if (isArrayLikeObject(iteratee)) {
+    var iteratee = last(arrays);
+    if (isArrayLikeObject(iteratee)) {
         iteratee = undefined;
-      }
-      return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true), getIteratee(iteratee, 2));
+    }
+    return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true), getIteratee(iteratee, 2));
     });
 
     /**
@@ -16432,9 +16446,9 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 1, 'y': 2 }, { 'x': 2, 'y': 1 }, { 'x': 1, 'y': 1 }]
      */
     var unionWith = baseRest(function(arrays) {
-      var comparator = last(arrays);
-      comparator = typeof comparator == 'function' ? comparator : undefined;
-      return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true), undefined, comparator);
+    var comparator = last(arrays);
+    comparator = typeof comparator == 'function' ? comparator : undefined;
+    return baseUniq(baseFlatten(arrays, 1, isArrayLikeObject, true), undefined, comparator);
     });
 
     /**
@@ -16456,7 +16470,7 @@ exports.Deprecation = Deprecation;
      * // => [2, 1]
      */
     function uniq(array) {
-      return (array && array.length) ? baseUniq(array) : [];
+    return (array && array.length) ? baseUniq(array) : [];
     }
 
     /**
@@ -16483,7 +16497,7 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 1 }, { 'x': 2 }]
      */
     function uniqBy(array, iteratee) {
-      return (array && array.length) ? baseUniq(array, getIteratee(iteratee, 2)) : [];
+    return (array && array.length) ? baseUniq(array, getIteratee(iteratee, 2)) : [];
     }
 
     /**
@@ -16507,8 +16521,8 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 1, 'y': 2 }, { 'x': 2, 'y': 1 }]
      */
     function uniqWith(array, comparator) {
-      comparator = typeof comparator == 'function' ? comparator : undefined;
-      return (array && array.length) ? baseUniq(array, undefined, comparator) : [];
+    comparator = typeof comparator == 'function' ? comparator : undefined;
+    return (array && array.length) ? baseUniq(array, undefined, comparator) : [];
     }
 
     /**
@@ -16531,19 +16545,19 @@ exports.Deprecation = Deprecation;
      * // => [['a', 'b'], [1, 2], [true, false]]
      */
     function unzip(array) {
-      if (!(array && array.length)) {
+    if (!(array && array.length)) {
         return [];
-      }
-      var length = 0;
-      array = arrayFilter(array, function(group) {
+    }
+    var length = 0;
+    array = arrayFilter(array, function(group) {
         if (isArrayLikeObject(group)) {
-          length = nativeMax(group.length, length);
-          return true;
+        length = nativeMax(group.length, length);
+        return true;
         }
-      });
-      return baseTimes(length, function(index) {
+    });
+    return baseTimes(length, function(index) {
         return arrayMap(array, baseProperty(index));
-      });
+    });
     }
 
     /**
@@ -16568,16 +16582,16 @@ exports.Deprecation = Deprecation;
      * // => [3, 30, 300]
      */
     function unzipWith(array, iteratee) {
-      if (!(array && array.length)) {
+    if (!(array && array.length)) {
         return [];
-      }
-      var result = unzip(array);
-      if (iteratee == null) {
+    }
+    var result = unzip(array);
+    if (iteratee == null) {
         return result;
-      }
-      return arrayMap(result, function(group) {
+    }
+    return arrayMap(result, function(group) {
         return apply(iteratee, undefined, group);
-      });
+    });
     }
 
     /**
@@ -16601,7 +16615,7 @@ exports.Deprecation = Deprecation;
      * // => [3]
      */
     var without = baseRest(function(array, values) {
-      return isArrayLikeObject(array)
+    return isArrayLikeObject(array)
         ? baseDifference(array, values)
         : [];
     });
@@ -16625,7 +16639,7 @@ exports.Deprecation = Deprecation;
      * // => [1, 3]
      */
     var xor = baseRest(function(arrays) {
-      return baseXor(arrayFilter(arrays, isArrayLikeObject));
+    return baseXor(arrayFilter(arrays, isArrayLikeObject));
     });
 
     /**
@@ -16652,11 +16666,11 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 2 }]
      */
     var xorBy = baseRest(function(arrays) {
-      var iteratee = last(arrays);
-      if (isArrayLikeObject(iteratee)) {
+    var iteratee = last(arrays);
+    if (isArrayLikeObject(iteratee)) {
         iteratee = undefined;
-      }
-      return baseXor(arrayFilter(arrays, isArrayLikeObject), getIteratee(iteratee, 2));
+    }
+    return baseXor(arrayFilter(arrays, isArrayLikeObject), getIteratee(iteratee, 2));
     });
 
     /**
@@ -16681,9 +16695,9 @@ exports.Deprecation = Deprecation;
      * // => [{ 'x': 2, 'y': 1 }, { 'x': 1, 'y': 1 }]
      */
     var xorWith = baseRest(function(arrays) {
-      var comparator = last(arrays);
-      comparator = typeof comparator == 'function' ? comparator : undefined;
-      return baseXor(arrayFilter(arrays, isArrayLikeObject), undefined, comparator);
+    var comparator = last(arrays);
+    comparator = typeof comparator == 'function' ? comparator : undefined;
+    return baseXor(arrayFilter(arrays, isArrayLikeObject), undefined, comparator);
     });
 
     /**
@@ -16721,7 +16735,7 @@ exports.Deprecation = Deprecation;
      * // => { 'a': 1, 'b': 2 }
      */
     function zipObject(props, values) {
-      return baseZipObject(props || [], values || [], assignValue);
+    return baseZipObject(props || [], values || [], assignValue);
     }
 
     /**
@@ -16740,7 +16754,7 @@ exports.Deprecation = Deprecation;
      * // => { 'a': { 'b': [{ 'c': 1 }, { 'd': 2 }] } }
      */
     function zipObjectDeep(props, values) {
-      return baseZipObject(props || [], values || [], baseSet);
+    return baseZipObject(props || [], values || [], baseSet);
     }
 
     /**
@@ -16764,11 +16778,11 @@ exports.Deprecation = Deprecation;
      * // => [111, 222]
      */
     var zipWith = baseRest(function(arrays) {
-      var length = arrays.length,
-          iteratee = length > 1 ? arrays[length - 1] : undefined;
+    var length = arrays.length,
+        iteratee = length > 1 ? arrays[length - 1] : undefined;
 
-      iteratee = typeof iteratee == 'function' ? (arrays.pop(), iteratee) : undefined;
-      return unzipWith(arrays, iteratee);
+    iteratee = typeof iteratee == 'function' ? (arrays.pop(), iteratee) : undefined;
+    return unzipWith(arrays, iteratee);
     });
 
     /*------------------------------------------------------------------------*/
@@ -16803,9 +16817,9 @@ exports.Deprecation = Deprecation;
      * // => 'pebbles is 1'
      */
     function chain(value) {
-      var result = lodash(value);
-      result.__chain__ = true;
-      return result;
+    var result = lodash(value);
+    result.__chain__ = true;
+    return result;
     }
 
     /**
@@ -16832,8 +16846,8 @@ exports.Deprecation = Deprecation;
      * // => [2, 1]
      */
     function tap(value, interceptor) {
-      interceptor(value);
-      return value;
+    interceptor(value);
+    return value;
     }
 
     /**
@@ -16860,7 +16874,7 @@ exports.Deprecation = Deprecation;
      * // => ['abc']
      */
     function thru(value, interceptor) {
-      return interceptor(value);
+    return interceptor(value);
     }
 
     /**
@@ -16880,27 +16894,27 @@ exports.Deprecation = Deprecation;
      * // => [3, 4]
      */
     var wrapperAt = flatRest(function(paths) {
-      var length = paths.length,
-          start = length ? paths[0] : 0,
-          value = this.__wrapped__,
-          interceptor = function(object) { return baseAt(object, paths); };
+    var length = paths.length,
+        start = length ? paths[0] : 0,
+        value = this.__wrapped__,
+        interceptor = function(object) { return baseAt(object, paths); };
 
-      if (length > 1 || this.__actions__.length ||
-          !(value instanceof LazyWrapper) || !isIndex(start)) {
+    if (length > 1 || this.__actions__.length ||
+        !(value instanceof LazyWrapper) || !isIndex(start)) {
         return this.thru(interceptor);
-      }
-      value = value.slice(start, +start + (length ? 1 : 0));
-      value.__actions__.push({
+    }
+    value = value.slice(start, +start + (length ? 1 : 0));
+    value.__actions__.push({
         'func': thru,
         'args': [interceptor],
         'thisArg': undefined
-      });
-      return new LodashWrapper(value, this.__chain__).thru(function(array) {
+    });
+    return new LodashWrapper(value, this.__chain__).thru(function(array) {
         if (length && !array.length) {
-          array.push(undefined);
+        array.push(undefined);
         }
         return array;
-      });
+    });
     });
 
     /**
@@ -16931,7 +16945,7 @@ exports.Deprecation = Deprecation;
      * // => { 'user': 'barney' }
      */
     function wrapperChain() {
-      return chain(this);
+    return chain(this);
     }
 
     /**
@@ -16961,7 +16975,7 @@ exports.Deprecation = Deprecation;
      * // => [1, 2, 3]
      */
     function wrapperCommit() {
-      return new LodashWrapper(this.value(), this.__chain__);
+    return new LodashWrapper(this.value(), this.__chain__);
     }
 
     /**
@@ -16987,13 +17001,13 @@ exports.Deprecation = Deprecation;
      * // => { 'done': true, 'value': undefined }
      */
     function wrapperNext() {
-      if (this.__values__ === undefined) {
+    if (this.__values__ === undefined) {
         this.__values__ = toArray(this.value());
-      }
-      var done = this.__index__ >= this.__values__.length,
-          value = done ? undefined : this.__values__[this.__index__++];
+    }
+    var done = this.__index__ >= this.__values__.length,
+        value = done ? undefined : this.__values__[this.__index__++];
 
-      return { 'done': done, 'value': value };
+    return { 'done': done, 'value': value };
     }
 
     /**
@@ -17015,7 +17029,7 @@ exports.Deprecation = Deprecation;
      * // => [1, 2]
      */
     function wrapperToIterator() {
-      return this;
+    return this;
     }
 
     /**
@@ -17043,23 +17057,23 @@ exports.Deprecation = Deprecation;
      * // => [1, 4]
      */
     function wrapperPlant(value) {
-      var result,
-          parent = this;
+    var result,
+        parent = this;
 
-      while (parent instanceof baseLodash) {
+    while (parent instanceof baseLodash) {
         var clone = wrapperClone(parent);
         clone.__index__ = 0;
         clone.__values__ = undefined;
         if (result) {
-          previous.__wrapped__ = clone;
+        previous.__wrapped__ = clone;
         } else {
-          result = clone;
+        result = clone;
         }
         var previous = clone;
         parent = parent.__wrapped__;
-      }
-      previous.__wrapped__ = value;
-      return result;
+    }
+    previous.__wrapped__ = value;
+    return result;
     }
 
     /**
@@ -17083,21 +17097,21 @@ exports.Deprecation = Deprecation;
      * // => [3, 2, 1]
      */
     function wrapperReverse() {
-      var value = this.__wrapped__;
-      if (value instanceof LazyWrapper) {
+    var value = this.__wrapped__;
+    if (value instanceof LazyWrapper) {
         var wrapped = value;
         if (this.__actions__.length) {
-          wrapped = new LazyWrapper(this);
+        wrapped = new LazyWrapper(this);
         }
         wrapped = wrapped.reverse();
         wrapped.__actions__.push({
-          'func': thru,
-          'args': [reverse],
-          'thisArg': undefined
+        'func': thru,
+        'args': [reverse],
+        'thisArg': undefined
         });
         return new LodashWrapper(wrapped, this.__chain__);
-      }
-      return this.thru(reverse);
+    }
+    return this.thru(reverse);
     }
 
     /**
@@ -17115,7 +17129,7 @@ exports.Deprecation = Deprecation;
      * // => [1, 2, 3]
      */
     function wrapperValue() {
-      return baseWrapperValue(this.__wrapped__, this.__actions__);
+    return baseWrapperValue(this.__wrapped__, this.__actions__);
     }
 
     /*------------------------------------------------------------------------*/
@@ -17143,11 +17157,11 @@ exports.Deprecation = Deprecation;
      * // => { '3': 2, '5': 1 }
      */
     var countBy = createAggregator(function(result, value, key) {
-      if (hasOwnProperty.call(result, key)) {
+    if (hasOwnProperty.call(result, key)) {
         ++result[key];
-      } else {
+    } else {
         baseAssignValue(result, key, 1);
-      }
+    }
     });
 
     /**
@@ -17192,11 +17206,11 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function every(collection, predicate, guard) {
-      var func = isArray(collection) ? arrayEvery : baseEvery;
-      if (guard && isIterateeCall(collection, predicate, guard)) {
+    var func = isArray(collection) ? arrayEvery : baseEvery;
+    if (guard && isIterateeCall(collection, predicate, guard)) {
         predicate = undefined;
-      }
-      return func(collection, getIteratee(predicate, 3));
+    }
+    return func(collection, getIteratee(predicate, 3));
     }
 
     /**
@@ -17241,8 +17255,8 @@ exports.Deprecation = Deprecation;
      * // => objects for ['fred', 'barney']
      */
     function filter(collection, predicate) {
-      var func = isArray(collection) ? arrayFilter : baseFilter;
-      return func(collection, getIteratee(predicate, 3));
+    var func = isArray(collection) ? arrayFilter : baseFilter;
+    return func(collection, getIteratee(predicate, 3));
     }
 
     /**
@@ -17326,7 +17340,7 @@ exports.Deprecation = Deprecation;
      * // => [1, 1, 2, 2]
      */
     function flatMap(collection, iteratee) {
-      return baseFlatten(map(collection, iteratee), 1);
+    return baseFlatten(map(collection, iteratee), 1);
     }
 
     /**
@@ -17350,7 +17364,7 @@ exports.Deprecation = Deprecation;
      * // => [1, 1, 2, 2]
      */
     function flatMapDeep(collection, iteratee) {
-      return baseFlatten(map(collection, iteratee), INFINITY);
+    return baseFlatten(map(collection, iteratee), INFINITY);
     }
 
     /**
@@ -17375,8 +17389,8 @@ exports.Deprecation = Deprecation;
      * // => [[1, 1], [2, 2]]
      */
     function flatMapDepth(collection, iteratee, depth) {
-      depth = depth === undefined ? 1 : toInteger(depth);
-      return baseFlatten(map(collection, iteratee), depth);
+    depth = depth === undefined ? 1 : toInteger(depth);
+    return baseFlatten(map(collection, iteratee), depth);
     }
 
     /**
@@ -17410,8 +17424,8 @@ exports.Deprecation = Deprecation;
      * // => Logs 'a' then 'b' (iteration order is not guaranteed).
      */
     function forEach(collection, iteratee) {
-      var func = isArray(collection) ? arrayEach : baseEach;
-      return func(collection, getIteratee(iteratee, 3));
+    var func = isArray(collection) ? arrayEach : baseEach;
+    return func(collection, getIteratee(iteratee, 3));
     }
 
     /**
@@ -17435,8 +17449,8 @@ exports.Deprecation = Deprecation;
      * // => Logs `2` then `1`.
      */
     function forEachRight(collection, iteratee) {
-      var func = isArray(collection) ? arrayEachRight : baseEachRight;
-      return func(collection, getIteratee(iteratee, 3));
+    var func = isArray(collection) ? arrayEachRight : baseEachRight;
+    return func(collection, getIteratee(iteratee, 3));
     }
 
     /**
@@ -17463,11 +17477,11 @@ exports.Deprecation = Deprecation;
      * // => { '3': ['one', 'two'], '5': ['three'] }
      */
     var groupBy = createAggregator(function(result, value, key) {
-      if (hasOwnProperty.call(result, key)) {
+    if (hasOwnProperty.call(result, key)) {
         result[key].push(value);
-      } else {
+    } else {
         baseAssignValue(result, key, [value]);
-      }
+    }
     });
 
     /**
@@ -17501,14 +17515,14 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function includes(collection, value, fromIndex, guard) {
-      collection = isArrayLike(collection) ? collection : values(collection);
-      fromIndex = (fromIndex && !guard) ? toInteger(fromIndex) : 0;
+    collection = isArrayLike(collection) ? collection : values(collection);
+    fromIndex = (fromIndex && !guard) ? toInteger(fromIndex) : 0;
 
-      var length = collection.length;
-      if (fromIndex < 0) {
+    var length = collection.length;
+    if (fromIndex < 0) {
         fromIndex = nativeMax(length + fromIndex, 0);
-      }
-      return isString(collection)
+    }
+    return isString(collection)
         ? (fromIndex <= length && collection.indexOf(value, fromIndex) > -1)
         : (!!length && baseIndexOf(collection, value, fromIndex) > -1);
     }
@@ -17537,14 +17551,14 @@ exports.Deprecation = Deprecation;
      * // => [['1', '2', '3'], ['4', '5', '6']]
      */
     var invokeMap = baseRest(function(collection, path, args) {
-      var index = -1,
-          isFunc = typeof path == 'function',
-          result = isArrayLike(collection) ? Array(collection.length) : [];
+    var index = -1,
+        isFunc = typeof path == 'function',
+        result = isArrayLike(collection) ? Array(collection.length) : [];
 
-      baseEach(collection, function(value) {
+    baseEach(collection, function(value) {
         result[++index] = isFunc ? apply(path, value, args) : baseInvoke(value, path, args);
-      });
-      return result;
+    });
+    return result;
     });
 
     /**
@@ -17576,7 +17590,7 @@ exports.Deprecation = Deprecation;
      * // => { 'left': { 'dir': 'left', 'code': 97 }, 'right': { 'dir': 'right', 'code': 100 } }
      */
     var keyBy = createAggregator(function(result, value, key) {
-      baseAssignValue(result, key, value);
+    baseAssignValue(result, key, value);
     });
 
     /**
@@ -17622,8 +17636,8 @@ exports.Deprecation = Deprecation;
      * // => ['barney', 'fred']
      */
     function map(collection, iteratee) {
-      var func = isArray(collection) ? arrayMap : baseMap;
-      return func(collection, getIteratee(iteratee, 3));
+    var func = isArray(collection) ? arrayMap : baseMap;
+    return func(collection, getIteratee(iteratee, 3));
     }
 
     /**
@@ -17656,17 +17670,17 @@ exports.Deprecation = Deprecation;
      * // => objects for [['barney', 36], ['barney', 34], ['fred', 48], ['fred', 40]]
      */
     function orderBy(collection, iteratees, orders, guard) {
-      if (collection == null) {
+    if (collection == null) {
         return [];
-      }
-      if (!isArray(iteratees)) {
+    }
+    if (!isArray(iteratees)) {
         iteratees = iteratees == null ? [] : [iteratees];
-      }
-      orders = guard ? undefined : orders;
-      if (!isArray(orders)) {
+    }
+    orders = guard ? undefined : orders;
+    if (!isArray(orders)) {
         orders = orders == null ? [] : [orders];
-      }
-      return baseOrderBy(collection, iteratees, orders);
+    }
+    return baseOrderBy(collection, iteratees, orders);
     }
 
     /**
@@ -17706,7 +17720,7 @@ exports.Deprecation = Deprecation;
      * // => objects for [['fred'], ['barney', 'pebbles']]
      */
     var partition = createAggregator(function(result, value, key) {
-      result[key ? 0 : 1].push(value);
+    result[key ? 0 : 1].push(value);
     }, function() { return [[], []]; });
 
     /**
@@ -17747,10 +17761,10 @@ exports.Deprecation = Deprecation;
      * // => { '1': ['a', 'c'], '2': ['b'] } (iteration order is not guaranteed)
      */
     function reduce(collection, iteratee, accumulator) {
-      var func = isArray(collection) ? arrayReduce : baseReduce,
-          initAccum = arguments.length < 3;
+    var func = isArray(collection) ? arrayReduce : baseReduce,
+        initAccum = arguments.length < 3;
 
-      return func(collection, getIteratee(iteratee, 4), accumulator, initAccum, baseEach);
+    return func(collection, getIteratee(iteratee, 4), accumulator, initAccum, baseEach);
     }
 
     /**
@@ -17776,10 +17790,10 @@ exports.Deprecation = Deprecation;
      * // => [4, 5, 2, 3, 0, 1]
      */
     function reduceRight(collection, iteratee, accumulator) {
-      var func = isArray(collection) ? arrayReduceRight : baseReduce,
-          initAccum = arguments.length < 3;
+    var func = isArray(collection) ? arrayReduceRight : baseReduce,
+        initAccum = arguments.length < 3;
 
-      return func(collection, getIteratee(iteratee, 4), accumulator, initAccum, baseEachRight);
+    return func(collection, getIteratee(iteratee, 4), accumulator, initAccum, baseEachRight);
     }
 
     /**
@@ -17817,8 +17831,8 @@ exports.Deprecation = Deprecation;
      * // => objects for ['barney']
      */
     function reject(collection, predicate) {
-      var func = isArray(collection) ? arrayFilter : baseFilter;
-      return func(collection, negate(getIteratee(predicate, 3)));
+    var func = isArray(collection) ? arrayFilter : baseFilter;
+    return func(collection, negate(getIteratee(predicate, 3)));
     }
 
     /**
@@ -17836,8 +17850,8 @@ exports.Deprecation = Deprecation;
      * // => 2
      */
     function sample(collection) {
-      var func = isArray(collection) ? arraySample : baseSample;
-      return func(collection);
+    var func = isArray(collection) ? arraySample : baseSample;
+    return func(collection);
     }
 
     /**
@@ -17861,13 +17875,13 @@ exports.Deprecation = Deprecation;
      * // => [2, 3, 1]
      */
     function sampleSize(collection, n, guard) {
-      if ((guard ? isIterateeCall(collection, n, guard) : n === undefined)) {
+    if ((guard ? isIterateeCall(collection, n, guard) : n === undefined)) {
         n = 1;
-      } else {
+    } else {
         n = toInteger(n);
-      }
-      var func = isArray(collection) ? arraySampleSize : baseSampleSize;
-      return func(collection, n);
+    }
+    var func = isArray(collection) ? arraySampleSize : baseSampleSize;
+    return func(collection, n);
     }
 
     /**
@@ -17886,8 +17900,8 @@ exports.Deprecation = Deprecation;
      * // => [4, 1, 3, 2]
      */
     function shuffle(collection) {
-      var func = isArray(collection) ? arrayShuffle : baseShuffle;
-      return func(collection);
+    var func = isArray(collection) ? arrayShuffle : baseShuffle;
+    return func(collection);
     }
 
     /**
@@ -17912,17 +17926,17 @@ exports.Deprecation = Deprecation;
      * // => 7
      */
     function size(collection) {
-      if (collection == null) {
+    if (collection == null) {
         return 0;
-      }
-      if (isArrayLike(collection)) {
+    }
+    if (isArrayLike(collection)) {
         return isString(collection) ? stringSize(collection) : collection.length;
-      }
-      var tag = getTag(collection);
-      if (tag == mapTag || tag == setTag) {
+    }
+    var tag = getTag(collection);
+    if (tag == mapTag || tag == setTag) {
         return collection.size;
-      }
-      return baseKeys(collection).length;
+    }
+    return baseKeys(collection).length;
     }
 
     /**
@@ -17962,11 +17976,11 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function some(collection, predicate, guard) {
-      var func = isArray(collection) ? arraySome : baseSome;
-      if (guard && isIterateeCall(collection, predicate, guard)) {
+    var func = isArray(collection) ? arraySome : baseSome;
+    if (guard && isIterateeCall(collection, predicate, guard)) {
         predicate = undefined;
-      }
-      return func(collection, getIteratee(predicate, 3));
+    }
+    return func(collection, getIteratee(predicate, 3));
     }
 
     /**
@@ -17999,16 +18013,16 @@ exports.Deprecation = Deprecation;
      * // => objects for [['barney', 34], ['barney', 36], ['fred', 30], ['fred', 48]]
      */
     var sortBy = baseRest(function(collection, iteratees) {
-      if (collection == null) {
+    if (collection == null) {
         return [];
-      }
-      var length = iteratees.length;
-      if (length > 1 && isIterateeCall(collection, iteratees[0], iteratees[1])) {
+    }
+    var length = iteratees.length;
+    if (length > 1 && isIterateeCall(collection, iteratees[0], iteratees[1])) {
         iteratees = [];
-      } else if (length > 2 && isIterateeCall(iteratees[0], iteratees[1], iteratees[2])) {
+    } else if (length > 2 && isIterateeCall(iteratees[0], iteratees[1], iteratees[2])) {
         iteratees = [iteratees[0]];
-      }
-      return baseOrderBy(collection, baseFlatten(iteratees, 1), []);
+    }
+    return baseOrderBy(collection, baseFlatten(iteratees, 1), []);
     });
 
     /*------------------------------------------------------------------------*/
@@ -18030,7 +18044,7 @@ exports.Deprecation = Deprecation;
      * // => Logs the number of milliseconds it took for the deferred invocation.
      */
     var now = ctxNow || function() {
-      return root.Date.now();
+    return root.Date.now();
     };
 
     /*------------------------------------------------------------------------*/
@@ -18060,15 +18074,15 @@ exports.Deprecation = Deprecation;
      * // => Logs 'done saving!' after the two async saves have completed.
      */
     function after(n, func) {
-      if (typeof func != 'function') {
+    if (typeof func != 'function') {
         throw new TypeError(FUNC_ERROR_TEXT);
-      }
-      n = toInteger(n);
-      return function() {
+    }
+    n = toInteger(n);
+    return function() {
         if (--n < 1) {
-          return func.apply(this, arguments);
+        return func.apply(this, arguments);
         }
-      };
+    };
     }
 
     /**
@@ -18089,9 +18103,9 @@ exports.Deprecation = Deprecation;
      * // => [6, 8, 10]
      */
     function ary(func, n, guard) {
-      n = guard ? undefined : n;
-      n = (func && n == null) ? func.length : n;
-      return createWrap(func, WRAP_ARY_FLAG, undefined, undefined, undefined, undefined, n);
+    n = guard ? undefined : n;
+    n = (func && n == null) ? func.length : n;
+    return createWrap(func, WRAP_ARY_FLAG, undefined, undefined, undefined, undefined, n);
     }
 
     /**
@@ -18112,20 +18126,20 @@ exports.Deprecation = Deprecation;
      * // => Allows adding up to 4 contacts to the list.
      */
     function before(n, func) {
-      var result;
-      if (typeof func != 'function') {
+    var result;
+    if (typeof func != 'function') {
         throw new TypeError(FUNC_ERROR_TEXT);
-      }
-      n = toInteger(n);
-      return function() {
+    }
+    n = toInteger(n);
+    return function() {
         if (--n > 0) {
-          result = func.apply(this, arguments);
+        result = func.apply(this, arguments);
         }
         if (n <= 1) {
-          func = undefined;
+        func = undefined;
         }
         return result;
-      };
+    };
     }
 
     /**
@@ -18164,12 +18178,12 @@ exports.Deprecation = Deprecation;
      * // => 'hi fred!'
      */
     var bind = baseRest(function(func, thisArg, partials) {
-      var bitmask = WRAP_BIND_FLAG;
-      if (partials.length) {
+    var bitmask = WRAP_BIND_FLAG;
+    if (partials.length) {
         var holders = replaceHolders(partials, getHolder(bind));
         bitmask |= WRAP_PARTIAL_FLAG;
-      }
-      return createWrap(func, bitmask, thisArg, partials, holders);
+    }
+    return createWrap(func, bitmask, thisArg, partials, holders);
     });
 
     /**
@@ -18218,12 +18232,12 @@ exports.Deprecation = Deprecation;
      * // => 'hiya fred!'
      */
     var bindKey = baseRest(function(object, key, partials) {
-      var bitmask = WRAP_BIND_FLAG | WRAP_BIND_KEY_FLAG;
-      if (partials.length) {
+    var bitmask = WRAP_BIND_FLAG | WRAP_BIND_KEY_FLAG;
+    if (partials.length) {
         var holders = replaceHolders(partials, getHolder(bindKey));
         bitmask |= WRAP_PARTIAL_FLAG;
-      }
-      return createWrap(key, bitmask, object, partials, holders);
+    }
+    return createWrap(key, bitmask, object, partials, holders);
     });
 
     /**
@@ -18268,10 +18282,10 @@ exports.Deprecation = Deprecation;
      * // => [1, 2, 3]
      */
     function curry(func, arity, guard) {
-      arity = guard ? undefined : arity;
-      var result = createWrap(func, WRAP_CURRY_FLAG, undefined, undefined, undefined, undefined, undefined, arity);
-      result.placeholder = curry.placeholder;
-      return result;
+    arity = guard ? undefined : arity;
+    var result = createWrap(func, WRAP_CURRY_FLAG, undefined, undefined, undefined, undefined, undefined, arity);
+    result.placeholder = curry.placeholder;
+    return result;
     }
 
     /**
@@ -18313,10 +18327,10 @@ exports.Deprecation = Deprecation;
      * // => [1, 2, 3]
      */
     function curryRight(func, arity, guard) {
-      arity = guard ? undefined : arity;
-      var result = createWrap(func, WRAP_CURRY_RIGHT_FLAG, undefined, undefined, undefined, undefined, undefined, arity);
-      result.placeholder = curryRight.placeholder;
-      return result;
+    arity = guard ? undefined : arity;
+    var result = createWrap(func, WRAP_CURRY_RIGHT_FLAG, undefined, undefined, undefined, undefined, undefined, arity);
+    result.placeholder = curryRight.placeholder;
+    return result;
     }
 
     /**
@@ -18374,29 +18388,29 @@ exports.Deprecation = Deprecation;
      * jQuery(window).on('popstate', debounced.cancel);
      */
     function debounce(func, wait, options) {
-      var lastArgs,
-          lastThis,
-          maxWait,
-          result,
-          timerId,
-          lastCallTime,
-          lastInvokeTime = 0,
-          leading = false,
-          maxing = false,
-          trailing = true;
+    var lastArgs,
+        lastThis,
+        maxWait,
+        result,
+        timerId,
+        lastCallTime,
+        lastInvokeTime = 0,
+        leading = false,
+        maxing = false,
+        trailing = true;
 
-      if (typeof func != 'function') {
+    if (typeof func != 'function') {
         throw new TypeError(FUNC_ERROR_TEXT);
-      }
-      wait = toNumber(wait) || 0;
-      if (isObject(options)) {
+    }
+    wait = toNumber(wait) || 0;
+    if (isObject(options)) {
         leading = !!options.leading;
         maxing = 'maxWait' in options;
         maxWait = maxing ? nativeMax(toNumber(options.maxWait) || 0, wait) : maxWait;
         trailing = 'trailing' in options ? !!options.trailing : trailing;
-      }
+    }
 
-      function invokeFunc(time) {
+    function invokeFunc(time) {
         var args = lastArgs,
             thisArg = lastThis;
 
@@ -18404,28 +18418,28 @@ exports.Deprecation = Deprecation;
         lastInvokeTime = time;
         result = func.apply(thisArg, args);
         return result;
-      }
+    }
 
-      function leadingEdge(time) {
+    function leadingEdge(time) {
         // Reset any `maxWait` timer.
         lastInvokeTime = time;
         // Start the timer for the trailing edge.
         timerId = setTimeout(timerExpired, wait);
         // Invoke the leading edge.
         return leading ? invokeFunc(time) : result;
-      }
+    }
 
-      function remainingWait(time) {
+    function remainingWait(time) {
         var timeSinceLastCall = time - lastCallTime,
             timeSinceLastInvoke = time - lastInvokeTime,
             timeWaiting = wait - timeSinceLastCall;
 
         return maxing
-          ? nativeMin(timeWaiting, maxWait - timeSinceLastInvoke)
-          : timeWaiting;
-      }
+        ? nativeMin(timeWaiting, maxWait - timeSinceLastInvoke)
+        : timeWaiting;
+    }
 
-      function shouldInvoke(time) {
+    function shouldInvoke(time) {
         var timeSinceLastCall = time - lastCallTime,
             timeSinceLastInvoke = time - lastInvokeTime;
 
@@ -18433,43 +18447,43 @@ exports.Deprecation = Deprecation;
         // trailing edge, the system time has gone backwards and we're treating
         // it as the trailing edge, or we've hit the `maxWait` limit.
         return (lastCallTime === undefined || (timeSinceLastCall >= wait) ||
-          (timeSinceLastCall < 0) || (maxing && timeSinceLastInvoke >= maxWait));
-      }
+        (timeSinceLastCall < 0) || (maxing && timeSinceLastInvoke >= maxWait));
+    }
 
-      function timerExpired() {
+    function timerExpired() {
         var time = now();
         if (shouldInvoke(time)) {
-          return trailingEdge(time);
+        return trailingEdge(time);
         }
         // Restart the timer.
         timerId = setTimeout(timerExpired, remainingWait(time));
-      }
+    }
 
-      function trailingEdge(time) {
+    function trailingEdge(time) {
         timerId = undefined;
 
         // Only invoke if we have `lastArgs` which means `func` has been
         // debounced at least once.
         if (trailing && lastArgs) {
-          return invokeFunc(time);
+        return invokeFunc(time);
         }
         lastArgs = lastThis = undefined;
         return result;
-      }
+    }
 
-      function cancel() {
+    function cancel() {
         if (timerId !== undefined) {
-          clearTimeout(timerId);
+        clearTimeout(timerId);
         }
         lastInvokeTime = 0;
         lastArgs = lastCallTime = lastThis = timerId = undefined;
-      }
+    }
 
-      function flush() {
+    function flush() {
         return timerId === undefined ? result : trailingEdge(now());
-      }
+    }
 
-      function debounced() {
+    function debounced() {
         var time = now(),
             isInvoking = shouldInvoke(time);
 
@@ -18478,24 +18492,24 @@ exports.Deprecation = Deprecation;
         lastCallTime = time;
 
         if (isInvoking) {
-          if (timerId === undefined) {
+        if (timerId === undefined) {
             return leadingEdge(lastCallTime);
-          }
-          if (maxing) {
+        }
+        if (maxing) {
             // Handle invocations in a tight loop.
             clearTimeout(timerId);
             timerId = setTimeout(timerExpired, wait);
             return invokeFunc(lastCallTime);
-          }
+        }
         }
         if (timerId === undefined) {
-          timerId = setTimeout(timerExpired, wait);
+        timerId = setTimeout(timerExpired, wait);
         }
         return result;
-      }
-      debounced.cancel = cancel;
-      debounced.flush = flush;
-      return debounced;
+    }
+    debounced.cancel = cancel;
+    debounced.flush = flush;
+    return debounced;
     }
 
     /**
@@ -18517,7 +18531,7 @@ exports.Deprecation = Deprecation;
      * // => Logs 'deferred' after one millisecond.
      */
     var defer = baseRest(function(func, args) {
-      return baseDelay(func, 1, args);
+    return baseDelay(func, 1, args);
     });
 
     /**
@@ -18540,7 +18554,7 @@ exports.Deprecation = Deprecation;
      * // => Logs 'later' after one second.
      */
     var delay = baseRest(function(func, wait, args) {
-      return baseDelay(func, toNumber(wait) || 0, args);
+    return baseDelay(func, toNumber(wait) || 0, args);
     });
 
     /**
@@ -18562,7 +18576,7 @@ exports.Deprecation = Deprecation;
      * // => ['d', 'c', 'b', 'a']
      */
     function flip(func) {
-      return createWrap(func, WRAP_FLIP_FLAG);
+    return createWrap(func, WRAP_FLIP_FLAG);
     }
 
     /**
@@ -18610,23 +18624,23 @@ exports.Deprecation = Deprecation;
      * _.memoize.Cache = WeakMap;
      */
     function memoize(func, resolver) {
-      if (typeof func != 'function' || (resolver != null && typeof resolver != 'function')) {
+    if (typeof func != 'function' || (resolver != null && typeof resolver != 'function')) {
         throw new TypeError(FUNC_ERROR_TEXT);
-      }
-      var memoized = function() {
+    }
+    var memoized = function() {
         var args = arguments,
             key = resolver ? resolver.apply(this, args) : args[0],
             cache = memoized.cache;
 
         if (cache.has(key)) {
-          return cache.get(key);
+        return cache.get(key);
         }
         var result = func.apply(this, args);
         memoized.cache = cache.set(key, result) || cache;
         return result;
-      };
-      memoized.cache = new (memoize.Cache || MapCache);
-      return memoized;
+    };
+    memoized.cache = new (memoize.Cache || MapCache);
+    return memoized;
     }
 
     // Expose `MapCache`.
@@ -18653,19 +18667,19 @@ exports.Deprecation = Deprecation;
      * // => [1, 3, 5]
      */
     function negate(predicate) {
-      if (typeof predicate != 'function') {
+    if (typeof predicate != 'function') {
         throw new TypeError(FUNC_ERROR_TEXT);
-      }
-      return function() {
+    }
+    return function() {
         var args = arguments;
         switch (args.length) {
-          case 0: return !predicate.call(this);
-          case 1: return !predicate.call(this, args[0]);
-          case 2: return !predicate.call(this, args[0], args[1]);
-          case 3: return !predicate.call(this, args[0], args[1], args[2]);
+        case 0: return !predicate.call(this);
+        case 1: return !predicate.call(this, args[0]);
+        case 2: return !predicate.call(this, args[0], args[1]);
+        case 3: return !predicate.call(this, args[0], args[1], args[2]);
         }
         return !predicate.apply(this, args);
-      };
+    };
     }
 
     /**
@@ -18687,7 +18701,7 @@ exports.Deprecation = Deprecation;
      * // => `createApplication` is invoked once
      */
     function once(func) {
-      return before(2, func);
+    return before(2, func);
     }
 
     /**
@@ -18722,20 +18736,20 @@ exports.Deprecation = Deprecation;
      * // => [100, 10]
      */
     var overArgs = castRest(function(func, transforms) {
-      transforms = (transforms.length == 1 && isArray(transforms[0]))
+    transforms = (transforms.length == 1 && isArray(transforms[0]))
         ? arrayMap(transforms[0], baseUnary(getIteratee()))
         : arrayMap(baseFlatten(transforms, 1), baseUnary(getIteratee()));
 
-      var funcsLength = transforms.length;
-      return baseRest(function(args) {
+    var funcsLength = transforms.length;
+    return baseRest(function(args) {
         var index = -1,
             length = nativeMin(args.length, funcsLength);
 
         while (++index < length) {
-          args[index] = transforms[index].call(this, args[index]);
+        args[index] = transforms[index].call(this, args[index]);
         }
         return apply(func, this, args);
-      });
+    });
     });
 
     /**
@@ -18772,8 +18786,8 @@ exports.Deprecation = Deprecation;
      * // => 'hi fred'
      */
     var partial = baseRest(function(func, partials) {
-      var holders = replaceHolders(partials, getHolder(partial));
-      return createWrap(func, WRAP_PARTIAL_FLAG, undefined, partials, holders);
+    var holders = replaceHolders(partials, getHolder(partial));
+    return createWrap(func, WRAP_PARTIAL_FLAG, undefined, partials, holders);
     });
 
     /**
@@ -18809,8 +18823,8 @@ exports.Deprecation = Deprecation;
      * // => 'hello fred'
      */
     var partialRight = baseRest(function(func, partials) {
-      var holders = replaceHolders(partials, getHolder(partialRight));
-      return createWrap(func, WRAP_PARTIAL_RIGHT_FLAG, undefined, partials, holders);
+    var holders = replaceHolders(partials, getHolder(partialRight));
+    return createWrap(func, WRAP_PARTIAL_RIGHT_FLAG, undefined, partials, holders);
     });
 
     /**
@@ -18836,7 +18850,7 @@ exports.Deprecation = Deprecation;
      * // => ['a', 'b', 'c']
      */
     var rearg = flatRest(function(func, indexes) {
-      return createWrap(func, WRAP_REARG_FLAG, undefined, undefined, undefined, indexes);
+    return createWrap(func, WRAP_REARG_FLAG, undefined, undefined, undefined, indexes);
     });
 
     /**
@@ -18865,11 +18879,11 @@ exports.Deprecation = Deprecation;
      * // => 'hello fred, barney, & pebbles'
      */
     function rest(func, start) {
-      if (typeof func != 'function') {
+    if (typeof func != 'function') {
         throw new TypeError(FUNC_ERROR_TEXT);
-      }
-      start = start === undefined ? start : toInteger(start);
-      return baseRest(func, start);
+    }
+    start = start === undefined ? start : toInteger(start);
+    return baseRest(func, start);
     }
 
     /**
@@ -18907,19 +18921,19 @@ exports.Deprecation = Deprecation;
      * // => a Promise of 76
      */
     function spread(func, start) {
-      if (typeof func != 'function') {
+    if (typeof func != 'function') {
         throw new TypeError(FUNC_ERROR_TEXT);
-      }
-      start = start == null ? 0 : nativeMax(toInteger(start), 0);
-      return baseRest(function(args) {
+    }
+    start = start == null ? 0 : nativeMax(toInteger(start), 0);
+    return baseRest(function(args) {
         var array = args[start],
             otherArgs = castSlice(args, 0, start);
 
         if (array) {
-          arrayPush(otherArgs, array);
+        arrayPush(otherArgs, array);
         }
         return apply(func, this, otherArgs);
-      });
+    });
     }
 
     /**
@@ -18967,21 +18981,21 @@ exports.Deprecation = Deprecation;
      * jQuery(window).on('popstate', throttled.cancel);
      */
     function throttle(func, wait, options) {
-      var leading = true,
-          trailing = true;
+    var leading = true,
+        trailing = true;
 
-      if (typeof func != 'function') {
+    if (typeof func != 'function') {
         throw new TypeError(FUNC_ERROR_TEXT);
-      }
-      if (isObject(options)) {
+    }
+    if (isObject(options)) {
         leading = 'leading' in options ? !!options.leading : leading;
         trailing = 'trailing' in options ? !!options.trailing : trailing;
-      }
-      return debounce(func, wait, {
+    }
+    return debounce(func, wait, {
         'leading': leading,
         'maxWait': wait,
         'trailing': trailing
-      });
+    });
     }
 
     /**
@@ -19000,7 +19014,7 @@ exports.Deprecation = Deprecation;
      * // => [6, 8, 10]
      */
     function unary(func) {
-      return ary(func, 1);
+    return ary(func, 1);
     }
 
     /**
@@ -19026,7 +19040,7 @@ exports.Deprecation = Deprecation;
      * // => '<p>fred, barney, &amp; pebbles</p>'
      */
     function wrap(value, wrapper) {
-      return partial(castFunction(wrapper), value);
+    return partial(castFunction(wrapper), value);
     }
 
     /*------------------------------------------------------------------------*/
@@ -19065,11 +19079,11 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function castArray() {
-      if (!arguments.length) {
+    if (!arguments.length) {
         return [];
-      }
-      var value = arguments[0];
-      return isArray(value) ? value : [value];
+    }
+    var value = arguments[0];
+    return isArray(value) ? value : [value];
     }
 
     /**
@@ -19099,7 +19113,7 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function clone(value) {
-      return baseClone(value, CLONE_SYMBOLS_FLAG);
+    return baseClone(value, CLONE_SYMBOLS_FLAG);
     }
 
     /**
@@ -19134,8 +19148,8 @@ exports.Deprecation = Deprecation;
      * // => 0
      */
     function cloneWith(value, customizer) {
-      customizer = typeof customizer == 'function' ? customizer : undefined;
-      return baseClone(value, CLONE_SYMBOLS_FLAG, customizer);
+    customizer = typeof customizer == 'function' ? customizer : undefined;
+    return baseClone(value, CLONE_SYMBOLS_FLAG, customizer);
     }
 
     /**
@@ -19157,7 +19171,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function cloneDeep(value) {
-      return baseClone(value, CLONE_DEEP_FLAG | CLONE_SYMBOLS_FLAG);
+    return baseClone(value, CLONE_DEEP_FLAG | CLONE_SYMBOLS_FLAG);
     }
 
     /**
@@ -19189,8 +19203,8 @@ exports.Deprecation = Deprecation;
      * // => 20
      */
     function cloneDeepWith(value, customizer) {
-      customizer = typeof customizer == 'function' ? customizer : undefined;
-      return baseClone(value, CLONE_DEEP_FLAG | CLONE_SYMBOLS_FLAG, customizer);
+    customizer = typeof customizer == 'function' ? customizer : undefined;
+    return baseClone(value, CLONE_DEEP_FLAG | CLONE_SYMBOLS_FLAG, customizer);
     }
 
     /**
@@ -19218,7 +19232,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function conformsTo(object, source) {
-      return source == null || baseConformsTo(object, source, keys(source));
+    return source == null || baseConformsTo(object, source, keys(source));
     }
 
     /**
@@ -19254,7 +19268,7 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function eq(value, other) {
-      return value === other || (value !== value && other !== other);
+    return value === other || (value !== value && other !== other);
     }
 
     /**
@@ -19306,7 +19320,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     var gte = createRelationalOperation(function(value, other) {
-      return value >= other;
+    return value >= other;
     });
 
     /**
@@ -19328,7 +19342,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     var isArguments = baseIsArguments(function() { return arguments; }()) ? baseIsArguments : function(value) {
-      return isObjectLike(value) && hasOwnProperty.call(value, 'callee') &&
+    return isObjectLike(value) && hasOwnProperty.call(value, 'callee') &&
         !propertyIsEnumerable.call(value, 'callee');
     };
 
@@ -19402,7 +19416,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isArrayLike(value) {
-      return value != null && isLength(value.length) && !isFunction(value);
+    return value != null && isLength(value.length) && !isFunction(value);
     }
 
     /**
@@ -19431,7 +19445,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isArrayLikeObject(value) {
-      return isObjectLike(value) && isArrayLike(value);
+    return isObjectLike(value) && isArrayLike(value);
     }
 
     /**
@@ -19452,7 +19466,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isBoolean(value) {
-      return value === true || value === false ||
+    return value === true || value === false ||
         (isObjectLike(value) && baseGetTag(value) == boolTag);
     }
 
@@ -19512,7 +19526,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isElement(value) {
-      return isObjectLike(value) && value.nodeType === 1 && !isPlainObject(value);
+    return isObjectLike(value) && value.nodeType === 1 && !isPlainObject(value);
     }
 
     /**
@@ -19549,27 +19563,27 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isEmpty(value) {
-      if (value == null) {
+    if (value == null) {
         return true;
-      }
-      if (isArrayLike(value) &&
-          (isArray(value) || typeof value == 'string' || typeof value.splice == 'function' ||
+    }
+    if (isArrayLike(value) &&
+        (isArray(value) || typeof value == 'string' || typeof value.splice == 'function' ||
             isBuffer(value) || isTypedArray(value) || isArguments(value))) {
         return !value.length;
-      }
-      var tag = getTag(value);
-      if (tag == mapTag || tag == setTag) {
+    }
+    var tag = getTag(value);
+    if (tag == mapTag || tag == setTag) {
         return !value.size;
-      }
-      if (isPrototype(value)) {
+    }
+    if (isPrototype(value)) {
         return !baseKeys(value).length;
-      }
-      for (var key in value) {
+    }
+    for (var key in value) {
         if (hasOwnProperty.call(value, key)) {
-          return false;
+        return false;
         }
-      }
-      return true;
+    }
+    return true;
     }
 
     /**
@@ -19601,7 +19615,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isEqual(value, other) {
-      return baseIsEqual(value, other);
+    return baseIsEqual(value, other);
     }
 
     /**
@@ -19637,9 +19651,9 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function isEqualWith(value, other, customizer) {
-      customizer = typeof customizer == 'function' ? customizer : undefined;
-      var result = customizer ? customizer(value, other) : undefined;
-      return result === undefined ? baseIsEqual(value, other, undefined, customizer) : !!result;
+    customizer = typeof customizer == 'function' ? customizer : undefined;
+    var result = customizer ? customizer(value, other) : undefined;
+    return result === undefined ? baseIsEqual(value, other, undefined, customizer) : !!result;
     }
 
     /**
@@ -19661,11 +19675,11 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isError(value) {
-      if (!isObjectLike(value)) {
+    if (!isObjectLike(value)) {
         return false;
-      }
-      var tag = baseGetTag(value);
-      return tag == errorTag || tag == domExcTag ||
+    }
+    var tag = baseGetTag(value);
+    return tag == errorTag || tag == domExcTag ||
         (typeof value.message == 'string' && typeof value.name == 'string' && !isPlainObject(value));
     }
 
@@ -19696,7 +19710,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isFinite(value) {
-      return typeof value == 'number' && nativeIsFinite(value);
+    return typeof value == 'number' && nativeIsFinite(value);
     }
 
     /**
@@ -19717,13 +19731,13 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isFunction(value) {
-      if (!isObject(value)) {
+    if (!isObject(value)) {
         return false;
-      }
-      // The use of `Object#toString` avoids issues with the `typeof` operator
-      // in Safari 9 which returns 'object' for typed arrays and other constructors.
-      var tag = baseGetTag(value);
-      return tag == funcTag || tag == genTag || tag == asyncTag || tag == proxyTag;
+    }
+    // The use of `Object#toString` avoids issues with the `typeof` operator
+    // in Safari 9 which returns 'object' for typed arrays and other constructors.
+    var tag = baseGetTag(value);
+    return tag == funcTag || tag == genTag || tag == asyncTag || tag == proxyTag;
     }
 
     /**
@@ -19753,7 +19767,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isInteger(value) {
-      return typeof value == 'number' && value == toInteger(value);
+    return typeof value == 'number' && value == toInteger(value);
     }
 
     /**
@@ -19783,7 +19797,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isLength(value) {
-      return typeof value == 'number' &&
+    return typeof value == 'number' &&
         value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
     }
 
@@ -19813,8 +19827,8 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isObject(value) {
-      var type = typeof value;
-      return value != null && (type == 'object' || type == 'function');
+    var type = typeof value;
+    return value != null && (type == 'object' || type == 'function');
     }
 
     /**
@@ -19842,7 +19856,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isObjectLike(value) {
-      return value != null && typeof value == 'object';
+    return value != null && typeof value == 'object';
     }
 
     /**
@@ -19893,7 +19907,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isMatch(object, source) {
-      return object === source || baseIsMatch(object, source, getMatchData(source));
+    return object === source || baseIsMatch(object, source, getMatchData(source));
     }
 
     /**
@@ -19929,8 +19943,8 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function isMatchWith(object, source, customizer) {
-      customizer = typeof customizer == 'function' ? customizer : undefined;
-      return baseIsMatch(object, source, getMatchData(source), customizer);
+    customizer = typeof customizer == 'function' ? customizer : undefined;
+    return baseIsMatch(object, source, getMatchData(source), customizer);
     }
 
     /**
@@ -19962,10 +19976,10 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isNaN(value) {
-      // An `NaN` primitive is the only value that is not equal to itself.
-      // Perform the `toStringTag` check first to avoid errors with some
-      // ActiveX objects in IE.
-      return isNumber(value) && value != +value;
+    // An `NaN` primitive is the only value that is not equal to itself.
+    // Perform the `toStringTag` check first to avoid errors with some
+    // ActiveX objects in IE.
+    return isNumber(value) && value != +value;
     }
 
     /**
@@ -19995,10 +20009,10 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isNative(value) {
-      if (isMaskable(value)) {
+    if (isMaskable(value)) {
         throw new Error(CORE_ERROR_TEXT);
-      }
-      return baseIsNative(value);
+    }
+    return baseIsNative(value);
     }
 
     /**
@@ -20019,7 +20033,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isNull(value) {
-      return value === null;
+    return value === null;
     }
 
     /**
@@ -20043,7 +20057,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isNil(value) {
-      return value == null;
+    return value == null;
     }
 
     /**
@@ -20073,7 +20087,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isNumber(value) {
-      return typeof value == 'number' ||
+    return typeof value == 'number' ||
         (isObjectLike(value) && baseGetTag(value) == numberTag);
     }
 
@@ -20106,15 +20120,15 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function isPlainObject(value) {
-      if (!isObjectLike(value) || baseGetTag(value) != objectTag) {
+    if (!isObjectLike(value) || baseGetTag(value) != objectTag) {
         return false;
-      }
-      var proto = getPrototype(value);
-      if (proto === null) {
+    }
+    var proto = getPrototype(value);
+    if (proto === null) {
         return true;
-      }
-      var Ctor = hasOwnProperty.call(proto, 'constructor') && proto.constructor;
-      return typeof Ctor == 'function' && Ctor instanceof Ctor &&
+    }
+    var Ctor = hasOwnProperty.call(proto, 'constructor') && proto.constructor;
+    return typeof Ctor == 'function' && Ctor instanceof Ctor &&
         funcToString.call(Ctor) == objectCtorString;
     }
 
@@ -20165,7 +20179,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isSafeInteger(value) {
-      return isInteger(value) && value >= -MAX_SAFE_INTEGER && value <= MAX_SAFE_INTEGER;
+    return isInteger(value) && value >= -MAX_SAFE_INTEGER && value <= MAX_SAFE_INTEGER;
     }
 
     /**
@@ -20205,7 +20219,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isString(value) {
-      return typeof value == 'string' ||
+    return typeof value == 'string' ||
         (!isArray(value) && isObjectLike(value) && baseGetTag(value) == stringTag);
     }
 
@@ -20227,7 +20241,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isSymbol(value) {
-      return typeof value == 'symbol' ||
+    return typeof value == 'symbol' ||
         (isObjectLike(value) && baseGetTag(value) == symbolTag);
     }
 
@@ -20268,7 +20282,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isUndefined(value) {
-      return value === undefined;
+    return value === undefined;
     }
 
     /**
@@ -20289,7 +20303,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isWeakMap(value) {
-      return isObjectLike(value) && getTag(value) == weakMapTag;
+    return isObjectLike(value) && getTag(value) == weakMapTag;
     }
 
     /**
@@ -20310,7 +20324,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function isWeakSet(value) {
-      return isObjectLike(value) && baseGetTag(value) == weakSetTag;
+    return isObjectLike(value) && baseGetTag(value) == weakSetTag;
     }
 
     /**
@@ -20362,7 +20376,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     var lte = createRelationalOperation(function(value, other) {
-      return value <= other;
+    return value <= other;
     });
 
     /**
@@ -20389,19 +20403,19 @@ exports.Deprecation = Deprecation;
      * // => []
      */
     function toArray(value) {
-      if (!value) {
+    if (!value) {
         return [];
-      }
-      if (isArrayLike(value)) {
+    }
+    if (isArrayLike(value)) {
         return isString(value) ? stringToArray(value) : copyArray(value);
-      }
-      if (symIterator && value[symIterator]) {
+    }
+    if (symIterator && value[symIterator]) {
         return iteratorToArray(value[symIterator]());
-      }
-      var tag = getTag(value),
-          func = tag == mapTag ? mapToArray : (tag == setTag ? setToArray : values);
+    }
+    var tag = getTag(value),
+        func = tag == mapTag ? mapToArray : (tag == setTag ? setToArray : values);
 
-      return func(value);
+    return func(value);
     }
 
     /**
@@ -20428,15 +20442,15 @@ exports.Deprecation = Deprecation;
      * // => 3.2
      */
     function toFinite(value) {
-      if (!value) {
+    if (!value) {
         return value === 0 ? value : 0;
-      }
-      value = toNumber(value);
-      if (value === INFINITY || value === -INFINITY) {
+    }
+    value = toNumber(value);
+    if (value === INFINITY || value === -INFINITY) {
         var sign = (value < 0 ? -1 : 1);
         return sign * MAX_INTEGER;
-      }
-      return value === value ? value : 0;
+    }
+    return value === value ? value : 0;
     }
 
     /**
@@ -20466,10 +20480,10 @@ exports.Deprecation = Deprecation;
      * // => 3
      */
     function toInteger(value) {
-      var result = toFinite(value),
-          remainder = result % 1;
+    var result = toFinite(value),
+        remainder = result % 1;
 
-      return result === result ? (remainder ? result - remainder : result) : 0;
+    return result === result ? (remainder ? result - remainder : result) : 0;
     }
 
     /**
@@ -20500,7 +20514,7 @@ exports.Deprecation = Deprecation;
      * // => 3
      */
     function toLength(value) {
-      return value ? baseClamp(toInteger(value), 0, MAX_ARRAY_LENGTH) : 0;
+    return value ? baseClamp(toInteger(value), 0, MAX_ARRAY_LENGTH) : 0;
     }
 
     /**
@@ -20527,22 +20541,22 @@ exports.Deprecation = Deprecation;
      * // => 3.2
      */
     function toNumber(value) {
-      if (typeof value == 'number') {
+    if (typeof value == 'number') {
         return value;
-      }
-      if (isSymbol(value)) {
+    }
+    if (isSymbol(value)) {
         return NAN;
-      }
-      if (isObject(value)) {
+    }
+    if (isObject(value)) {
         var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
         value = isObject(other) ? (other + '') : other;
-      }
-      if (typeof value != 'string') {
+    }
+    if (typeof value != 'string') {
         return value === 0 ? value : +value;
-      }
-      value = baseTrim(value);
-      var isBinary = reIsBinary.test(value);
-      return (isBinary || reIsOctal.test(value))
+    }
+    value = baseTrim(value);
+    var isBinary = reIsBinary.test(value);
+    return (isBinary || reIsOctal.test(value))
         ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
         : (reIsBadHex.test(value) ? NAN : +value);
     }
@@ -20572,7 +20586,7 @@ exports.Deprecation = Deprecation;
      * // => { 'a': 1, 'b': 2, 'c': 3 }
      */
     function toPlainObject(value) {
-      return copyObject(value, keysIn(value));
+    return copyObject(value, keysIn(value));
     }
 
     /**
@@ -20600,7 +20614,7 @@ exports.Deprecation = Deprecation;
      * // => 3
      */
     function toSafeInteger(value) {
-      return value
+    return value
         ? baseClamp(toInteger(value), -MAX_SAFE_INTEGER, MAX_SAFE_INTEGER)
         : (value === 0 ? value : 0);
     }
@@ -20627,7 +20641,7 @@ exports.Deprecation = Deprecation;
      * // => '1,2,3'
      */
     function toString(value) {
-      return value == null ? '' : baseToString(value);
+    return value == null ? '' : baseToString(value);
     }
 
     /*------------------------------------------------------------------------*/
@@ -20665,15 +20679,15 @@ exports.Deprecation = Deprecation;
      * // => { 'a': 1, 'c': 3 }
      */
     var assign = createAssigner(function(object, source) {
-      if (isPrototype(source) || isArrayLike(source)) {
+    if (isPrototype(source) || isArrayLike(source)) {
         copyObject(source, keys(source), object);
         return;
-      }
-      for (var key in source) {
+    }
+    for (var key in source) {
         if (hasOwnProperty.call(source, key)) {
-          assignValue(object, key, source[key]);
+        assignValue(object, key, source[key]);
         }
-      }
+    }
     });
 
     /**
@@ -20708,7 +20722,7 @@ exports.Deprecation = Deprecation;
      * // => { 'a': 1, 'b': 2, 'c': 3, 'd': 4 }
      */
     var assignIn = createAssigner(function(object, source) {
-      copyObject(source, keysIn(source), object);
+    copyObject(source, keysIn(source), object);
     });
 
     /**
@@ -20741,7 +20755,7 @@ exports.Deprecation = Deprecation;
      * // => { 'a': 1, 'b': 2 }
      */
     var assignInWith = createAssigner(function(object, source, srcIndex, customizer) {
-      copyObject(source, keysIn(source), object, customizer);
+    copyObject(source, keysIn(source), object, customizer);
     });
 
     /**
@@ -20773,7 +20787,7 @@ exports.Deprecation = Deprecation;
      * // => { 'a': 1, 'b': 2 }
      */
     var assignWith = createAssigner(function(object, source, srcIndex, customizer) {
-      copyObject(source, keys(source), object, customizer);
+    copyObject(source, keys(source), object, customizer);
     });
 
     /**
@@ -20830,8 +20844,8 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function create(prototype, properties) {
-      var result = baseCreate(prototype);
-      return properties == null ? result : baseAssign(result, properties);
+    var result = baseCreate(prototype);
+    return properties == null ? result : baseAssign(result, properties);
     }
 
     /**
@@ -20856,34 +20870,34 @@ exports.Deprecation = Deprecation;
      * // => { 'a': 1, 'b': 2 }
      */
     var defaults = baseRest(function(object, sources) {
-      object = Object(object);
+    object = Object(object);
 
-      var index = -1;
-      var length = sources.length;
-      var guard = length > 2 ? sources[2] : undefined;
+    var index = -1;
+    var length = sources.length;
+    var guard = length > 2 ? sources[2] : undefined;
 
-      if (guard && isIterateeCall(sources[0], sources[1], guard)) {
+    if (guard && isIterateeCall(sources[0], sources[1], guard)) {
         length = 1;
-      }
+    }
 
-      while (++index < length) {
+    while (++index < length) {
         var source = sources[index];
         var props = keysIn(source);
         var propsIndex = -1;
         var propsLength = props.length;
 
         while (++propsIndex < propsLength) {
-          var key = props[propsIndex];
-          var value = object[key];
+        var key = props[propsIndex];
+        var value = object[key];
 
-          if (value === undefined ||
-              (eq(value, objectProto[key]) && !hasOwnProperty.call(object, key))) {
+        if (value === undefined ||
+            (eq(value, objectProto[key]) && !hasOwnProperty.call(object, key))) {
             object[key] = source[key];
-          }
         }
-      }
+        }
+    }
 
-      return object;
+    return object;
     });
 
     /**
@@ -20906,8 +20920,8 @@ exports.Deprecation = Deprecation;
      * // => { 'a': { 'b': 2, 'c': 3 } }
      */
     var defaultsDeep = baseRest(function(args) {
-      args.push(undefined, customDefaultsMerge);
-      return apply(mergeWith, undefined, args);
+    args.push(undefined, customDefaultsMerge);
+    return apply(mergeWith, undefined, args);
     });
 
     /**
@@ -20946,7 +20960,7 @@ exports.Deprecation = Deprecation;
      * // => 'barney'
      */
     function findKey(object, predicate) {
-      return baseFindKey(object, getIteratee(predicate, 3), baseForOwn);
+    return baseFindKey(object, getIteratee(predicate, 3), baseForOwn);
     }
 
     /**
@@ -20985,7 +20999,7 @@ exports.Deprecation = Deprecation;
      * // => 'pebbles'
      */
     function findLastKey(object, predicate) {
-      return baseFindKey(object, getIteratee(predicate, 3), baseForOwnRight);
+    return baseFindKey(object, getIteratee(predicate, 3), baseForOwnRight);
     }
 
     /**
@@ -21017,7 +21031,7 @@ exports.Deprecation = Deprecation;
      * // => Logs 'a', 'b', then 'c' (iteration order is not guaranteed).
      */
     function forIn(object, iteratee) {
-      return object == null
+    return object == null
         ? object
         : baseFor(object, getIteratee(iteratee, 3), keysIn);
     }
@@ -21049,7 +21063,7 @@ exports.Deprecation = Deprecation;
      * // => Logs 'c', 'b', then 'a' assuming `_.forIn` logs 'a', 'b', then 'c'.
      */
     function forInRight(object, iteratee) {
-      return object == null
+    return object == null
         ? object
         : baseForRight(object, getIteratee(iteratee, 3), keysIn);
     }
@@ -21083,7 +21097,7 @@ exports.Deprecation = Deprecation;
      * // => Logs 'a' then 'b' (iteration order is not guaranteed).
      */
     function forOwn(object, iteratee) {
-      return object && baseForOwn(object, getIteratee(iteratee, 3));
+    return object && baseForOwn(object, getIteratee(iteratee, 3));
     }
 
     /**
@@ -21113,7 +21127,7 @@ exports.Deprecation = Deprecation;
      * // => Logs 'b' then 'a' assuming `_.forOwn` logs 'a' then 'b'.
      */
     function forOwnRight(object, iteratee) {
-      return object && baseForOwnRight(object, getIteratee(iteratee, 3));
+    return object && baseForOwnRight(object, getIteratee(iteratee, 3));
     }
 
     /**
@@ -21140,7 +21154,7 @@ exports.Deprecation = Deprecation;
      * // => ['a', 'b']
      */
     function functions(object) {
-      return object == null ? [] : baseFunctions(object, keys(object));
+    return object == null ? [] : baseFunctions(object, keys(object));
     }
 
     /**
@@ -21167,7 +21181,7 @@ exports.Deprecation = Deprecation;
      * // => ['a', 'b', 'c']
      */
     function functionsIn(object) {
-      return object == null ? [] : baseFunctions(object, keysIn(object));
+    return object == null ? [] : baseFunctions(object, keysIn(object));
     }
 
     /**
@@ -21196,8 +21210,8 @@ exports.Deprecation = Deprecation;
      * // => 'default'
      */
     function get(object, path, defaultValue) {
-      var result = object == null ? undefined : baseGet(object, path);
-      return result === undefined ? defaultValue : result;
+    var result = object == null ? undefined : baseGet(object, path);
+    return result === undefined ? defaultValue : result;
     }
 
     /**
@@ -21228,7 +21242,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function has(object, path) {
-      return object != null && hasPath(object, path, baseHas);
+    return object != null && hasPath(object, path, baseHas);
     }
 
     /**
@@ -21258,7 +21272,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function hasIn(object, path) {
-      return object != null && hasPath(object, path, baseHasIn);
+    return object != null && hasPath(object, path, baseHasIn);
     }
 
     /**
@@ -21280,12 +21294,12 @@ exports.Deprecation = Deprecation;
      * // => { '1': 'c', '2': 'b' }
      */
     var invert = createInverter(function(result, value, key) {
-      if (value != null &&
-          typeof value.toString != 'function') {
+    if (value != null &&
+        typeof value.toString != 'function') {
         value = nativeObjectToString.call(value);
-      }
+    }
 
-      result[value] = key;
+    result[value] = key;
     }, constant(identity));
 
     /**
@@ -21315,16 +21329,16 @@ exports.Deprecation = Deprecation;
      * // => { 'group1': ['a', 'c'], 'group2': ['b'] }
      */
     var invertBy = createInverter(function(result, value, key) {
-      if (value != null &&
-          typeof value.toString != 'function') {
+    if (value != null &&
+        typeof value.toString != 'function') {
         value = nativeObjectToString.call(value);
-      }
+    }
 
-      if (hasOwnProperty.call(result, value)) {
+    if (hasOwnProperty.call(result, value)) {
         result[value].push(key);
-      } else {
+    } else {
         result[value] = [key];
-      }
+    }
     }, getIteratee);
 
     /**
@@ -21376,7 +21390,7 @@ exports.Deprecation = Deprecation;
      * // => ['0', '1']
      */
     function keys(object) {
-      return isArrayLike(object) ? arrayLikeKeys(object) : baseKeys(object);
+    return isArrayLike(object) ? arrayLikeKeys(object) : baseKeys(object);
     }
 
     /**
@@ -21403,7 +21417,7 @@ exports.Deprecation = Deprecation;
      * // => ['a', 'b', 'c'] (iteration order is not guaranteed)
      */
     function keysIn(object) {
-      return isArrayLike(object) ? arrayLikeKeys(object, true) : baseKeysIn(object);
+    return isArrayLike(object) ? arrayLikeKeys(object, true) : baseKeysIn(object);
     }
 
     /**
@@ -21428,13 +21442,13 @@ exports.Deprecation = Deprecation;
      * // => { 'a1': 1, 'b2': 2 }
      */
     function mapKeys(object, iteratee) {
-      var result = {};
-      iteratee = getIteratee(iteratee, 3);
+    var result = {};
+    iteratee = getIteratee(iteratee, 3);
 
-      baseForOwn(object, function(value, key, object) {
+    baseForOwn(object, function(value, key, object) {
         baseAssignValue(result, iteratee(value, key, object), value);
-      });
-      return result;
+    });
+    return result;
     }
 
     /**
@@ -21466,13 +21480,13 @@ exports.Deprecation = Deprecation;
      * // => { 'fred': 40, 'pebbles': 1 } (iteration order is not guaranteed)
      */
     function mapValues(object, iteratee) {
-      var result = {};
-      iteratee = getIteratee(iteratee, 3);
+    var result = {};
+    iteratee = getIteratee(iteratee, 3);
 
-      baseForOwn(object, function(value, key, object) {
+    baseForOwn(object, function(value, key, object) {
         baseAssignValue(result, key, iteratee(value, key, object));
-      });
-      return result;
+    });
+    return result;
     }
 
     /**
@@ -21507,7 +21521,7 @@ exports.Deprecation = Deprecation;
      * // => { 'a': [{ 'b': 2, 'c': 3 }, { 'd': 4, 'e': 5 }] }
      */
     var merge = createAssigner(function(object, source, srcIndex) {
-      baseMerge(object, source, srcIndex);
+    baseMerge(object, source, srcIndex);
     });
 
     /**
@@ -21542,7 +21556,7 @@ exports.Deprecation = Deprecation;
      * // => { 'a': [1, 3], 'b': [2, 4] }
      */
     var mergeWith = createAssigner(function(object, source, srcIndex, customizer) {
-      baseMerge(object, source, srcIndex, customizer);
+    baseMerge(object, source, srcIndex, customizer);
     });
 
     /**
@@ -21566,25 +21580,25 @@ exports.Deprecation = Deprecation;
      * // => { 'b': '2' }
      */
     var omit = flatRest(function(object, paths) {
-      var result = {};
-      if (object == null) {
+    var result = {};
+    if (object == null) {
         return result;
-      }
-      var isDeep = false;
-      paths = arrayMap(paths, function(path) {
+    }
+    var isDeep = false;
+    paths = arrayMap(paths, function(path) {
         path = castPath(path, object);
         isDeep || (isDeep = path.length > 1);
         return path;
-      });
-      copyObject(object, getAllKeysIn(object), result);
-      if (isDeep) {
+    });
+    copyObject(object, getAllKeysIn(object), result);
+    if (isDeep) {
         result = baseClone(result, CLONE_DEEP_FLAG | CLONE_FLAT_FLAG | CLONE_SYMBOLS_FLAG, customOmitClone);
-      }
-      var length = paths.length;
-      while (length--) {
+    }
+    var length = paths.length;
+    while (length--) {
         baseUnset(result, paths[length]);
-      }
-      return result;
+    }
+    return result;
     });
 
     /**
@@ -21608,7 +21622,7 @@ exports.Deprecation = Deprecation;
      * // => { 'b': '2' }
      */
     function omitBy(object, predicate) {
-      return pickBy(object, negate(getIteratee(predicate)));
+    return pickBy(object, negate(getIteratee(predicate)));
     }
 
     /**
@@ -21629,7 +21643,7 @@ exports.Deprecation = Deprecation;
      * // => { 'a': 1, 'c': 3 }
      */
     var pick = flatRest(function(object, paths) {
-      return object == null ? {} : basePick(object, paths);
+    return object == null ? {} : basePick(object, paths);
     });
 
     /**
@@ -21651,16 +21665,16 @@ exports.Deprecation = Deprecation;
      * // => { 'a': 1, 'c': 3 }
      */
     function pickBy(object, predicate) {
-      if (object == null) {
+    if (object == null) {
         return {};
-      }
-      var props = arrayMap(getAllKeysIn(object), function(prop) {
+    }
+    var props = arrayMap(getAllKeysIn(object), function(prop) {
         return [prop];
-      });
-      predicate = getIteratee(predicate);
-      return basePickBy(object, props, function(value, path) {
+    });
+    predicate = getIteratee(predicate);
+    return basePickBy(object, props, function(value, path) {
         return predicate(value, path[0]);
-      });
+    });
     }
 
     /**
@@ -21693,25 +21707,25 @@ exports.Deprecation = Deprecation;
      * // => 'default'
      */
     function result(object, path, defaultValue) {
-      path = castPath(path, object);
+    path = castPath(path, object);
 
-      var index = -1,
-          length = path.length;
+    var index = -1,
+        length = path.length;
 
-      // Ensure the loop is entered when path is empty.
-      if (!length) {
+    // Ensure the loop is entered when path is empty.
+    if (!length) {
         length = 1;
         object = undefined;
-      }
-      while (++index < length) {
+    }
+    while (++index < length) {
         var value = object == null ? undefined : object[toKey(path[index])];
         if (value === undefined) {
-          index = length;
-          value = defaultValue;
+        index = length;
+        value = defaultValue;
         }
         object = isFunction(value) ? value.call(object) : value;
-      }
-      return object;
+    }
+    return object;
     }
 
     /**
@@ -21743,7 +21757,7 @@ exports.Deprecation = Deprecation;
      * // => 5
      */
     function set(object, path, value) {
-      return object == null ? object : baseSet(object, path, value);
+    return object == null ? object : baseSet(object, path, value);
     }
 
     /**
@@ -21771,8 +21785,8 @@ exports.Deprecation = Deprecation;
      * // => { '0': { '1': 'a' } }
      */
     function setWith(object, path, value, customizer) {
-      customizer = typeof customizer == 'function' ? customizer : undefined;
-      return object == null ? object : baseSet(object, path, value, customizer);
+    customizer = typeof customizer == 'function' ? customizer : undefined;
+    return object == null ? object : baseSet(object, path, value, customizer);
     }
 
     /**
@@ -21858,26 +21872,26 @@ exports.Deprecation = Deprecation;
      * // => { '1': ['a', 'c'], '2': ['b'] }
      */
     function transform(object, iteratee, accumulator) {
-      var isArr = isArray(object),
-          isArrLike = isArr || isBuffer(object) || isTypedArray(object);
+    var isArr = isArray(object),
+        isArrLike = isArr || isBuffer(object) || isTypedArray(object);
 
-      iteratee = getIteratee(iteratee, 4);
-      if (accumulator == null) {
+    iteratee = getIteratee(iteratee, 4);
+    if (accumulator == null) {
         var Ctor = object && object.constructor;
         if (isArrLike) {
-          accumulator = isArr ? new Ctor : [];
+        accumulator = isArr ? new Ctor : [];
         }
         else if (isObject(object)) {
-          accumulator = isFunction(Ctor) ? baseCreate(getPrototype(object)) : {};
+        accumulator = isFunction(Ctor) ? baseCreate(getPrototype(object)) : {};
         }
         else {
-          accumulator = {};
+        accumulator = {};
         }
-      }
-      (isArrLike ? arrayEach : baseForOwn)(object, function(value, index, object) {
+    }
+    (isArrLike ? arrayEach : baseForOwn)(object, function(value, index, object) {
         return iteratee(accumulator, value, index, object);
-      });
-      return accumulator;
+    });
+    return accumulator;
     }
 
     /**
@@ -21908,7 +21922,7 @@ exports.Deprecation = Deprecation;
      * // => { 'a': [{ 'b': {} }] };
      */
     function unset(object, path) {
-      return object == null ? true : baseUnset(object, path);
+    return object == null ? true : baseUnset(object, path);
     }
 
     /**
@@ -21939,7 +21953,7 @@ exports.Deprecation = Deprecation;
      * // => 0
      */
     function update(object, path, updater) {
-      return object == null ? object : baseUpdate(object, path, castFunction(updater));
+    return object == null ? object : baseUpdate(object, path, castFunction(updater));
     }
 
     /**
@@ -21967,8 +21981,8 @@ exports.Deprecation = Deprecation;
      * // => { '0': { '1': 'a' } }
      */
     function updateWith(object, path, updater, customizer) {
-      customizer = typeof customizer == 'function' ? customizer : undefined;
-      return object == null ? object : baseUpdate(object, path, castFunction(updater), customizer);
+    customizer = typeof customizer == 'function' ? customizer : undefined;
+    return object == null ? object : baseUpdate(object, path, castFunction(updater), customizer);
     }
 
     /**
@@ -21998,7 +22012,7 @@ exports.Deprecation = Deprecation;
      * // => ['h', 'i']
      */
     function values(object) {
-      return object == null ? [] : baseValues(object, keys(object));
+    return object == null ? [] : baseValues(object, keys(object));
     }
 
     /**
@@ -22026,7 +22040,7 @@ exports.Deprecation = Deprecation;
      * // => [1, 2, 3] (iteration order is not guaranteed)
      */
     function valuesIn(object) {
-      return object == null ? [] : baseValues(object, keysIn(object));
+    return object == null ? [] : baseValues(object, keysIn(object));
     }
 
     /*------------------------------------------------------------------------*/
@@ -22051,19 +22065,19 @@ exports.Deprecation = Deprecation;
      * // => 5
      */
     function clamp(number, lower, upper) {
-      if (upper === undefined) {
+    if (upper === undefined) {
         upper = lower;
         lower = undefined;
-      }
-      if (upper !== undefined) {
+    }
+    if (upper !== undefined) {
         upper = toNumber(upper);
         upper = upper === upper ? upper : 0;
-      }
-      if (lower !== undefined) {
+    }
+    if (lower !== undefined) {
         lower = toNumber(lower);
         lower = lower === lower ? lower : 0;
-      }
-      return baseClamp(toNumber(number), lower, upper);
+    }
+    return baseClamp(toNumber(number), lower, upper);
     }
 
     /**
@@ -22105,15 +22119,15 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function inRange(number, start, end) {
-      start = toFinite(start);
-      if (end === undefined) {
+    start = toFinite(start);
+    if (end === undefined) {
         end = start;
         start = 0;
-      } else {
+    } else {
         end = toFinite(end);
-      }
-      number = toNumber(number);
-      return baseInRange(number, start, end);
+    }
+    number = toNumber(number);
+    return baseInRange(number, start, end);
     }
 
     /**
@@ -22148,42 +22162,42 @@ exports.Deprecation = Deprecation;
      * // => a floating-point number between 1.2 and 5.2
      */
     function random(lower, upper, floating) {
-      if (floating && typeof floating != 'boolean' && isIterateeCall(lower, upper, floating)) {
+    if (floating && typeof floating != 'boolean' && isIterateeCall(lower, upper, floating)) {
         upper = floating = undefined;
-      }
-      if (floating === undefined) {
+    }
+    if (floating === undefined) {
         if (typeof upper == 'boolean') {
-          floating = upper;
-          upper = undefined;
+        floating = upper;
+        upper = undefined;
         }
         else if (typeof lower == 'boolean') {
-          floating = lower;
-          lower = undefined;
+        floating = lower;
+        lower = undefined;
         }
-      }
-      if (lower === undefined && upper === undefined) {
+    }
+    if (lower === undefined && upper === undefined) {
         lower = 0;
         upper = 1;
-      }
-      else {
+    }
+    else {
         lower = toFinite(lower);
         if (upper === undefined) {
-          upper = lower;
-          lower = 0;
+        upper = lower;
+        lower = 0;
         } else {
-          upper = toFinite(upper);
+        upper = toFinite(upper);
         }
-      }
-      if (lower > upper) {
+    }
+    if (lower > upper) {
         var temp = lower;
         lower = upper;
         upper = temp;
-      }
-      if (floating || lower % 1 || upper % 1) {
+    }
+    if (floating || lower % 1 || upper % 1) {
         var rand = nativeRandom();
         return nativeMin(lower + (rand * (upper - lower + freeParseFloat('1e-' + ((rand + '').length - 1)))), upper);
-      }
-      return baseRandom(lower, upper);
+    }
+    return baseRandom(lower, upper);
     }
 
     /*------------------------------------------------------------------------*/
@@ -22209,8 +22223,8 @@ exports.Deprecation = Deprecation;
      * // => 'fooBar'
      */
     var camelCase = createCompounder(function(result, word, index) {
-      word = word.toLowerCase();
-      return result + (index ? capitalize(word) : word);
+    word = word.toLowerCase();
+    return result + (index ? capitalize(word) : word);
     });
 
     /**
@@ -22229,7 +22243,7 @@ exports.Deprecation = Deprecation;
      * // => 'Fred'
      */
     function capitalize(string) {
-      return upperFirst(toString(string).toLowerCase());
+    return upperFirst(toString(string).toLowerCase());
     }
 
     /**
@@ -22251,8 +22265,8 @@ exports.Deprecation = Deprecation;
      * // => 'deja vu'
      */
     function deburr(string) {
-      string = toString(string);
-      return string && string.replace(reLatin, deburrLetter).replace(reComboMark, '');
+    string = toString(string);
+    return string && string.replace(reLatin, deburrLetter).replace(reComboMark, '');
     }
 
     /**
@@ -22279,17 +22293,17 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function endsWith(string, target, position) {
-      string = toString(string);
-      target = baseToString(target);
+    string = toString(string);
+    target = baseToString(target);
 
-      var length = string.length;
-      position = position === undefined
+    var length = string.length;
+    position = position === undefined
         ? length
         : baseClamp(toInteger(position), 0, length);
 
-      var end = position;
-      position -= target.length;
-      return position >= 0 && string.slice(position, end) == target;
+    var end = position;
+    position -= target.length;
+    return position >= 0 && string.slice(position, end) == target;
     }
 
     /**
@@ -22321,8 +22335,8 @@ exports.Deprecation = Deprecation;
      * // => 'fred, barney, &amp; pebbles'
      */
     function escape(string) {
-      string = toString(string);
-      return (string && reHasUnescapedHtml.test(string))
+    string = toString(string);
+    return (string && reHasUnescapedHtml.test(string))
         ? string.replace(reUnescapedHtml, escapeHtmlChar)
         : string;
     }
@@ -22343,8 +22357,8 @@ exports.Deprecation = Deprecation;
      * // => '\[lodash\]\(https://lodash\.com/\)'
      */
     function escapeRegExp(string) {
-      string = toString(string);
-      return (string && reHasRegExpChar.test(string))
+    string = toString(string);
+    return (string && reHasRegExpChar.test(string))
         ? string.replace(reRegExpChar, '\\$&')
         : string;
     }
@@ -22371,7 +22385,7 @@ exports.Deprecation = Deprecation;
      * // => 'foo-bar'
      */
     var kebabCase = createCompounder(function(result, word, index) {
-      return result + (index ? '-' : '') + word.toLowerCase();
+    return result + (index ? '-' : '') + word.toLowerCase();
     });
 
     /**
@@ -22395,7 +22409,7 @@ exports.Deprecation = Deprecation;
      * // => 'foo bar'
      */
     var lowerCase = createCompounder(function(result, word, index) {
-      return result + (index ? ' ' : '') + word.toLowerCase();
+    return result + (index ? ' ' : '') + word.toLowerCase();
     });
 
     /**
@@ -22441,19 +22455,19 @@ exports.Deprecation = Deprecation;
      * // => 'abc'
      */
     function pad(string, length, chars) {
-      string = toString(string);
-      length = toInteger(length);
+    string = toString(string);
+    length = toInteger(length);
 
-      var strLength = length ? stringSize(string) : 0;
-      if (!length || strLength >= length) {
+    var strLength = length ? stringSize(string) : 0;
+    if (!length || strLength >= length) {
         return string;
-      }
-      var mid = (length - strLength) / 2;
-      return (
+    }
+    var mid = (length - strLength) / 2;
+    return (
         createPadding(nativeFloor(mid), chars) +
         string +
         createPadding(nativeCeil(mid), chars)
-      );
+    );
     }
 
     /**
@@ -22480,11 +22494,11 @@ exports.Deprecation = Deprecation;
      * // => 'abc'
      */
     function padEnd(string, length, chars) {
-      string = toString(string);
-      length = toInteger(length);
+    string = toString(string);
+    length = toInteger(length);
 
-      var strLength = length ? stringSize(string) : 0;
-      return (length && strLength < length)
+    var strLength = length ? stringSize(string) : 0;
+    return (length && strLength < length)
         ? (string + createPadding(length - strLength, chars))
         : string;
     }
@@ -22513,11 +22527,11 @@ exports.Deprecation = Deprecation;
      * // => 'abc'
      */
     function padStart(string, length, chars) {
-      string = toString(string);
-      length = toInteger(length);
+    string = toString(string);
+    length = toInteger(length);
 
-      var strLength = length ? stringSize(string) : 0;
-      return (length && strLength < length)
+    var strLength = length ? stringSize(string) : 0;
+    return (length && strLength < length)
         ? (createPadding(length - strLength, chars) + string)
         : string;
     }
@@ -22547,12 +22561,12 @@ exports.Deprecation = Deprecation;
      * // => [6, 8, 10]
      */
     function parseInt(string, radix, guard) {
-      if (guard || radix == null) {
+    if (guard || radix == null) {
         radix = 0;
-      } else if (radix) {
+    } else if (radix) {
         radix = +radix;
-      }
-      return nativeParseInt(toString(string).replace(reTrimStart, ''), radix || 0);
+    }
+    return nativeParseInt(toString(string).replace(reTrimStart, ''), radix || 0);
     }
 
     /**
@@ -22578,12 +22592,12 @@ exports.Deprecation = Deprecation;
      * // => ''
      */
     function repeat(string, n, guard) {
-      if ((guard ? isIterateeCall(string, n, guard) : n === undefined)) {
+    if ((guard ? isIterateeCall(string, n, guard) : n === undefined)) {
         n = 1;
-      } else {
+    } else {
         n = toInteger(n);
-      }
-      return baseRepeat(toString(string), n);
+    }
+    return baseRepeat(toString(string), n);
     }
 
     /**
@@ -22606,10 +22620,10 @@ exports.Deprecation = Deprecation;
      * // => 'Hi Barney'
      */
     function replace() {
-      var args = arguments,
-          string = toString(args[0]);
+    var args = arguments,
+        string = toString(args[0]);
 
-      return args.length < 3 ? string : string.replace(args[1], args[2]);
+    return args.length < 3 ? string : string.replace(args[1], args[2]);
     }
 
     /**
@@ -22634,7 +22648,7 @@ exports.Deprecation = Deprecation;
      * // => 'foo_bar'
      */
     var snakeCase = createCompounder(function(result, word, index) {
-      return result + (index ? '_' : '') + word.toLowerCase();
+    return result + (index ? '_' : '') + word.toLowerCase();
     });
 
     /**
@@ -22657,24 +22671,24 @@ exports.Deprecation = Deprecation;
      * // => ['a', 'b']
      */
     function split(string, separator, limit) {
-      if (limit && typeof limit != 'number' && isIterateeCall(string, separator, limit)) {
+    if (limit && typeof limit != 'number' && isIterateeCall(string, separator, limit)) {
         separator = limit = undefined;
-      }
-      limit = limit === undefined ? MAX_ARRAY_LENGTH : limit >>> 0;
-      if (!limit) {
+    }
+    limit = limit === undefined ? MAX_ARRAY_LENGTH : limit >>> 0;
+    if (!limit) {
         return [];
-      }
-      string = toString(string);
-      if (string && (
+    }
+    string = toString(string);
+    if (string && (
             typeof separator == 'string' ||
             (separator != null && !isRegExp(separator))
-          )) {
+        )) {
         separator = baseToString(separator);
         if (!separator && hasUnicode(string)) {
-          return castSlice(stringToArray(string), 0, limit);
+        return castSlice(stringToArray(string), 0, limit);
         }
-      }
-      return string.split(separator, limit);
+    }
+    return string.split(separator, limit);
     }
 
     /**
@@ -22699,7 +22713,7 @@ exports.Deprecation = Deprecation;
      * // => 'FOO BAR'
      */
     var startCase = createCompounder(function(result, word, index) {
-      return result + (index ? ' ' : '') + upperFirst(word);
+    return result + (index ? ' ' : '') + upperFirst(word);
     });
 
     /**
@@ -22726,13 +22740,13 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function startsWith(string, target, position) {
-      string = toString(string);
-      position = position == null
+    string = toString(string);
+    position = position == null
         ? 0
         : baseClamp(toInteger(position), 0, string.length);
 
-      target = baseToString(target);
-      return string.slice(position, position + target.length) == target;
+    target = baseToString(target);
+    return string.slice(position, position + target.length) == target;
     }
 
     /**
@@ -22840,46 +22854,46 @@ exports.Deprecation = Deprecation;
      * ');
      */
     function template(string, options, guard) {
-      // Based on John Resig's `tmpl` implementation
-      // (http://ejohn.org/blog/javascript-micro-templating/)
-      // and Laura Doktorova's doT.js (https://github.com/olado/doT).
-      var settings = lodash.templateSettings;
+    // Based on John Resig's `tmpl` implementation
+    // (http://ejohn.org/blog/javascript-micro-templating/)
+    // and Laura Doktorova's doT.js (https://github.com/olado/doT).
+    var settings = lodash.templateSettings;
 
-      if (guard && isIterateeCall(string, options, guard)) {
+    if (guard && isIterateeCall(string, options, guard)) {
         options = undefined;
-      }
-      string = toString(string);
-      options = assignInWith({}, options, settings, customDefaultsAssignIn);
+    }
+    string = toString(string);
+    options = assignInWith({}, options, settings, customDefaultsAssignIn);
 
-      var imports = assignInWith({}, options.imports, settings.imports, customDefaultsAssignIn),
-          importsKeys = keys(imports),
-          importsValues = baseValues(imports, importsKeys);
+    var imports = assignInWith({}, options.imports, settings.imports, customDefaultsAssignIn),
+        importsKeys = keys(imports),
+        importsValues = baseValues(imports, importsKeys);
 
-      var isEscaping,
-          isEvaluating,
-          index = 0,
-          interpolate = options.interpolate || reNoMatch,
-          source = "__p += '";
+    var isEscaping,
+        isEvaluating,
+        index = 0,
+        interpolate = options.interpolate || reNoMatch,
+        source = "__p += '";
 
-      // Compile the regexp to match each delimiter.
-      var reDelimiters = RegExp(
+    // Compile the regexp to match each delimiter.
+    var reDelimiters = RegExp(
         (options.escape || reNoMatch).source + '|' +
         interpolate.source + '|' +
         (interpolate === reInterpolate ? reEsTemplate : reNoMatch).source + '|' +
         (options.evaluate || reNoMatch).source + '|$'
-      , 'g');
+    , 'g');
 
-      // Use a sourceURL for easier debugging.
-      // The sourceURL gets injected into the source that's eval-ed, so be careful
-      // to normalize all kinds of whitespace, so e.g. newlines (and unicode versions of it) can't sneak in
-      // and escape the comment, thus injecting code that gets evaled.
-      var sourceURL = '//# sourceURL=' +
+    // Use a sourceURL for easier debugging.
+    // The sourceURL gets injected into the source that's eval-ed, so be careful
+    // to normalize all kinds of whitespace, so e.g. newlines (and unicode versions of it) can't sneak in
+    // and escape the comment, thus injecting code that gets evaled.
+    var sourceURL = '//# sourceURL=' +
         (hasOwnProperty.call(options, 'sourceURL')
-          ? (options.sourceURL + '').replace(/\s/g, ' ')
-          : ('lodash.templateSources[' + (++templateCounter) + ']')
+        ? (options.sourceURL + '').replace(/\s/g, ' ')
+        : ('lodash.templateSources[' + (++templateCounter) + ']')
         ) + '\n';
 
-      string.replace(reDelimiters, function(match, escapeValue, interpolateValue, esTemplateValue, evaluateValue, offset) {
+    string.replace(reDelimiters, function(match, escapeValue, interpolateValue, esTemplateValue, evaluateValue, offset) {
         interpolateValue || (interpolateValue = esTemplateValue);
 
         // Escape characters that can't be included in string literals.
@@ -22887,73 +22901,73 @@ exports.Deprecation = Deprecation;
 
         // Replace delimiters with snippets.
         if (escapeValue) {
-          isEscaping = true;
-          source += "' +\n__e(" + escapeValue + ") +\n'";
+        isEscaping = true;
+        source += "' +\n__e(" + escapeValue + ") +\n'";
         }
         if (evaluateValue) {
-          isEvaluating = true;
-          source += "';\n" + evaluateValue + ";\n__p += '";
+        isEvaluating = true;
+        source += "';\n" + evaluateValue + ";\n__p += '";
         }
         if (interpolateValue) {
-          source += "' +\n((__t = (" + interpolateValue + ")) == null ? '' : __t) +\n'";
+        source += "' +\n((__t = (" + interpolateValue + ")) == null ? '' : __t) +\n'";
         }
         index = offset + match.length;
 
         // The JS engine embedded in Adobe products needs `match` returned in
         // order to produce the correct `offset` value.
         return match;
-      });
+    });
 
-      source += "';\n";
+    source += "';\n";
 
-      // If `variable` is not specified wrap a with-statement around the generated
-      // code to add the data object to the top of the scope chain.
-      var variable = hasOwnProperty.call(options, 'variable') && options.variable;
-      if (!variable) {
+    // If `variable` is not specified wrap a with-statement around the generated
+    // code to add the data object to the top of the scope chain.
+    var variable = hasOwnProperty.call(options, 'variable') && options.variable;
+    if (!variable) {
         source = 'with (obj) {\n' + source + '\n}\n';
-      }
-      // Throw an error if a forbidden character was found in `variable`, to prevent
-      // potential command injection attacks.
-      else if (reForbiddenIdentifierChars.test(variable)) {
+    }
+    // Throw an error if a forbidden character was found in `variable`, to prevent
+    // potential command injection attacks.
+    else if (reForbiddenIdentifierChars.test(variable)) {
         throw new Error(INVALID_TEMPL_VAR_ERROR_TEXT);
-      }
+    }
 
-      // Cleanup code by stripping empty strings.
-      source = (isEvaluating ? source.replace(reEmptyStringLeading, '') : source)
+    // Cleanup code by stripping empty strings.
+    source = (isEvaluating ? source.replace(reEmptyStringLeading, '') : source)
         .replace(reEmptyStringMiddle, '$1')
         .replace(reEmptyStringTrailing, '$1;');
 
-      // Frame code as the function body.
-      source = 'function(' + (variable || 'obj') + ') {\n' +
+    // Frame code as the function body.
+    source = 'function(' + (variable || 'obj') + ') {\n' +
         (variable
-          ? ''
-          : 'obj || (obj = {});\n'
+        ? ''
+        : 'obj || (obj = {});\n'
         ) +
         "var __t, __p = ''" +
         (isEscaping
-           ? ', __e = _.escape'
-           : ''
+            ? ', __e = _.escape'
+            : ''
         ) +
         (isEvaluating
-          ? ', __j = Array.prototype.join;\n' +
+        ? ', __j = Array.prototype.join;\n' +
             "function print() { __p += __j.call(arguments, '') }\n"
-          : ';\n'
+        : ';\n'
         ) +
         source +
         'return __p\n}';
 
-      var result = attempt(function() {
+    var result = attempt(function() {
         return Function(importsKeys, sourceURL + 'return ' + source)
-          .apply(undefined, importsValues);
-      });
+        .apply(undefined, importsValues);
+    });
 
-      // Provide the compiled function's source by its `toString` method or
-      // the `source` property as a convenience for inlining compiled templates.
-      result.source = source;
-      if (isError(result)) {
+    // Provide the compiled function's source by its `toString` method or
+    // the `source` property as a convenience for inlining compiled templates.
+    result.source = source;
+    if (isError(result)) {
         throw result;
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -22978,7 +22992,7 @@ exports.Deprecation = Deprecation;
      * // => '__foo_bar__'
      */
     function toLower(value) {
-      return toString(value).toLowerCase();
+    return toString(value).toLowerCase();
     }
 
     /**
@@ -23003,7 +23017,7 @@ exports.Deprecation = Deprecation;
      * // => '__FOO_BAR__'
      */
     function toUpper(value) {
-      return toString(value).toUpperCase();
+    return toString(value).toUpperCase();
     }
 
     /**
@@ -23029,19 +23043,19 @@ exports.Deprecation = Deprecation;
      * // => ['foo', 'bar']
      */
     function trim(string, chars, guard) {
-      string = toString(string);
-      if (string && (guard || chars === undefined)) {
+    string = toString(string);
+    if (string && (guard || chars === undefined)) {
         return baseTrim(string);
-      }
-      if (!string || !(chars = baseToString(chars))) {
+    }
+    if (!string || !(chars = baseToString(chars))) {
         return string;
-      }
-      var strSymbols = stringToArray(string),
-          chrSymbols = stringToArray(chars),
-          start = charsStartIndex(strSymbols, chrSymbols),
-          end = charsEndIndex(strSymbols, chrSymbols) + 1;
+    }
+    var strSymbols = stringToArray(string),
+        chrSymbols = stringToArray(chars),
+        start = charsStartIndex(strSymbols, chrSymbols),
+        end = charsEndIndex(strSymbols, chrSymbols) + 1;
 
-      return castSlice(strSymbols, start, end).join('');
+    return castSlice(strSymbols, start, end).join('');
     }
 
     /**
@@ -23064,17 +23078,17 @@ exports.Deprecation = Deprecation;
      * // => '-_-abc'
      */
     function trimEnd(string, chars, guard) {
-      string = toString(string);
-      if (string && (guard || chars === undefined)) {
+    string = toString(string);
+    if (string && (guard || chars === undefined)) {
         return string.slice(0, trimmedEndIndex(string) + 1);
-      }
-      if (!string || !(chars = baseToString(chars))) {
+    }
+    if (!string || !(chars = baseToString(chars))) {
         return string;
-      }
-      var strSymbols = stringToArray(string),
-          end = charsEndIndex(strSymbols, stringToArray(chars)) + 1;
+    }
+    var strSymbols = stringToArray(string),
+        end = charsEndIndex(strSymbols, stringToArray(chars)) + 1;
 
-      return castSlice(strSymbols, 0, end).join('');
+    return castSlice(strSymbols, 0, end).join('');
     }
 
     /**
@@ -23097,17 +23111,17 @@ exports.Deprecation = Deprecation;
      * // => 'abc-_-'
      */
     function trimStart(string, chars, guard) {
-      string = toString(string);
-      if (string && (guard || chars === undefined)) {
+    string = toString(string);
+    if (string && (guard || chars === undefined)) {
         return string.replace(reTrimStart, '');
-      }
-      if (!string || !(chars = baseToString(chars))) {
+    }
+    if (!string || !(chars = baseToString(chars))) {
         return string;
-      }
-      var strSymbols = stringToArray(string),
-          start = charsStartIndex(strSymbols, stringToArray(chars));
+    }
+    var strSymbols = stringToArray(string),
+        start = charsStartIndex(strSymbols, stringToArray(chars));
 
-      return castSlice(strSymbols, start).join('');
+    return castSlice(strSymbols, start).join('');
     }
 
     /**
@@ -23148,59 +23162,59 @@ exports.Deprecation = Deprecation;
      * // => 'hi-diddly-ho there, neig [...]'
      */
     function truncate(string, options) {
-      var length = DEFAULT_TRUNC_LENGTH,
-          omission = DEFAULT_TRUNC_OMISSION;
+    var length = DEFAULT_TRUNC_LENGTH,
+        omission = DEFAULT_TRUNC_OMISSION;
 
-      if (isObject(options)) {
+    if (isObject(options)) {
         var separator = 'separator' in options ? options.separator : separator;
         length = 'length' in options ? toInteger(options.length) : length;
         omission = 'omission' in options ? baseToString(options.omission) : omission;
-      }
-      string = toString(string);
+    }
+    string = toString(string);
 
-      var strLength = string.length;
-      if (hasUnicode(string)) {
+    var strLength = string.length;
+    if (hasUnicode(string)) {
         var strSymbols = stringToArray(string);
         strLength = strSymbols.length;
-      }
-      if (length >= strLength) {
+    }
+    if (length >= strLength) {
         return string;
-      }
-      var end = length - stringSize(omission);
-      if (end < 1) {
+    }
+    var end = length - stringSize(omission);
+    if (end < 1) {
         return omission;
-      }
-      var result = strSymbols
+    }
+    var result = strSymbols
         ? castSlice(strSymbols, 0, end).join('')
         : string.slice(0, end);
 
-      if (separator === undefined) {
+    if (separator === undefined) {
         return result + omission;
-      }
-      if (strSymbols) {
+    }
+    if (strSymbols) {
         end += (result.length - end);
-      }
-      if (isRegExp(separator)) {
+    }
+    if (isRegExp(separator)) {
         if (string.slice(end).search(separator)) {
-          var match,
-              substring = result;
+        var match,
+            substring = result;
 
-          if (!separator.global) {
+        if (!separator.global) {
             separator = RegExp(separator.source, toString(reFlags.exec(separator)) + 'g');
-          }
-          separator.lastIndex = 0;
-          while ((match = separator.exec(substring))) {
-            var newEnd = match.index;
-          }
-          result = result.slice(0, newEnd === undefined ? end : newEnd);
         }
-      } else if (string.indexOf(baseToString(separator), end) != end) {
+        separator.lastIndex = 0;
+        while ((match = separator.exec(substring))) {
+            var newEnd = match.index;
+        }
+        result = result.slice(0, newEnd === undefined ? end : newEnd);
+        }
+    } else if (string.indexOf(baseToString(separator), end) != end) {
         var index = result.lastIndexOf(separator);
         if (index > -1) {
-          result = result.slice(0, index);
+        result = result.slice(0, index);
         }
-      }
-      return result + omission;
+    }
+    return result + omission;
     }
 
     /**
@@ -23223,8 +23237,8 @@ exports.Deprecation = Deprecation;
      * // => 'fred, barney, & pebbles'
      */
     function unescape(string) {
-      string = toString(string);
-      return (string && reHasEscapedHtml.test(string))
+    string = toString(string);
+    return (string && reHasEscapedHtml.test(string))
         ? string.replace(reEscapedHtml, unescapeHtmlChar)
         : string;
     }
@@ -23250,7 +23264,7 @@ exports.Deprecation = Deprecation;
      * // => 'FOO BAR'
      */
     var upperCase = createCompounder(function(result, word, index) {
-      return result + (index ? ' ' : '') + word.toUpperCase();
+    return result + (index ? ' ' : '') + word.toUpperCase();
     });
 
     /**
@@ -23292,13 +23306,13 @@ exports.Deprecation = Deprecation;
      * // => ['fred', 'barney', '&', 'pebbles']
      */
     function words(string, pattern, guard) {
-      string = toString(string);
-      pattern = guard ? undefined : pattern;
+    string = toString(string);
+    pattern = guard ? undefined : pattern;
 
-      if (pattern === undefined) {
+    if (pattern === undefined) {
         return hasUnicodeWord(string) ? unicodeWords(string) : asciiWords(string);
-      }
-      return string.match(pattern) || [];
+    }
+    return string.match(pattern) || [];
     }
 
     /*------------------------------------------------------------------------*/
@@ -23326,11 +23340,11 @@ exports.Deprecation = Deprecation;
      * }
      */
     var attempt = baseRest(function(func, args) {
-      try {
+    try {
         return apply(func, undefined, args);
-      } catch (e) {
+    } catch (e) {
         return isError(e) ? e : new Error(e);
-      }
+    }
     });
 
     /**
@@ -23360,11 +23374,11 @@ exports.Deprecation = Deprecation;
      * // => Logs 'clicked docs' when clicked.
      */
     var bindAll = flatRest(function(object, methodNames) {
-      arrayEach(methodNames, function(key) {
+    arrayEach(methodNames, function(key) {
         key = toKey(key);
         baseAssignValue(object, key, bind(object[key], object));
-      });
-      return object;
+    });
+    return object;
     });
 
     /**
@@ -23397,25 +23411,25 @@ exports.Deprecation = Deprecation;
      * // => 'no match'
      */
     function cond(pairs) {
-      var length = pairs == null ? 0 : pairs.length,
-          toIteratee = getIteratee();
+    var length = pairs == null ? 0 : pairs.length,
+        toIteratee = getIteratee();
 
-      pairs = !length ? [] : arrayMap(pairs, function(pair) {
+    pairs = !length ? [] : arrayMap(pairs, function(pair) {
         if (typeof pair[1] != 'function') {
-          throw new TypeError(FUNC_ERROR_TEXT);
+        throw new TypeError(FUNC_ERROR_TEXT);
         }
         return [toIteratee(pair[0]), pair[1]];
-      });
+    });
 
-      return baseRest(function(args) {
+    return baseRest(function(args) {
         var index = -1;
         while (++index < length) {
-          var pair = pairs[index];
-          if (apply(pair[0], this, args)) {
+        var pair = pairs[index];
+        if (apply(pair[0], this, args)) {
             return apply(pair[1], this, args);
-          }
         }
-      });
+        }
+    });
     }
 
     /**
@@ -23443,7 +23457,7 @@ exports.Deprecation = Deprecation;
      * // => [{ 'a': 1, 'b': 2 }]
      */
     function conforms(source) {
-      return baseConforms(baseClone(source, CLONE_DEEP_FLAG));
+    return baseConforms(baseClone(source, CLONE_DEEP_FLAG));
     }
 
     /**
@@ -23466,9 +23480,9 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function constant(value) {
-      return function() {
+    return function() {
         return value;
-      };
+    };
     }
 
     /**
@@ -23492,7 +23506,7 @@ exports.Deprecation = Deprecation;
      * // => 10
      */
     function defaultTo(value, defaultValue) {
-      return (value == null || value !== value) ? defaultValue : value;
+    return (value == null || value !== value) ? defaultValue : value;
     }
 
     /**
@@ -23559,7 +23573,7 @@ exports.Deprecation = Deprecation;
      * // => true
      */
     function identity(value) {
-      return value;
+    return value;
     }
 
     /**
@@ -23605,7 +23619,7 @@ exports.Deprecation = Deprecation;
      * // => ['def']
      */
     function iteratee(func) {
-      return baseIteratee(typeof func == 'function' ? func : baseClone(func, CLONE_DEEP_FLAG));
+    return baseIteratee(typeof func == 'function' ? func : baseClone(func, CLONE_DEEP_FLAG));
     }
 
     /**
@@ -23644,7 +23658,7 @@ exports.Deprecation = Deprecation;
      * // => [{ 'a': 1, 'b': 2, 'c': 3 }, { 'a': 4, 'b': 5, 'c': 6 }]
      */
     function matches(source) {
-      return baseMatches(baseClone(source, CLONE_DEEP_FLAG));
+    return baseMatches(baseClone(source, CLONE_DEEP_FLAG));
     }
 
     /**
@@ -23681,7 +23695,7 @@ exports.Deprecation = Deprecation;
      * // => [{ 'a': 1, 'b': 2, 'c': 3 }, { 'a': 4, 'b': 5, 'c': 6 }]
      */
     function matchesProperty(path, srcValue) {
-      return baseMatchesProperty(path, baseClone(srcValue, CLONE_DEEP_FLAG));
+    return baseMatchesProperty(path, baseClone(srcValue, CLONE_DEEP_FLAG));
     }
 
     /**
@@ -23709,9 +23723,9 @@ exports.Deprecation = Deprecation;
      * // => [2, 1]
      */
     var method = baseRest(function(path, args) {
-      return function(object) {
+    return function(object) {
         return baseInvoke(object, path, args);
-      };
+    };
     });
 
     /**
@@ -23738,9 +23752,9 @@ exports.Deprecation = Deprecation;
      * // => [2, 0]
      */
     var methodOf = baseRest(function(object, args) {
-      return function(path) {
+    return function(path) {
         return baseInvoke(object, path, args);
-      };
+    };
     });
 
     /**
@@ -23780,39 +23794,39 @@ exports.Deprecation = Deprecation;
      * // => ['e']
      */
     function mixin(object, source, options) {
-      var props = keys(source),
-          methodNames = baseFunctions(source, props);
+    var props = keys(source),
+        methodNames = baseFunctions(source, props);
 
-      if (options == null &&
-          !(isObject(source) && (methodNames.length || !props.length))) {
+    if (options == null &&
+        !(isObject(source) && (methodNames.length || !props.length))) {
         options = source;
         source = object;
         object = this;
         methodNames = baseFunctions(source, keys(source));
-      }
-      var chain = !(isObject(options) && 'chain' in options) || !!options.chain,
-          isFunc = isFunction(object);
+    }
+    var chain = !(isObject(options) && 'chain' in options) || !!options.chain,
+        isFunc = isFunction(object);
 
-      arrayEach(methodNames, function(methodName) {
+    arrayEach(methodNames, function(methodName) {
         var func = source[methodName];
         object[methodName] = func;
         if (isFunc) {
-          object.prototype[methodName] = function() {
+        object.prototype[methodName] = function() {
             var chainAll = this.__chain__;
             if (chain || chainAll) {
-              var result = object(this.__wrapped__),
-                  actions = result.__actions__ = copyArray(this.__actions__);
+            var result = object(this.__wrapped__),
+                actions = result.__actions__ = copyArray(this.__actions__);
 
-              actions.push({ 'func': func, 'args': arguments, 'thisArg': object });
-              result.__chain__ = chainAll;
-              return result;
+            actions.push({ 'func': func, 'args': arguments, 'thisArg': object });
+            result.__chain__ = chainAll;
+            return result;
             }
             return func.apply(object, arrayPush([this.value()], arguments));
-          };
+        };
         }
-      });
+    });
 
-      return object;
+    return object;
     }
 
     /**
@@ -23829,10 +23843,10 @@ exports.Deprecation = Deprecation;
      * var lodash = _.noConflict();
      */
     function noConflict() {
-      if (root._ === this) {
+    if (root._ === this) {
         root._ = oldDash;
-      }
-      return this;
+    }
+    return this;
     }
 
     /**
@@ -23848,7 +23862,7 @@ exports.Deprecation = Deprecation;
      * // => [undefined, undefined]
      */
     function noop() {
-      // No operation performed.
+    // No operation performed.
     }
 
     /**
@@ -23872,10 +23886,10 @@ exports.Deprecation = Deprecation;
      * // => 'c'
      */
     function nthArg(n) {
-      n = toInteger(n);
-      return baseRest(function(args) {
+    n = toInteger(n);
+    return baseRest(function(args) {
         return baseNth(args, n);
-      });
+    });
     }
 
     /**
@@ -23984,7 +23998,7 @@ exports.Deprecation = Deprecation;
      * // => [1, 2]
      */
     function property(path) {
-      return isKey(path) ? baseProperty(toKey(path)) : basePropertyDeep(path);
+    return isKey(path) ? baseProperty(toKey(path)) : basePropertyDeep(path);
     }
 
     /**
@@ -24009,9 +24023,9 @@ exports.Deprecation = Deprecation;
      * // => [2, 0]
      */
     function propertyOf(object) {
-      return function(path) {
+    return function(path) {
         return object == null ? undefined : baseGet(object, path);
-      };
+    };
     }
 
     /**
@@ -24114,7 +24128,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function stubArray() {
-      return [];
+    return [];
     }
 
     /**
@@ -24131,7 +24145,7 @@ exports.Deprecation = Deprecation;
      * // => [false, false]
      */
     function stubFalse() {
-      return false;
+    return false;
     }
 
     /**
@@ -24153,7 +24167,7 @@ exports.Deprecation = Deprecation;
      * // => false
      */
     function stubObject() {
-      return {};
+    return {};
     }
 
     /**
@@ -24170,7 +24184,7 @@ exports.Deprecation = Deprecation;
      * // => ['', '']
      */
     function stubString() {
-      return '';
+    return '';
     }
 
     /**
@@ -24187,7 +24201,7 @@ exports.Deprecation = Deprecation;
      * // => [true, true]
      */
     function stubTrue() {
-      return true;
+    return true;
     }
 
     /**
@@ -24210,21 +24224,21 @@ exports.Deprecation = Deprecation;
      * // => [0, 0, 0, 0]
      */
     function times(n, iteratee) {
-      n = toInteger(n);
-      if (n < 1 || n > MAX_SAFE_INTEGER) {
+    n = toInteger(n);
+    if (n < 1 || n > MAX_SAFE_INTEGER) {
         return [];
-      }
-      var index = MAX_ARRAY_LENGTH,
-          length = nativeMin(n, MAX_ARRAY_LENGTH);
+    }
+    var index = MAX_ARRAY_LENGTH,
+        length = nativeMin(n, MAX_ARRAY_LENGTH);
 
-      iteratee = getIteratee(iteratee);
-      n -= MAX_ARRAY_LENGTH;
+    iteratee = getIteratee(iteratee);
+    n -= MAX_ARRAY_LENGTH;
 
-      var result = baseTimes(length, iteratee);
-      while (++index < n) {
+    var result = baseTimes(length, iteratee);
+    while (++index < n) {
         iteratee(index);
-      }
-      return result;
+    }
+    return result;
     }
 
     /**
@@ -24245,10 +24259,10 @@ exports.Deprecation = Deprecation;
      * // => ['a', '0', 'b', 'c']
      */
     function toPath(value) {
-      if (isArray(value)) {
+    if (isArray(value)) {
         return arrayMap(value, toKey);
-      }
-      return isSymbol(value) ? [value] : copyArray(stringToPath(toString(value)));
+    }
+    return isSymbol(value) ? [value] : copyArray(stringToPath(toString(value)));
     }
 
     /**
@@ -24269,8 +24283,8 @@ exports.Deprecation = Deprecation;
      * // => '105'
      */
     function uniqueId(prefix) {
-      var id = ++idCounter;
-      return toString(prefix) + id;
+    var id = ++idCounter;
+    return toString(prefix) + id;
     }
 
     /*------------------------------------------------------------------------*/
@@ -24291,7 +24305,7 @@ exports.Deprecation = Deprecation;
      * // => 10
      */
     var add = createMathOperation(function(augend, addend) {
-      return augend + addend;
+    return augend + addend;
     }, 0);
 
     /**
@@ -24333,7 +24347,7 @@ exports.Deprecation = Deprecation;
      * // => 1.5
      */
     var divide = createMathOperation(function(dividend, divisor) {
-      return dividend / divisor;
+    return dividend / divisor;
     }, 1);
 
     /**
@@ -24378,7 +24392,7 @@ exports.Deprecation = Deprecation;
      * // => undefined
      */
     function max(array) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseExtremum(array, identity, baseGt)
         : undefined;
     }
@@ -24407,7 +24421,7 @@ exports.Deprecation = Deprecation;
      * // => { 'n': 2 }
      */
     function maxBy(array, iteratee) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseExtremum(array, getIteratee(iteratee, 2), baseGt)
         : undefined;
     }
@@ -24427,7 +24441,7 @@ exports.Deprecation = Deprecation;
      * // => 5
      */
     function mean(array) {
-      return baseMean(array, identity);
+    return baseMean(array, identity);
     }
 
     /**
@@ -24454,7 +24468,7 @@ exports.Deprecation = Deprecation;
      * // => 5
      */
     function meanBy(array, iteratee) {
-      return baseMean(array, getIteratee(iteratee, 2));
+    return baseMean(array, getIteratee(iteratee, 2));
     }
 
     /**
@@ -24476,7 +24490,7 @@ exports.Deprecation = Deprecation;
      * // => undefined
      */
     function min(array) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseExtremum(array, identity, baseLt)
         : undefined;
     }
@@ -24505,7 +24519,7 @@ exports.Deprecation = Deprecation;
      * // => { 'n': 1 }
      */
     function minBy(array, iteratee) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseExtremum(array, getIteratee(iteratee, 2), baseLt)
         : undefined;
     }
@@ -24526,7 +24540,7 @@ exports.Deprecation = Deprecation;
      * // => 24
      */
     var multiply = createMathOperation(function(multiplier, multiplicand) {
-      return multiplier * multiplicand;
+    return multiplier * multiplicand;
     }, 1);
 
     /**
@@ -24568,7 +24582,7 @@ exports.Deprecation = Deprecation;
      * // => 2
      */
     var subtract = createMathOperation(function(minuend, subtrahend) {
-      return minuend - subtrahend;
+    return minuend - subtrahend;
     }, 0);
 
     /**
@@ -24586,7 +24600,7 @@ exports.Deprecation = Deprecation;
      * // => 20
      */
     function sum(array) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseSum(array, identity)
         : 0;
     }
@@ -24615,7 +24629,7 @@ exports.Deprecation = Deprecation;
      * // => 20
      */
     function sumBy(array, iteratee) {
-      return (array && array.length)
+    return (array && array.length)
         ? baseSum(array, getIteratee(iteratee, 2))
         : 0;
     }
@@ -24941,13 +24955,13 @@ exports.Deprecation = Deprecation;
     lodash.first = head;
 
     mixin(lodash, (function() {
-      var source = {};
-      baseForOwn(lodash, function(func, methodName) {
+    var source = {};
+    baseForOwn(lodash, function(func, methodName) {
         if (!hasOwnProperty.call(lodash.prototype, methodName)) {
-          source[methodName] = func;
+        source[methodName] = func;
         }
-      });
-      return source;
+    });
+    return source;
     }()), { 'chain': false });
 
     /*------------------------------------------------------------------------*/
@@ -24963,131 +24977,131 @@ exports.Deprecation = Deprecation;
 
     // Assign default placeholders.
     arrayEach(['bind', 'bindKey', 'curry', 'curryRight', 'partial', 'partialRight'], function(methodName) {
-      lodash[methodName].placeholder = lodash;
+    lodash[methodName].placeholder = lodash;
     });
 
     // Add `LazyWrapper` methods for `_.drop` and `_.take` variants.
     arrayEach(['drop', 'take'], function(methodName, index) {
-      LazyWrapper.prototype[methodName] = function(n) {
+    LazyWrapper.prototype[methodName] = function(n) {
         n = n === undefined ? 1 : nativeMax(toInteger(n), 0);
 
         var result = (this.__filtered__ && !index)
-          ? new LazyWrapper(this)
-          : this.clone();
+        ? new LazyWrapper(this)
+        : this.clone();
 
         if (result.__filtered__) {
-          result.__takeCount__ = nativeMin(n, result.__takeCount__);
+        result.__takeCount__ = nativeMin(n, result.__takeCount__);
         } else {
-          result.__views__.push({
+        result.__views__.push({
             'size': nativeMin(n, MAX_ARRAY_LENGTH),
             'type': methodName + (result.__dir__ < 0 ? 'Right' : '')
-          });
+        });
         }
         return result;
-      };
+    };
 
-      LazyWrapper.prototype[methodName + 'Right'] = function(n) {
+    LazyWrapper.prototype[methodName + 'Right'] = function(n) {
         return this.reverse()[methodName](n).reverse();
-      };
+    };
     });
 
     // Add `LazyWrapper` methods that accept an `iteratee` value.
     arrayEach(['filter', 'map', 'takeWhile'], function(methodName, index) {
-      var type = index + 1,
-          isFilter = type == LAZY_FILTER_FLAG || type == LAZY_WHILE_FLAG;
+    var type = index + 1,
+        isFilter = type == LAZY_FILTER_FLAG || type == LAZY_WHILE_FLAG;
 
-      LazyWrapper.prototype[methodName] = function(iteratee) {
+    LazyWrapper.prototype[methodName] = function(iteratee) {
         var result = this.clone();
         result.__iteratees__.push({
-          'iteratee': getIteratee(iteratee, 3),
-          'type': type
+        'iteratee': getIteratee(iteratee, 3),
+        'type': type
         });
         result.__filtered__ = result.__filtered__ || isFilter;
         return result;
-      };
+    };
     });
 
     // Add `LazyWrapper` methods for `_.head` and `_.last`.
     arrayEach(['head', 'last'], function(methodName, index) {
-      var takeName = 'take' + (index ? 'Right' : '');
+    var takeName = 'take' + (index ? 'Right' : '');
 
-      LazyWrapper.prototype[methodName] = function() {
+    LazyWrapper.prototype[methodName] = function() {
         return this[takeName](1).value()[0];
-      };
+    };
     });
 
     // Add `LazyWrapper` methods for `_.initial` and `_.tail`.
     arrayEach(['initial', 'tail'], function(methodName, index) {
-      var dropName = 'drop' + (index ? '' : 'Right');
+    var dropName = 'drop' + (index ? '' : 'Right');
 
-      LazyWrapper.prototype[methodName] = function() {
+    LazyWrapper.prototype[methodName] = function() {
         return this.__filtered__ ? new LazyWrapper(this) : this[dropName](1);
-      };
+    };
     });
 
     LazyWrapper.prototype.compact = function() {
-      return this.filter(identity);
+    return this.filter(identity);
     };
 
     LazyWrapper.prototype.find = function(predicate) {
-      return this.filter(predicate).head();
+    return this.filter(predicate).head();
     };
 
     LazyWrapper.prototype.findLast = function(predicate) {
-      return this.reverse().find(predicate);
+    return this.reverse().find(predicate);
     };
 
     LazyWrapper.prototype.invokeMap = baseRest(function(path, args) {
-      if (typeof path == 'function') {
+    if (typeof path == 'function') {
         return new LazyWrapper(this);
-      }
-      return this.map(function(value) {
+    }
+    return this.map(function(value) {
         return baseInvoke(value, path, args);
-      });
+    });
     });
 
     LazyWrapper.prototype.reject = function(predicate) {
-      return this.filter(negate(getIteratee(predicate)));
+    return this.filter(negate(getIteratee(predicate)));
     };
 
     LazyWrapper.prototype.slice = function(start, end) {
-      start = toInteger(start);
+    start = toInteger(start);
 
-      var result = this;
-      if (result.__filtered__ && (start > 0 || end < 0)) {
+    var result = this;
+    if (result.__filtered__ && (start > 0 || end < 0)) {
         return new LazyWrapper(result);
-      }
-      if (start < 0) {
+    }
+    if (start < 0) {
         result = result.takeRight(-start);
-      } else if (start) {
+    } else if (start) {
         result = result.drop(start);
-      }
-      if (end !== undefined) {
+    }
+    if (end !== undefined) {
         end = toInteger(end);
         result = end < 0 ? result.dropRight(-end) : result.take(end - start);
-      }
-      return result;
+    }
+    return result;
     };
 
     LazyWrapper.prototype.takeRightWhile = function(predicate) {
-      return this.reverse().takeWhile(predicate).reverse();
+    return this.reverse().takeWhile(predicate).reverse();
     };
 
     LazyWrapper.prototype.toArray = function() {
-      return this.take(MAX_ARRAY_LENGTH);
+    return this.take(MAX_ARRAY_LENGTH);
     };
 
     // Add `LazyWrapper` methods to `lodash.prototype`.
     baseForOwn(LazyWrapper.prototype, function(func, methodName) {
-      var checkIteratee = /^(?:filter|find|map|reject)|While$/.test(methodName),
-          isTaker = /^(?:head|last)$/.test(methodName),
-          lodashFunc = lodash[isTaker ? ('take' + (methodName == 'last' ? 'Right' : '')) : methodName],
-          retUnwrapped = isTaker || /^find/.test(methodName);
+    var checkIteratee = /^(?:filter|find|map|reject)|While$/.test(methodName),
+        isTaker = /^(?:head|last)$/.test(methodName),
+        lodashFunc = lodash[isTaker ? ('take' + (methodName == 'last' ? 'Right' : '')) : methodName],
+        retUnwrapped = isTaker || /^find/.test(methodName);
 
-      if (!lodashFunc) {
+    if (!lodashFunc) {
         return;
-      }
-      lodash.prototype[methodName] = function() {
+    }
+    lodash.prototype[methodName] = function() {
         var value = this.__wrapped__,
             args = isTaker ? [1] : arguments,
             isLazy = value instanceof LazyWrapper,
@@ -25095,13 +25109,13 @@ exports.Deprecation = Deprecation;
             useLazy = isLazy || isArray(value);
 
         var interceptor = function(value) {
-          var result = lodashFunc.apply(lodash, arrayPush([value], args));
-          return (isTaker && chainAll) ? result[0] : result;
+        var result = lodashFunc.apply(lodash, arrayPush([value], args));
+        return (isTaker && chainAll) ? result[0] : result;
         };
 
         if (useLazy && checkIteratee && typeof iteratee == 'function' && iteratee.length != 1) {
-          // Avoid lazy use if the iteratee has a "length" value other than `1`.
-          isLazy = useLazy = false;
+        // Avoid lazy use if the iteratee has a "length" value other than `1`.
+        isLazy = useLazy = false;
         }
         var chainAll = this.__chain__,
             isHybrid = !!this.__actions__.length,
@@ -25109,52 +25123,52 @@ exports.Deprecation = Deprecation;
             onlyLazy = isLazy && !isHybrid;
 
         if (!retUnwrapped && useLazy) {
-          value = onlyLazy ? value : new LazyWrapper(this);
-          var result = func.apply(value, args);
-          result.__actions__.push({ 'func': thru, 'args': [interceptor], 'thisArg': undefined });
-          return new LodashWrapper(result, chainAll);
+        value = onlyLazy ? value : new LazyWrapper(this);
+        var result = func.apply(value, args);
+        result.__actions__.push({ 'func': thru, 'args': [interceptor], 'thisArg': undefined });
+        return new LodashWrapper(result, chainAll);
         }
         if (isUnwrapped && onlyLazy) {
-          return func.apply(this, args);
+        return func.apply(this, args);
         }
         result = this.thru(interceptor);
         return isUnwrapped ? (isTaker ? result.value()[0] : result.value()) : result;
-      };
+    };
     });
 
     // Add `Array` methods to `lodash.prototype`.
     arrayEach(['pop', 'push', 'shift', 'sort', 'splice', 'unshift'], function(methodName) {
-      var func = arrayProto[methodName],
-          chainName = /^(?:push|sort|unshift)$/.test(methodName) ? 'tap' : 'thru',
-          retUnwrapped = /^(?:pop|shift)$/.test(methodName);
+    var func = arrayProto[methodName],
+        chainName = /^(?:push|sort|unshift)$/.test(methodName) ? 'tap' : 'thru',
+        retUnwrapped = /^(?:pop|shift)$/.test(methodName);
 
-      lodash.prototype[methodName] = function() {
+    lodash.prototype[methodName] = function() {
         var args = arguments;
         if (retUnwrapped && !this.__chain__) {
-          var value = this.value();
-          return func.apply(isArray(value) ? value : [], args);
+        var value = this.value();
+        return func.apply(isArray(value) ? value : [], args);
         }
         return this[chainName](function(value) {
-          return func.apply(isArray(value) ? value : [], args);
+        return func.apply(isArray(value) ? value : [], args);
         });
-      };
+    };
     });
 
     // Map minified method names to their real names.
     baseForOwn(LazyWrapper.prototype, function(func, methodName) {
-      var lodashFunc = lodash[methodName];
-      if (lodashFunc) {
+    var lodashFunc = lodash[methodName];
+    if (lodashFunc) {
         var key = lodashFunc.name + '';
         if (!hasOwnProperty.call(realNames, key)) {
-          realNames[key] = [];
+        realNames[key] = [];
         }
         realNames[key].push({ 'name': methodName, 'func': lodashFunc });
-      }
+    }
     });
 
     realNames[createHybrid(undefined, WRAP_BIND_KEY_FLAG).name] = [{
-      'name': 'wrapper',
-      'func': undefined
+    'name': 'wrapper',
+    'func': undefined
     }];
 
     // Add methods to `LazyWrapper`.
@@ -25175,18 +25189,18 @@ exports.Deprecation = Deprecation;
     lodash.prototype.first = lodash.prototype.head;
 
     if (symIterator) {
-      lodash.prototype[symIterator] = wrapperToIterator;
+    lodash.prototype[symIterator] = wrapperToIterator;
     }
     return lodash;
-  });
+});
 
-  /*--------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
 
-  // Export lodash.
-  var _ = runInContext();
+// Export lodash.
+var _ = runInContext();
 
-  // Some AMD build optimizers, like r.js, check for condition patterns like:
-  if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
+// Some AMD build optimizers, like r.js, check for condition patterns like:
+if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
     // Expose Lodash on the global object to prevent errors when Lodash is
     // loaded by a script tag in the presence of an AMD loader.
     // See http://requirejs.org/docs/errors.html#mismatch for more details.
@@ -25196,20 +25210,20 @@ exports.Deprecation = Deprecation;
     // Define as an anonymous module so, through path mapping, it can be
     // referenced as the "underscore" module.
     define(function() {
-      return _;
+    return _;
     });
-  }
-  // Check for `exports` after `define` in case a build optimizer adds it.
-  else if (freeModule) {
+}
+// Check for `exports` after `define` in case a build optimizer adds it.
+else if (freeModule) {
     // Export for Node.js.
     (freeModule.exports = _)._ = _;
     // Export for CommonJS support.
     freeExports._ = _;
-  }
-  else {
+}
+else {
     // Export to the global object.
     root._ = _;
-  }
+}
 }.call(this));
 
 
@@ -25223,42 +25237,42 @@ module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
 once.proto = once(function () {
-  Object.defineProperty(Function.prototype, 'once', {
+Object.defineProperty(Function.prototype, 'once', {
     value: function () {
-      return once(this)
+    return once(this)
     },
     configurable: true
-  })
+})
 
-  Object.defineProperty(Function.prototype, 'onceStrict', {
+Object.defineProperty(Function.prototype, 'onceStrict', {
     value: function () {
-      return onceStrict(this)
+    return onceStrict(this)
     },
     configurable: true
-  })
+})
 })
 
 function once (fn) {
-  var f = function () {
+var f = function () {
     if (f.called) return f.value
     f.called = true
     return f.value = fn.apply(this, arguments)
-  }
-  f.called = false
-  return f
+}
+f.called = false
+return f
 }
 
 function onceStrict (fn) {
-  var f = function () {
+var f = function () {
     if (f.called)
-      throw new Error(f.onceError)
+    throw new Error(f.onceError)
     f.called = true
     return f.value = fn.apply(this, arguments)
-  }
-  var name = fn.name || 'Function wrapped with `once`'
-  f.onceError = name + " shouldn't be called more than once"
-  f.called = false
-  return f
+}
+var name = fn.name || 'Function wrapped with `once`'
+f.onceError = name + " shouldn't be called more than once"
+f.called = false
+return f
 }
 
 
@@ -25274,38 +25288,38 @@ var punycode = __nccwpck_require__(5477);
 var mappingTable = __nccwpck_require__(2020);
 
 var PROCESSING_OPTIONS = {
-  TRANSITIONAL: 0,
-  NONTRANSITIONAL: 1
+TRANSITIONAL: 0,
+NONTRANSITIONAL: 1
 };
 
 function normalize(str) { // fix bug in v8
-  return str.split('\u0000').map(function (s) { return s.normalize('NFC'); }).join('\u0000');
+return str.split('\u0000').map(function (s) { return s.normalize('NFC'); }).join('\u0000');
 }
 
 function findStatus(val) {
-  var start = 0;
-  var end = mappingTable.length - 1;
+var start = 0;
+var end = mappingTable.length - 1;
 
-  while (start <= end) {
+while (start <= end) {
     var mid = Math.floor((start + end) / 2);
 
     var target = mappingTable[mid];
     if (target[0][0] <= val && target[0][1] >= val) {
-      return target;
+    return target;
     } else if (target[0][0] > val) {
-      end = mid - 1;
+    end = mid - 1;
     } else {
-      start = mid + 1;
+    start = mid + 1;
     }
-  }
+}
 
-  return null;
+return null;
 }
 
 var regexAstralSymbols = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
 
 function countSymbols(string) {
-  return string
+return string
     // replace every surrogate pair with a BMP symbol
     .replace(regexAstralSymbols, '_')
     // then get the length
@@ -25313,151 +25327,151 @@ function countSymbols(string) {
 }
 
 function mapChars(domain_name, useSTD3, processing_option) {
-  var hasError = false;
-  var processed = "";
+var hasError = false;
+var processed = "";
 
-  var len = countSymbols(domain_name);
-  for (var i = 0; i < len; ++i) {
+var len = countSymbols(domain_name);
+for (var i = 0; i < len; ++i) {
     var codePoint = domain_name.codePointAt(i);
     var status = findStatus(codePoint);
 
     switch (status[1]) {
-      case "disallowed":
+    case "disallowed":
         hasError = true;
         processed += String.fromCodePoint(codePoint);
         break;
-      case "ignored":
+    case "ignored":
         break;
-      case "mapped":
+    case "mapped":
         processed += String.fromCodePoint.apply(String, status[2]);
         break;
-      case "deviation":
+    case "deviation":
         if (processing_option === PROCESSING_OPTIONS.TRANSITIONAL) {
-          processed += String.fromCodePoint.apply(String, status[2]);
+        processed += String.fromCodePoint.apply(String, status[2]);
         } else {
-          processed += String.fromCodePoint(codePoint);
+        processed += String.fromCodePoint(codePoint);
         }
         break;
-      case "valid":
+    case "valid":
         processed += String.fromCodePoint(codePoint);
         break;
-      case "disallowed_STD3_mapped":
+    case "disallowed_STD3_mapped":
         if (useSTD3) {
-          hasError = true;
-          processed += String.fromCodePoint(codePoint);
+        hasError = true;
+        processed += String.fromCodePoint(codePoint);
         } else {
-          processed += String.fromCodePoint.apply(String, status[2]);
+        processed += String.fromCodePoint.apply(String, status[2]);
         }
         break;
-      case "disallowed_STD3_valid":
+    case "disallowed_STD3_valid":
         if (useSTD3) {
-          hasError = true;
+        hasError = true;
         }
 
         processed += String.fromCodePoint(codePoint);
         break;
     }
-  }
+}
 
-  return {
+return {
     string: processed,
     error: hasError
-  };
+};
 }
 
 var combiningMarksRegex = /[\u0300-\u036F\u0483-\u0489\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0711\u0730-\u074A\u07A6-\u07B0\u07EB-\u07F3\u0816-\u0819\u081B-\u0823\u0825-\u0827\u0829-\u082D\u0859-\u085B\u08E4-\u0903\u093A-\u093C\u093E-\u094F\u0951-\u0957\u0962\u0963\u0981-\u0983\u09BC\u09BE-\u09C4\u09C7\u09C8\u09CB-\u09CD\u09D7\u09E2\u09E3\u0A01-\u0A03\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A70\u0A71\u0A75\u0A81-\u0A83\u0ABC\u0ABE-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AE2\u0AE3\u0B01-\u0B03\u0B3C\u0B3E-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B62\u0B63\u0B82\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD7\u0C00-\u0C03\u0C3E-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C62\u0C63\u0C81-\u0C83\u0CBC\u0CBE-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CE2\u0CE3\u0D01-\u0D03\u0D3E-\u0D44\u0D46-\u0D48\u0D4A-\u0D4D\u0D57\u0D62\u0D63\u0D82\u0D83\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DF2\u0DF3\u0E31\u0E34-\u0E3A\u0E47-\u0E4E\u0EB1\u0EB4-\u0EB9\u0EBB\u0EBC\u0EC8-\u0ECD\u0F18\u0F19\u0F35\u0F37\u0F39\u0F3E\u0F3F\u0F71-\u0F84\u0F86\u0F87\u0F8D-\u0F97\u0F99-\u0FBC\u0FC6\u102B-\u103E\u1056-\u1059\u105E-\u1060\u1062-\u1064\u1067-\u106D\u1071-\u1074\u1082-\u108D\u108F\u109A-\u109D\u135D-\u135F\u1712-\u1714\u1732-\u1734\u1752\u1753\u1772\u1773\u17B4-\u17D3\u17DD\u180B-\u180D\u18A9\u1920-\u192B\u1930-\u193B\u19B0-\u19C0\u19C8\u19C9\u1A17-\u1A1B\u1A55-\u1A5E\u1A60-\u1A7C\u1A7F\u1AB0-\u1ABE\u1B00-\u1B04\u1B34-\u1B44\u1B6B-\u1B73\u1B80-\u1B82\u1BA1-\u1BAD\u1BE6-\u1BF3\u1C24-\u1C37\u1CD0-\u1CD2\u1CD4-\u1CE8\u1CED\u1CF2-\u1CF4\u1CF8\u1CF9\u1DC0-\u1DF5\u1DFC-\u1DFF\u20D0-\u20F0\u2CEF-\u2CF1\u2D7F\u2DE0-\u2DFF\u302A-\u302F\u3099\u309A\uA66F-\uA672\uA674-\uA67D\uA69F\uA6F0\uA6F1\uA802\uA806\uA80B\uA823-\uA827\uA880\uA881\uA8B4-\uA8C4\uA8E0-\uA8F1\uA926-\uA92D\uA947-\uA953\uA980-\uA983\uA9B3-\uA9C0\uA9E5\uAA29-\uAA36\uAA43\uAA4C\uAA4D\uAA7B-\uAA7D\uAAB0\uAAB2-\uAAB4\uAAB7\uAAB8\uAABE\uAABF\uAAC1\uAAEB-\uAAEF\uAAF5\uAAF6\uABE3-\uABEA\uABEC\uABED\uFB1E\uFE00-\uFE0F\uFE20-\uFE2D]|\uD800[\uDDFD\uDEE0\uDF76-\uDF7A]|\uD802[\uDE01-\uDE03\uDE05\uDE06\uDE0C-\uDE0F\uDE38-\uDE3A\uDE3F\uDEE5\uDEE6]|\uD804[\uDC00-\uDC02\uDC38-\uDC46\uDC7F-\uDC82\uDCB0-\uDCBA\uDD00-\uDD02\uDD27-\uDD34\uDD73\uDD80-\uDD82\uDDB3-\uDDC0\uDE2C-\uDE37\uDEDF-\uDEEA\uDF01-\uDF03\uDF3C\uDF3E-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF57\uDF62\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDCB0-\uDCC3\uDDAF-\uDDB5\uDDB8-\uDDC0\uDE30-\uDE40\uDEAB-\uDEB7]|\uD81A[\uDEF0-\uDEF4\uDF30-\uDF36]|\uD81B[\uDF51-\uDF7E\uDF8F-\uDF92]|\uD82F[\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44]|\uD83A[\uDCD0-\uDCD6]|\uDB40[\uDD00-\uDDEF]/;
 
 function validateLabel(label, processing_option) {
-  if (label.substr(0, 4) === "xn--") {
+if (label.substr(0, 4) === "xn--") {
     label = punycode.toUnicode(label);
     processing_option = PROCESSING_OPTIONS.NONTRANSITIONAL;
-  }
+}
 
-  var error = false;
+var error = false;
 
-  if (normalize(label) !== label ||
-      (label[3] === "-" && label[4] === "-") ||
-      label[0] === "-" || label[label.length - 1] === "-" ||
-      label.indexOf(".") !== -1 ||
-      label.search(combiningMarksRegex) === 0) {
+if (normalize(label) !== label ||
+    (label[3] === "-" && label[4] === "-") ||
+    label[0] === "-" || label[label.length - 1] === "-" ||
+    label.indexOf(".") !== -1 ||
+    label.search(combiningMarksRegex) === 0) {
     error = true;
-  }
+}
 
-  var len = countSymbols(label);
-  for (var i = 0; i < len; ++i) {
+var len = countSymbols(label);
+for (var i = 0; i < len; ++i) {
     var status = findStatus(label.codePointAt(i));
     if ((processing === PROCESSING_OPTIONS.TRANSITIONAL && status[1] !== "valid") ||
         (processing === PROCESSING_OPTIONS.NONTRANSITIONAL &&
-         status[1] !== "valid" && status[1] !== "deviation")) {
-      error = true;
-      break;
+        status[1] !== "valid" && status[1] !== "deviation")) {
+    error = true;
+    break;
     }
-  }
+}
 
-  return {
+return {
     label: label,
     error: error
-  };
+};
 }
 
 function processing(domain_name, useSTD3, processing_option) {
-  var result = mapChars(domain_name, useSTD3, processing_option);
-  result.string = normalize(result.string);
+var result = mapChars(domain_name, useSTD3, processing_option);
+result.string = normalize(result.string);
 
-  var labels = result.string.split(".");
-  for (var i = 0; i < labels.length; ++i) {
+var labels = result.string.split(".");
+for (var i = 0; i < labels.length; ++i) {
     try {
-      var validation = validateLabel(labels[i]);
-      labels[i] = validation.label;
-      result.error = result.error || validation.error;
+    var validation = validateLabel(labels[i]);
+    labels[i] = validation.label;
+    result.error = result.error || validation.error;
     } catch(e) {
-      result.error = true;
+    result.error = true;
     }
-  }
+}
 
-  return {
+return {
     string: labels.join("."),
     error: result.error
-  };
+};
 }
 
 module.exports.toASCII = function(domain_name, useSTD3, processing_option, verifyDnsLength) {
-  var result = processing(domain_name, useSTD3, processing_option);
-  var labels = result.string.split(".");
-  labels = labels.map(function(l) {
+var result = processing(domain_name, useSTD3, processing_option);
+var labels = result.string.split(".");
+labels = labels.map(function(l) {
     try {
-      return punycode.toASCII(l);
+    return punycode.toASCII(l);
     } catch(e) {
-      result.error = true;
-      return l;
+    result.error = true;
+    return l;
     }
-  });
+});
 
-  if (verifyDnsLength) {
+if (verifyDnsLength) {
     var total = labels.slice(0, labels.length - 1).join(".").length;
     if (total.length > 253 || total.length === 0) {
-      result.error = true;
+    result.error = true;
     }
 
     for (var i=0; i < labels.length; ++i) {
-      if (labels.length > 63 || labels.length === 0) {
+    if (labels.length > 63 || labels.length === 0) {
         result.error = true;
         break;
-      }
     }
-  }
+    }
+}
 
-  if (result.error) return null;
-  return labels.join(".");
+if (result.error) return null;
+return labels.join(".");
 };
 
 module.exports.toUnicode = function(domain_name, useSTD3) {
-  var result = processing(domain_name, useSTD3, PROCESSING_OPTIONS.NONTRANSITIONAL);
+var result = processing(domain_name, useSTD3, PROCESSING_OPTIONS.NONTRANSITIONAL);
 
-  return {
+return {
     domain: result.string,
     error: result.error
-  };
+};
 };
 
 module.exports.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
@@ -25495,250 +25509,250 @@ exports.httpsOverHttps = httpsOverHttps;
 
 
 function httpOverHttp(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = http.request;
-  return agent;
+var agent = new TunnelingAgent(options);
+agent.request = http.request;
+return agent;
 }
 
 function httpsOverHttp(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = http.request;
-  agent.createSocket = createSecureSocket;
-  agent.defaultPort = 443;
-  return agent;
+var agent = new TunnelingAgent(options);
+agent.request = http.request;
+agent.createSocket = createSecureSocket;
+agent.defaultPort = 443;
+return agent;
 }
 
 function httpOverHttps(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = https.request;
-  return agent;
+var agent = new TunnelingAgent(options);
+agent.request = https.request;
+return agent;
 }
 
 function httpsOverHttps(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = https.request;
-  agent.createSocket = createSecureSocket;
-  agent.defaultPort = 443;
-  return agent;
+var agent = new TunnelingAgent(options);
+agent.request = https.request;
+agent.createSocket = createSecureSocket;
+agent.defaultPort = 443;
+return agent;
 }
 
 
 function TunnelingAgent(options) {
-  var self = this;
-  self.options = options || {};
-  self.proxyOptions = self.options.proxy || {};
-  self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets;
-  self.requests = [];
-  self.sockets = [];
+var self = this;
+self.options = options || {};
+self.proxyOptions = self.options.proxy || {};
+self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets;
+self.requests = [];
+self.sockets = [];
 
-  self.on('free', function onFree(socket, host, port, localAddress) {
+self.on('free', function onFree(socket, host, port, localAddress) {
     var options = toOptions(host, port, localAddress);
     for (var i = 0, len = self.requests.length; i < len; ++i) {
-      var pending = self.requests[i];
-      if (pending.host === options.host && pending.port === options.port) {
+    var pending = self.requests[i];
+    if (pending.host === options.host && pending.port === options.port) {
         // Detect the request to connect same origin server,
         // reuse the connection.
         self.requests.splice(i, 1);
         pending.request.onSocket(socket);
         return;
-      }
+    }
     }
     socket.destroy();
     self.removeSocket(socket);
-  });
+});
 }
 util.inherits(TunnelingAgent, events.EventEmitter);
 
 TunnelingAgent.prototype.addRequest = function addRequest(req, host, port, localAddress) {
-  var self = this;
-  var options = mergeOptions({request: req}, self.options, toOptions(host, port, localAddress));
+var self = this;
+var options = mergeOptions({request: req}, self.options, toOptions(host, port, localAddress));
 
-  if (self.sockets.length >= this.maxSockets) {
+if (self.sockets.length >= this.maxSockets) {
     // We are over limit so we'll add it to the queue.
     self.requests.push(options);
     return;
-  }
+}
 
-  // If we are under maxSockets create a new one.
-  self.createSocket(options, function(socket) {
+// If we are under maxSockets create a new one.
+self.createSocket(options, function(socket) {
     socket.on('free', onFree);
     socket.on('close', onCloseOrRemove);
     socket.on('agentRemove', onCloseOrRemove);
     req.onSocket(socket);
 
     function onFree() {
-      self.emit('free', socket, options);
+    self.emit('free', socket, options);
     }
 
     function onCloseOrRemove(err) {
-      self.removeSocket(socket);
-      socket.removeListener('free', onFree);
-      socket.removeListener('close', onCloseOrRemove);
-      socket.removeListener('agentRemove', onCloseOrRemove);
+    self.removeSocket(socket);
+    socket.removeListener('free', onFree);
+    socket.removeListener('close', onCloseOrRemove);
+    socket.removeListener('agentRemove', onCloseOrRemove);
     }
-  });
+});
 };
 
 TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
-  var self = this;
-  var placeholder = {};
-  self.sockets.push(placeholder);
+var self = this;
+var placeholder = {};
+self.sockets.push(placeholder);
 
-  var connectOptions = mergeOptions({}, self.proxyOptions, {
+var connectOptions = mergeOptions({}, self.proxyOptions, {
     method: 'CONNECT',
     path: options.host + ':' + options.port,
     agent: false,
     headers: {
-      host: options.host + ':' + options.port
+    host: options.host + ':' + options.port
     }
-  });
-  if (options.localAddress) {
+});
+if (options.localAddress) {
     connectOptions.localAddress = options.localAddress;
-  }
-  if (connectOptions.proxyAuth) {
+}
+if (connectOptions.proxyAuth) {
     connectOptions.headers = connectOptions.headers || {};
     connectOptions.headers['Proxy-Authorization'] = 'Basic ' +
         new Buffer(connectOptions.proxyAuth).toString('base64');
-  }
+}
 
-  debug('making CONNECT request');
-  var connectReq = self.request(connectOptions);
-  connectReq.useChunkedEncodingByDefault = false; // for v0.6
-  connectReq.once('response', onResponse); // for v0.6
-  connectReq.once('upgrade', onUpgrade);   // for v0.6
-  connectReq.once('connect', onConnect);   // for v0.7 or later
-  connectReq.once('error', onError);
-  connectReq.end();
+debug('making CONNECT request');
+var connectReq = self.request(connectOptions);
+connectReq.useChunkedEncodingByDefault = false; // for v0.6
+connectReq.once('response', onResponse); // for v0.6
+connectReq.once('upgrade', onUpgrade);   // for v0.6
+connectReq.once('connect', onConnect);   // for v0.7 or later
+connectReq.once('error', onError);
+connectReq.end();
 
-  function onResponse(res) {
+function onResponse(res) {
     // Very hacky. This is necessary to avoid http-parser leaks.
     res.upgrade = true;
-  }
+}
 
-  function onUpgrade(res, socket, head) {
+function onUpgrade(res, socket, head) {
     // Hacky.
     process.nextTick(function() {
-      onConnect(res, socket, head);
+    onConnect(res, socket, head);
     });
-  }
+}
 
-  function onConnect(res, socket, head) {
+function onConnect(res, socket, head) {
     connectReq.removeAllListeners();
     socket.removeAllListeners();
 
     if (res.statusCode !== 200) {
-      debug('tunneling socket could not be established, statusCode=%d',
+    debug('tunneling socket could not be established, statusCode=%d',
         res.statusCode);
-      socket.destroy();
-      var error = new Error('tunneling socket could not be established, ' +
+    socket.destroy();
+    var error = new Error('tunneling socket could not be established, ' +
         'statusCode=' + res.statusCode);
-      error.code = 'ECONNRESET';
-      options.request.emit('error', error);
-      self.removeSocket(placeholder);
-      return;
+    error.code = 'ECONNRESET';
+    options.request.emit('error', error);
+    self.removeSocket(placeholder);
+    return;
     }
     if (head.length > 0) {
-      debug('got illegal response body from proxy');
-      socket.destroy();
-      var error = new Error('got illegal response body from proxy');
-      error.code = 'ECONNRESET';
-      options.request.emit('error', error);
-      self.removeSocket(placeholder);
-      return;
+    debug('got illegal response body from proxy');
+    socket.destroy();
+    var error = new Error('got illegal response body from proxy');
+    error.code = 'ECONNRESET';
+    options.request.emit('error', error);
+    self.removeSocket(placeholder);
+    return;
     }
     debug('tunneling connection has established');
     self.sockets[self.sockets.indexOf(placeholder)] = socket;
     return cb(socket);
-  }
+}
 
-  function onError(cause) {
+function onError(cause) {
     connectReq.removeAllListeners();
 
     debug('tunneling socket could not be established, cause=%s\n',
-          cause.message, cause.stack);
+        cause.message, cause.stack);
     var error = new Error('tunneling socket could not be established, ' +
-                          'cause=' + cause.message);
+                        'cause=' + cause.message);
     error.code = 'ECONNRESET';
     options.request.emit('error', error);
     self.removeSocket(placeholder);
-  }
+}
 };
 
 TunnelingAgent.prototype.removeSocket = function removeSocket(socket) {
-  var pos = this.sockets.indexOf(socket)
-  if (pos === -1) {
+var pos = this.sockets.indexOf(socket)
+if (pos === -1) {
     return;
-  }
-  this.sockets.splice(pos, 1);
+}
+this.sockets.splice(pos, 1);
 
-  var pending = this.requests.shift();
-  if (pending) {
+var pending = this.requests.shift();
+if (pending) {
     // If we have pending requests and a socket gets closed a new one
     // needs to be created to take over in the pool for the one that closed.
     this.createSocket(pending, function(socket) {
-      pending.request.onSocket(socket);
+    pending.request.onSocket(socket);
     });
-  }
+}
 };
 
 function createSecureSocket(options, cb) {
-  var self = this;
-  TunnelingAgent.prototype.createSocket.call(self, options, function(socket) {
+var self = this;
+TunnelingAgent.prototype.createSocket.call(self, options, function(socket) {
     var hostHeader = options.request.getHeader('host');
     var tlsOptions = mergeOptions({}, self.options, {
-      socket: socket,
-      servername: hostHeader ? hostHeader.replace(/:.*$/, '') : options.host
+    socket: socket,
+    servername: hostHeader ? hostHeader.replace(/:.*$/, '') : options.host
     });
 
     // 0 is dummy port for v0.6
     var secureSocket = tls.connect(0, tlsOptions);
     self.sockets[self.sockets.indexOf(socket)] = secureSocket;
     cb(secureSocket);
-  });
+});
 }
 
 
 function toOptions(host, port, localAddress) {
-  if (typeof host === 'string') { // since v0.10
+if (typeof host === 'string') { // since v0.10
     return {
-      host: host,
-      port: port,
-      localAddress: localAddress
+    host: host,
+    port: port,
+    localAddress: localAddress
     };
-  }
-  return host; // for v0.11 or later
+}
+return host; // for v0.11 or later
 }
 
 function mergeOptions(target) {
-  for (var i = 1, len = arguments.length; i < len; ++i) {
+for (var i = 1, len = arguments.length; i < len; ++i) {
     var overrides = arguments[i];
     if (typeof overrides === 'object') {
-      var keys = Object.keys(overrides);
-      for (var j = 0, keyLen = keys.length; j < keyLen; ++j) {
+    var keys = Object.keys(overrides);
+    for (var j = 0, keyLen = keys.length; j < keyLen; ++j) {
         var k = keys[j];
         if (overrides[k] !== undefined) {
-          target[k] = overrides[k];
+        target[k] = overrides[k];
         }
-      }
     }
-  }
-  return target;
+    }
+}
+return target;
 }
 
 
 var debug;
 if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
-  debug = function() {
+debug = function() {
     var args = Array.prototype.slice.call(arguments);
     if (typeof args[0] === 'string') {
-      args[0] = 'TUNNEL: ' + args[0];
+    args[0] = 'TUNNEL: ' + args[0];
     } else {
-      args.unshift('TUNNEL:');
+    args.unshift('TUNNEL:');
     }
     console.error.apply(console, args);
-  }
+}
 } else {
-  debug = function() {};
+debug = function() {};
 }
 exports.debug = debug; // for test
 
@@ -25752,61 +25766,61 @@ exports.debug = debug; // for test
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 Object.defineProperty(exports, "v1", ({
-  enumerable: true,
-  get: function () {
+enumerable: true,
+get: function () {
     return _v.default;
-  }
+}
 }));
 Object.defineProperty(exports, "v3", ({
-  enumerable: true,
-  get: function () {
+enumerable: true,
+get: function () {
     return _v2.default;
-  }
+}
 }));
 Object.defineProperty(exports, "v4", ({
-  enumerable: true,
-  get: function () {
+enumerable: true,
+get: function () {
     return _v3.default;
-  }
+}
 }));
 Object.defineProperty(exports, "v5", ({
-  enumerable: true,
-  get: function () {
+enumerable: true,
+get: function () {
     return _v4.default;
-  }
+}
 }));
 Object.defineProperty(exports, "NIL", ({
-  enumerable: true,
-  get: function () {
+enumerable: true,
+get: function () {
     return _nil.default;
-  }
+}
 }));
 Object.defineProperty(exports, "version", ({
-  enumerable: true,
-  get: function () {
+enumerable: true,
+get: function () {
     return _version.default;
-  }
+}
 }));
 Object.defineProperty(exports, "validate", ({
-  enumerable: true,
-  get: function () {
+enumerable: true,
+get: function () {
     return _validate.default;
-  }
+}
 }));
 Object.defineProperty(exports, "stringify", ({
-  enumerable: true,
-  get: function () {
+enumerable: true,
+get: function () {
     return _stringify.default;
-  }
+}
 }));
 Object.defineProperty(exports, "parse", ({
-  enumerable: true,
-  get: function () {
+enumerable: true,
+get: function () {
     return _parse.default;
-  }
+}
 }));
 
 var _v = _interopRequireDefault(__nccwpck_require__(8628));
@@ -25838,7 +25852,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 
@@ -25847,13 +25861,13 @@ var _crypto = _interopRequireDefault(__nccwpck_require__(6113));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function md5(bytes) {
-  if (Array.isArray(bytes)) {
+if (Array.isArray(bytes)) {
     bytes = Buffer.from(bytes);
-  } else if (typeof bytes === 'string') {
+} else if (typeof bytes === 'string') {
     bytes = Buffer.from(bytes, 'utf8');
-  }
+}
 
-  return _crypto.default.createHash('md5').update(bytes).digest();
+return _crypto.default.createHash('md5').update(bytes).digest();
 }
 
 var _default = md5;
@@ -25868,7 +25882,7 @@ exports["default"] = _default;
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 var _default = '00000000-0000-0000-0000-000000000000';
@@ -25883,7 +25897,7 @@ exports["default"] = _default;
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 
@@ -25892,35 +25906,35 @@ var _validate = _interopRequireDefault(__nccwpck_require__(6900));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function parse(uuid) {
-  if (!(0, _validate.default)(uuid)) {
+if (!(0, _validate.default)(uuid)) {
     throw TypeError('Invalid UUID');
-  }
+}
 
-  let v;
-  const arr = new Uint8Array(16); // Parse ########-....-....-....-............
+let v;
+const arr = new Uint8Array(16); // Parse ########-....-....-....-............
 
-  arr[0] = (v = parseInt(uuid.slice(0, 8), 16)) >>> 24;
-  arr[1] = v >>> 16 & 0xff;
-  arr[2] = v >>> 8 & 0xff;
-  arr[3] = v & 0xff; // Parse ........-####-....-....-............
+arr[0] = (v = parseInt(uuid.slice(0, 8), 16)) >>> 24;
+arr[1] = v >>> 16 & 0xff;
+arr[2] = v >>> 8 & 0xff;
+arr[3] = v & 0xff; // Parse ........-####-....-....-............
 
-  arr[4] = (v = parseInt(uuid.slice(9, 13), 16)) >>> 8;
-  arr[5] = v & 0xff; // Parse ........-....-####-....-............
+arr[4] = (v = parseInt(uuid.slice(9, 13), 16)) >>> 8;
+arr[5] = v & 0xff; // Parse ........-....-####-....-............
 
-  arr[6] = (v = parseInt(uuid.slice(14, 18), 16)) >>> 8;
-  arr[7] = v & 0xff; // Parse ........-....-....-####-............
+arr[6] = (v = parseInt(uuid.slice(14, 18), 16)) >>> 8;
+arr[7] = v & 0xff; // Parse ........-....-....-####-............
 
-  arr[8] = (v = parseInt(uuid.slice(19, 23), 16)) >>> 8;
-  arr[9] = v & 0xff; // Parse ........-....-....-....-############
-  // (Use "/" to avoid 32-bit truncation when bit-shifting high-order bytes)
+arr[8] = (v = parseInt(uuid.slice(19, 23), 16)) >>> 8;
+arr[9] = v & 0xff; // Parse ........-....-....-....-############
+// (Use "/" to avoid 32-bit truncation when bit-shifting high-order bytes)
 
-  arr[10] = (v = parseInt(uuid.slice(24, 36), 16)) / 0x10000000000 & 0xff;
-  arr[11] = v / 0x100000000 & 0xff;
-  arr[12] = v >>> 24 & 0xff;
-  arr[13] = v >>> 16 & 0xff;
-  arr[14] = v >>> 8 & 0xff;
-  arr[15] = v & 0xff;
-  return arr;
+arr[10] = (v = parseInt(uuid.slice(24, 36), 16)) / 0x10000000000 & 0xff;
+arr[11] = v / 0x100000000 & 0xff;
+arr[12] = v >>> 24 & 0xff;
+arr[13] = v >>> 16 & 0xff;
+arr[14] = v >>> 8 & 0xff;
+arr[15] = v & 0xff;
+return arr;
 }
 
 var _default = parse;
@@ -25935,7 +25949,7 @@ exports["default"] = _default;
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 var _default = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i;
@@ -25950,7 +25964,7 @@ exports["default"] = _default;
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = rng;
 
@@ -25963,13 +25977,13 @@ const rnds8Pool = new Uint8Array(256); // # of random values to pre-allocate
 let poolPtr = rnds8Pool.length;
 
 function rng() {
-  if (poolPtr > rnds8Pool.length - 16) {
+if (poolPtr > rnds8Pool.length - 16) {
     _crypto.default.randomFillSync(rnds8Pool);
 
     poolPtr = 0;
-  }
+}
 
-  return rnds8Pool.slice(poolPtr, poolPtr += 16);
+return rnds8Pool.slice(poolPtr, poolPtr += 16);
 }
 
 /***/ }),
@@ -25981,7 +25995,7 @@ function rng() {
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 
@@ -25990,13 +26004,13 @@ var _crypto = _interopRequireDefault(__nccwpck_require__(6113));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function sha1(bytes) {
-  if (Array.isArray(bytes)) {
+if (Array.isArray(bytes)) {
     bytes = Buffer.from(bytes);
-  } else if (typeof bytes === 'string') {
+} else if (typeof bytes === 'string') {
     bytes = Buffer.from(bytes, 'utf8');
-  }
+}
 
-  return _crypto.default.createHash('sha1').update(bytes).digest();
+return _crypto.default.createHash('sha1').update(bytes).digest();
 }
 
 var _default = sha1;
@@ -26011,7 +26025,7 @@ exports["default"] = _default;
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 
@@ -26026,23 +26040,23 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 const byteToHex = [];
 
 for (let i = 0; i < 256; ++i) {
-  byteToHex.push((i + 0x100).toString(16).substr(1));
+byteToHex.push((i + 0x100).toString(16).substr(1));
 }
 
 function stringify(arr, offset = 0) {
-  // Note: Be careful editing this code!  It's been tuned for performance
-  // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
-  const uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase(); // Consistency check for valid UUID.  If this throws, it's likely due to one
-  // of the following:
-  // - One or more input array values don't map to a hex octet (leading to
-  // "undefined" in the uuid)
-  // - Invalid input values for the RFC `version` or `variant` fields
+// Note: Be careful editing this code!  It's been tuned for performance
+// and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
+const uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase(); // Consistency check for valid UUID.  If this throws, it's likely due to one
+// of the following:
+// - One or more input array values don't map to a hex octet (leading to
+// "undefined" in the uuid)
+// - Invalid input values for the RFC `version` or `variant` fields
 
-  if (!(0, _validate.default)(uuid)) {
+if (!(0, _validate.default)(uuid)) {
     throw TypeError('Stringified UUID is invalid');
-  }
+}
 
-  return uuid;
+return uuid;
 }
 
 var _default = stringify;
@@ -26057,7 +26071,7 @@ exports["default"] = _default;
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 
@@ -26080,83 +26094,83 @@ let _lastMSecs = 0;
 let _lastNSecs = 0; // See https://github.com/uuidjs/uuid for API details
 
 function v1(options, buf, offset) {
-  let i = buf && offset || 0;
-  const b = buf || new Array(16);
-  options = options || {};
-  let node = options.node || _nodeId;
-  let clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq; // node and clockseq need to be initialized to random values if they're not
-  // specified.  We do this lazily to minimize issues related to insufficient
-  // system entropy.  See #189
+let i = buf && offset || 0;
+const b = buf || new Array(16);
+options = options || {};
+let node = options.node || _nodeId;
+let clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq; // node and clockseq need to be initialized to random values if they're not
+// specified.  We do this lazily to minimize issues related to insufficient
+// system entropy.  See #189
 
-  if (node == null || clockseq == null) {
+if (node == null || clockseq == null) {
     const seedBytes = options.random || (options.rng || _rng.default)();
 
     if (node == null) {
-      // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
-      node = _nodeId = [seedBytes[0] | 0x01, seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]];
+    // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
+    node = _nodeId = [seedBytes[0] | 0x01, seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]];
     }
 
     if (clockseq == null) {
-      // Per 4.2.2, randomize (14 bit) clockseq
-      clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
+    // Per 4.2.2, randomize (14 bit) clockseq
+    clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
     }
-  } // UUID timestamps are 100 nano-second units since the Gregorian epoch,
-  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
-  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
-  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
+} // UUID timestamps are 100 nano-second units since the Gregorian epoch,
+// (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
+// time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
+// (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
 
 
-  let msecs = options.msecs !== undefined ? options.msecs : Date.now(); // Per 4.2.1.2, use count of uuid's generated during the current clock
-  // cycle to simulate higher resolution clock
+let msecs = options.msecs !== undefined ? options.msecs : Date.now(); // Per 4.2.1.2, use count of uuid's generated during the current clock
+// cycle to simulate higher resolution clock
 
-  let nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1; // Time since last uuid creation (in msecs)
+let nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1; // Time since last uuid creation (in msecs)
 
-  const dt = msecs - _lastMSecs + (nsecs - _lastNSecs) / 10000; // Per 4.2.1.2, Bump clockseq on clock regression
+const dt = msecs - _lastMSecs + (nsecs - _lastNSecs) / 10000; // Per 4.2.1.2, Bump clockseq on clock regression
 
-  if (dt < 0 && options.clockseq === undefined) {
+if (dt < 0 && options.clockseq === undefined) {
     clockseq = clockseq + 1 & 0x3fff;
-  } // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
-  // time interval
+} // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
+// time interval
 
 
-  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
+if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
     nsecs = 0;
-  } // Per 4.2.1.2 Throw error if too many uuids are requested
+} // Per 4.2.1.2 Throw error if too many uuids are requested
 
 
-  if (nsecs >= 10000) {
+if (nsecs >= 10000) {
     throw new Error("uuid.v1(): Can't create more than 10M uuids/sec");
-  }
+}
 
-  _lastMSecs = msecs;
-  _lastNSecs = nsecs;
-  _clockseq = clockseq; // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
+_lastMSecs = msecs;
+_lastNSecs = nsecs;
+_clockseq = clockseq; // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
 
-  msecs += 12219292800000; // `time_low`
+msecs += 12219292800000; // `time_low`
 
-  const tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
-  b[i++] = tl >>> 24 & 0xff;
-  b[i++] = tl >>> 16 & 0xff;
-  b[i++] = tl >>> 8 & 0xff;
-  b[i++] = tl & 0xff; // `time_mid`
+const tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
+b[i++] = tl >>> 24 & 0xff;
+b[i++] = tl >>> 16 & 0xff;
+b[i++] = tl >>> 8 & 0xff;
+b[i++] = tl & 0xff; // `time_mid`
 
-  const tmh = msecs / 0x100000000 * 10000 & 0xfffffff;
-  b[i++] = tmh >>> 8 & 0xff;
-  b[i++] = tmh & 0xff; // `time_high_and_version`
+const tmh = msecs / 0x100000000 * 10000 & 0xfffffff;
+b[i++] = tmh >>> 8 & 0xff;
+b[i++] = tmh & 0xff; // `time_high_and_version`
 
-  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
+b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
 
-  b[i++] = tmh >>> 16 & 0xff; // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
+b[i++] = tmh >>> 16 & 0xff; // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
 
-  b[i++] = clockseq >>> 8 | 0x80; // `clock_seq_low`
+b[i++] = clockseq >>> 8 | 0x80; // `clock_seq_low`
 
-  b[i++] = clockseq & 0xff; // `node`
+b[i++] = clockseq & 0xff; // `node`
 
-  for (let n = 0; n < 6; ++n) {
+for (let n = 0; n < 6; ++n) {
     b[i + n] = node[n];
-  }
+}
 
-  return buf || (0, _stringify.default)(b);
+return buf || (0, _stringify.default)(b);
 }
 
 var _default = v1;
@@ -26171,7 +26185,7 @@ exports["default"] = _default;
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 
@@ -26194,7 +26208,7 @@ exports["default"] = _default;
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = _default;
 exports.URL = exports.DNS = void 0;
@@ -26206,15 +26220,15 @@ var _parse = _interopRequireDefault(__nccwpck_require__(2746));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function stringToBytes(str) {
-  str = unescape(encodeURIComponent(str)); // UTF8 escape
+str = unescape(encodeURIComponent(str)); // UTF8 escape
 
-  const bytes = [];
+const bytes = [];
 
-  for (let i = 0; i < str.length; ++i) {
+for (let i = 0; i < str.length; ++i) {
     bytes.push(str.charCodeAt(i));
-  }
+}
 
-  return bytes;
+return bytes;
 }
 
 const DNS = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
@@ -26223,17 +26237,17 @@ const URL = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
 exports.URL = URL;
 
 function _default(name, version, hashfunc) {
-  function generateUUID(value, namespace, buf, offset) {
+function generateUUID(value, namespace, buf, offset) {
     if (typeof value === 'string') {
-      value = stringToBytes(value);
+    value = stringToBytes(value);
     }
 
     if (typeof namespace === 'string') {
-      namespace = (0, _parse.default)(namespace);
+    namespace = (0, _parse.default)(namespace);
     }
 
     if (namespace.length !== 16) {
-      throw TypeError('Namespace must be array-like (16 iterable integer values, 0-255)');
+    throw TypeError('Namespace must be array-like (16 iterable integer values, 0-255)');
     } // Compute hash of namespace and value, Per 4.3
     // Future: Use spread syntax when supported on all platforms, e.g. `bytes =
     // hashfunc([...namespace, ... value])`
@@ -26247,27 +26261,27 @@ function _default(name, version, hashfunc) {
     bytes[8] = bytes[8] & 0x3f | 0x80;
 
     if (buf) {
-      offset = offset || 0;
+    offset = offset || 0;
 
-      for (let i = 0; i < 16; ++i) {
+    for (let i = 0; i < 16; ++i) {
         buf[offset + i] = bytes[i];
-      }
+    }
 
-      return buf;
+    return buf;
     }
 
     return (0, _stringify.default)(bytes);
-  } // Function#name is not settable on some platforms (#270)
+} // Function#name is not settable on some platforms (#270)
 
 
-  try {
+try {
     generateUUID.name = name; // eslint-disable-next-line no-empty
-  } catch (err) {} // For CommonJS default export support
+} catch (err) {} // For CommonJS default export support
 
 
-  generateUUID.DNS = DNS;
-  generateUUID.URL = URL;
-  return generateUUID;
+generateUUID.DNS = DNS;
+generateUUID.URL = URL;
+return generateUUID;
 }
 
 /***/ }),
@@ -26279,7 +26293,7 @@ function _default(name, version, hashfunc) {
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 
@@ -26290,25 +26304,25 @@ var _stringify = _interopRequireDefault(__nccwpck_require__(8950));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function v4(options, buf, offset) {
-  options = options || {};
+options = options || {};
 
-  const rnds = options.random || (options.rng || _rng.default)(); // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+const rnds = options.random || (options.rng || _rng.default)(); // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
 
 
-  rnds[6] = rnds[6] & 0x0f | 0x40;
-  rnds[8] = rnds[8] & 0x3f | 0x80; // Copy bytes to buffer, if provided
+rnds[6] = rnds[6] & 0x0f | 0x40;
+rnds[8] = rnds[8] & 0x3f | 0x80; // Copy bytes to buffer, if provided
 
-  if (buf) {
+if (buf) {
     offset = offset || 0;
 
     for (let i = 0; i < 16; ++i) {
-      buf[offset + i] = rnds[i];
+    buf[offset + i] = rnds[i];
     }
 
     return buf;
-  }
+}
 
-  return (0, _stringify.default)(rnds);
+return (0, _stringify.default)(rnds);
 }
 
 var _default = v4;
@@ -26323,7 +26337,7 @@ exports["default"] = _default;
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 
@@ -26346,7 +26360,7 @@ exports["default"] = _default;
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 
@@ -26355,7 +26369,7 @@ var _regex = _interopRequireDefault(__nccwpck_require__(814));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function validate(uuid) {
-  return typeof uuid === 'string' && _regex.default.test(uuid);
+return typeof uuid === 'string' && _regex.default.test(uuid);
 }
 
 var _default = validate;
@@ -26370,7 +26384,7 @@ exports["default"] = _default;
 
 
 Object.defineProperty(exports, "__esModule", ({
-  value: true
+value: true
 }));
 exports["default"] = void 0;
 
@@ -26379,11 +26393,11 @@ var _validate = _interopRequireDefault(__nccwpck_require__(6900));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function version(uuid) {
-  if (!(0, _validate.default)(uuid)) {
+if (!(0, _validate.default)(uuid)) {
     throw TypeError('Invalid UUID');
-  }
+}
 
-  return parseInt(uuid.substr(14, 1), 16);
+return parseInt(uuid.substr(14, 1), 16);
 }
 
 var _default = version;
@@ -26460,9 +26474,9 @@ function createNumberConversion(bitLength, typeOpts) {
             return x - moduloVal;
         } else if (typeOpts.unsigned) {
             if (x < 0) {
-              x += moduloVal;
+            x += moduloVal;
             } else if (x === -0) { // don't return negative zero
-              return 0;
+            return 0;
             }
         }
 
@@ -26596,201 +26610,201 @@ conversions["RegExp"] = function (V, opts) {
 const usm = __nccwpck_require__(2158);
 
 exports.implementation = class URLImpl {
-  constructor(constructorArgs) {
+constructor(constructorArgs) {
     const url = constructorArgs[0];
     const base = constructorArgs[1];
 
     let parsedBase = null;
     if (base !== undefined) {
-      parsedBase = usm.basicURLParse(base);
-      if (parsedBase === "failure") {
+    parsedBase = usm.basicURLParse(base);
+    if (parsedBase === "failure") {
         throw new TypeError("Invalid base URL");
-      }
+    }
     }
 
     const parsedURL = usm.basicURLParse(url, { baseURL: parsedBase });
     if (parsedURL === "failure") {
-      throw new TypeError("Invalid URL");
+    throw new TypeError("Invalid URL");
     }
 
     this._url = parsedURL;
 
     // TODO: query stuff
-  }
+}
 
-  get href() {
+get href() {
     return usm.serializeURL(this._url);
-  }
+}
 
-  set href(v) {
+set href(v) {
     const parsedURL = usm.basicURLParse(v);
     if (parsedURL === "failure") {
-      throw new TypeError("Invalid URL");
+    throw new TypeError("Invalid URL");
     }
 
     this._url = parsedURL;
-  }
+}
 
-  get origin() {
+get origin() {
     return usm.serializeURLOrigin(this._url);
-  }
+}
 
-  get protocol() {
+get protocol() {
     return this._url.scheme + ":";
-  }
+}
 
-  set protocol(v) {
+set protocol(v) {
     usm.basicURLParse(v + ":", { url: this._url, stateOverride: "scheme start" });
-  }
+}
 
-  get username() {
+get username() {
     return this._url.username;
-  }
+}
 
-  set username(v) {
+set username(v) {
     if (usm.cannotHaveAUsernamePasswordPort(this._url)) {
-      return;
+    return;
     }
 
     usm.setTheUsername(this._url, v);
-  }
+}
 
-  get password() {
+get password() {
     return this._url.password;
-  }
+}
 
-  set password(v) {
+set password(v) {
     if (usm.cannotHaveAUsernamePasswordPort(this._url)) {
-      return;
+    return;
     }
 
     usm.setThePassword(this._url, v);
-  }
+}
 
-  get host() {
+get host() {
     const url = this._url;
 
     if (url.host === null) {
-      return "";
+    return "";
     }
 
     if (url.port === null) {
-      return usm.serializeHost(url.host);
+    return usm.serializeHost(url.host);
     }
 
     return usm.serializeHost(url.host) + ":" + usm.serializeInteger(url.port);
-  }
+}
 
-  set host(v) {
+set host(v) {
     if (this._url.cannotBeABaseURL) {
-      return;
+    return;
     }
 
     usm.basicURLParse(v, { url: this._url, stateOverride: "host" });
-  }
+}
 
-  get hostname() {
+get hostname() {
     if (this._url.host === null) {
-      return "";
+    return "";
     }
 
     return usm.serializeHost(this._url.host);
-  }
+}
 
-  set hostname(v) {
+set hostname(v) {
     if (this._url.cannotBeABaseURL) {
-      return;
+    return;
     }
 
     usm.basicURLParse(v, { url: this._url, stateOverride: "hostname" });
-  }
+}
 
-  get port() {
+get port() {
     if (this._url.port === null) {
-      return "";
+    return "";
     }
 
     return usm.serializeInteger(this._url.port);
-  }
+}
 
-  set port(v) {
+set port(v) {
     if (usm.cannotHaveAUsernamePasswordPort(this._url)) {
-      return;
+    return;
     }
 
     if (v === "") {
-      this._url.port = null;
+    this._url.port = null;
     } else {
-      usm.basicURLParse(v, { url: this._url, stateOverride: "port" });
+    usm.basicURLParse(v, { url: this._url, stateOverride: "port" });
     }
-  }
+}
 
-  get pathname() {
+get pathname() {
     if (this._url.cannotBeABaseURL) {
-      return this._url.path[0];
+    return this._url.path[0];
     }
 
     if (this._url.path.length === 0) {
-      return "";
+    return "";
     }
 
     return "/" + this._url.path.join("/");
-  }
+}
 
-  set pathname(v) {
+set pathname(v) {
     if (this._url.cannotBeABaseURL) {
-      return;
+    return;
     }
 
     this._url.path = [];
     usm.basicURLParse(v, { url: this._url, stateOverride: "path start" });
-  }
+}
 
-  get search() {
+get search() {
     if (this._url.query === null || this._url.query === "") {
-      return "";
+    return "";
     }
 
     return "?" + this._url.query;
-  }
+}
 
-  set search(v) {
+set search(v) {
     // TODO: query stuff
 
     const url = this._url;
 
     if (v === "") {
-      url.query = null;
-      return;
+    url.query = null;
+    return;
     }
 
     const input = v[0] === "?" ? v.substring(1) : v;
     url.query = "";
     usm.basicURLParse(input, { url, stateOverride: "query" });
-  }
+}
 
-  get hash() {
+get hash() {
     if (this._url.fragment === null || this._url.fragment === "") {
-      return "";
+    return "";
     }
 
     return "#" + this._url.fragment;
-  }
+}
 
-  set hash(v) {
+set hash(v) {
     if (v === "") {
-      this._url.fragment = null;
-      return;
+    this._url.fragment = null;
+    return;
     }
 
     const input = v[0] === "#" ? v.substring(1) : v;
     this._url.fragment = "";
     usm.basicURLParse(input, { url: this._url, stateOverride: "fragment" });
-  }
+}
 
-  toJSON() {
+toJSON() {
     return this.href;
-  }
+}
 };
 
 
@@ -26809,191 +26823,191 @@ const Impl = __nccwpck_require__(7537);
 const impl = utils.implSymbol;
 
 function URL(url) {
-  if (!this || this[impl] || !(this instanceof URL)) {
+if (!this || this[impl] || !(this instanceof URL)) {
     throw new TypeError("Failed to construct 'URL': Please use the 'new' operator, this DOM object constructor cannot be called as a function.");
-  }
-  if (arguments.length < 1) {
+}
+if (arguments.length < 1) {
     throw new TypeError("Failed to construct 'URL': 1 argument required, but only " + arguments.length + " present.");
-  }
-  const args = [];
-  for (let i = 0; i < arguments.length && i < 2; ++i) {
+}
+const args = [];
+for (let i = 0; i < arguments.length && i < 2; ++i) {
     args[i] = arguments[i];
-  }
-  args[0] = conversions["USVString"](args[0]);
-  if (args[1] !== undefined) {
-  args[1] = conversions["USVString"](args[1]);
-  }
+}
+args[0] = conversions["USVString"](args[0]);
+if (args[1] !== undefined) {
+args[1] = conversions["USVString"](args[1]);
+}
 
-  module.exports.setup(this, args);
+module.exports.setup(this, args);
 }
 
 URL.prototype.toJSON = function toJSON() {
-  if (!this || !module.exports.is(this)) {
+if (!this || !module.exports.is(this)) {
     throw new TypeError("Illegal invocation");
-  }
-  const args = [];
-  for (let i = 0; i < arguments.length && i < 0; ++i) {
+}
+const args = [];
+for (let i = 0; i < arguments.length && i < 0; ++i) {
     args[i] = arguments[i];
-  }
-  return this[impl].toJSON.apply(this[impl], args);
+}
+return this[impl].toJSON.apply(this[impl], args);
 };
 Object.defineProperty(URL.prototype, "href", {
-  get() {
+get() {
     return this[impl].href;
-  },
-  set(V) {
+},
+set(V) {
     V = conversions["USVString"](V);
     this[impl].href = V;
-  },
-  enumerable: true,
-  configurable: true
+},
+enumerable: true,
+configurable: true
 });
 
 URL.prototype.toString = function () {
-  if (!this || !module.exports.is(this)) {
+if (!this || !module.exports.is(this)) {
     throw new TypeError("Illegal invocation");
-  }
-  return this.href;
+}
+return this.href;
 };
 
 Object.defineProperty(URL.prototype, "origin", {
-  get() {
+get() {
     return this[impl].origin;
-  },
-  enumerable: true,
-  configurable: true
+},
+enumerable: true,
+configurable: true
 });
 
 Object.defineProperty(URL.prototype, "protocol", {
-  get() {
+get() {
     return this[impl].protocol;
-  },
-  set(V) {
+},
+set(V) {
     V = conversions["USVString"](V);
     this[impl].protocol = V;
-  },
-  enumerable: true,
-  configurable: true
+},
+enumerable: true,
+configurable: true
 });
 
 Object.defineProperty(URL.prototype, "username", {
-  get() {
+get() {
     return this[impl].username;
-  },
-  set(V) {
+},
+set(V) {
     V = conversions["USVString"](V);
     this[impl].username = V;
-  },
-  enumerable: true,
-  configurable: true
+},
+enumerable: true,
+configurable: true
 });
 
 Object.defineProperty(URL.prototype, "password", {
-  get() {
+get() {
     return this[impl].password;
-  },
-  set(V) {
+},
+set(V) {
     V = conversions["USVString"](V);
     this[impl].password = V;
-  },
-  enumerable: true,
-  configurable: true
+},
+enumerable: true,
+configurable: true
 });
 
 Object.defineProperty(URL.prototype, "host", {
-  get() {
+get() {
     return this[impl].host;
-  },
-  set(V) {
+},
+set(V) {
     V = conversions["USVString"](V);
     this[impl].host = V;
-  },
-  enumerable: true,
-  configurable: true
+},
+enumerable: true,
+configurable: true
 });
 
 Object.defineProperty(URL.prototype, "hostname", {
-  get() {
+get() {
     return this[impl].hostname;
-  },
-  set(V) {
+},
+set(V) {
     V = conversions["USVString"](V);
     this[impl].hostname = V;
-  },
-  enumerable: true,
-  configurable: true
+},
+enumerable: true,
+configurable: true
 });
 
 Object.defineProperty(URL.prototype, "port", {
-  get() {
+get() {
     return this[impl].port;
-  },
-  set(V) {
+},
+set(V) {
     V = conversions["USVString"](V);
     this[impl].port = V;
-  },
-  enumerable: true,
-  configurable: true
+},
+enumerable: true,
+configurable: true
 });
 
 Object.defineProperty(URL.prototype, "pathname", {
-  get() {
+get() {
     return this[impl].pathname;
-  },
-  set(V) {
+},
+set(V) {
     V = conversions["USVString"](V);
     this[impl].pathname = V;
-  },
-  enumerable: true,
-  configurable: true
+},
+enumerable: true,
+configurable: true
 });
 
 Object.defineProperty(URL.prototype, "search", {
-  get() {
+get() {
     return this[impl].search;
-  },
-  set(V) {
+},
+set(V) {
     V = conversions["USVString"](V);
     this[impl].search = V;
-  },
-  enumerable: true,
-  configurable: true
+},
+enumerable: true,
+configurable: true
 });
 
 Object.defineProperty(URL.prototype, "hash", {
-  get() {
+get() {
     return this[impl].hash;
-  },
-  set(V) {
+},
+set(V) {
     V = conversions["USVString"](V);
     this[impl].hash = V;
-  },
-  enumerable: true,
-  configurable: true
+},
+enumerable: true,
+configurable: true
 });
 
 
 module.exports = {
-  is(obj) {
+is(obj) {
     return !!obj && obj[impl] instanceof Impl.implementation;
-  },
-  create(constructorArgs, privateData) {
+},
+create(constructorArgs, privateData) {
     let obj = Object.create(URL.prototype);
     this.setup(obj, constructorArgs, privateData);
     return obj;
-  },
-  setup(obj, constructorArgs, privateData) {
+},
+setup(obj, constructorArgs, privateData) {
     if (!privateData) privateData = {};
     privateData.wrapper = obj;
 
     obj[impl] = new Impl.implementation(constructorArgs, privateData);
     obj[impl][utils.wrapperSymbol] = obj;
-  },
-  interface: URL,
-  expose: {
+},
+interface: URL,
+expose: {
     Window: { URL: URL },
     Worker: { URL: URL }
-  }
+}
 };
 
 
@@ -27028,311 +27042,311 @@ const punycode = __nccwpck_require__(5477);
 const tr46 = __nccwpck_require__(4256);
 
 const specialSchemes = {
-  ftp: 21,
-  file: null,
-  gopher: 70,
-  http: 80,
-  https: 443,
-  ws: 80,
-  wss: 443
+ftp: 21,
+file: null,
+gopher: 70,
+http: 80,
+https: 443,
+ws: 80,
+wss: 443
 };
 
 const failure = Symbol("failure");
 
 function countSymbols(str) {
-  return punycode.ucs2.decode(str).length;
+return punycode.ucs2.decode(str).length;
 }
 
 function at(input, idx) {
-  const c = input[idx];
-  return isNaN(c) ? undefined : String.fromCodePoint(c);
+const c = input[idx];
+return isNaN(c) ? undefined : String.fromCodePoint(c);
 }
 
 function isASCIIDigit(c) {
-  return c >= 0x30 && c <= 0x39;
+return c >= 0x30 && c <= 0x39;
 }
 
 function isASCIIAlpha(c) {
-  return (c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A);
+return (c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A);
 }
 
 function isASCIIAlphanumeric(c) {
-  return isASCIIAlpha(c) || isASCIIDigit(c);
+return isASCIIAlpha(c) || isASCIIDigit(c);
 }
 
 function isASCIIHex(c) {
-  return isASCIIDigit(c) || (c >= 0x41 && c <= 0x46) || (c >= 0x61 && c <= 0x66);
+return isASCIIDigit(c) || (c >= 0x41 && c <= 0x46) || (c >= 0x61 && c <= 0x66);
 }
 
 function isSingleDot(buffer) {
-  return buffer === "." || buffer.toLowerCase() === "%2e";
+return buffer === "." || buffer.toLowerCase() === "%2e";
 }
 
 function isDoubleDot(buffer) {
-  buffer = buffer.toLowerCase();
-  return buffer === ".." || buffer === "%2e." || buffer === ".%2e" || buffer === "%2e%2e";
+buffer = buffer.toLowerCase();
+return buffer === ".." || buffer === "%2e." || buffer === ".%2e" || buffer === "%2e%2e";
 }
 
 function isWindowsDriveLetterCodePoints(cp1, cp2) {
-  return isASCIIAlpha(cp1) && (cp2 === 58 || cp2 === 124);
+return isASCIIAlpha(cp1) && (cp2 === 58 || cp2 === 124);
 }
 
 function isWindowsDriveLetterString(string) {
-  return string.length === 2 && isASCIIAlpha(string.codePointAt(0)) && (string[1] === ":" || string[1] === "|");
+return string.length === 2 && isASCIIAlpha(string.codePointAt(0)) && (string[1] === ":" || string[1] === "|");
 }
 
 function isNormalizedWindowsDriveLetterString(string) {
-  return string.length === 2 && isASCIIAlpha(string.codePointAt(0)) && string[1] === ":";
+return string.length === 2 && isASCIIAlpha(string.codePointAt(0)) && string[1] === ":";
 }
 
 function containsForbiddenHostCodePoint(string) {
-  return string.search(/\u0000|\u0009|\u000A|\u000D|\u0020|#|%|\/|:|\?|@|\[|\\|\]/) !== -1;
+return string.search(/\u0000|\u0009|\u000A|\u000D|\u0020|#|%|\/|:|\?|@|\[|\\|\]/) !== -1;
 }
 
 function containsForbiddenHostCodePointExcludingPercent(string) {
-  return string.search(/\u0000|\u0009|\u000A|\u000D|\u0020|#|\/|:|\?|@|\[|\\|\]/) !== -1;
+return string.search(/\u0000|\u0009|\u000A|\u000D|\u0020|#|\/|:|\?|@|\[|\\|\]/) !== -1;
 }
 
 function isSpecialScheme(scheme) {
-  return specialSchemes[scheme] !== undefined;
+return specialSchemes[scheme] !== undefined;
 }
 
 function isSpecial(url) {
-  return isSpecialScheme(url.scheme);
+return isSpecialScheme(url.scheme);
 }
 
 function defaultPort(scheme) {
-  return specialSchemes[scheme];
+return specialSchemes[scheme];
 }
 
 function percentEncode(c) {
-  let hex = c.toString(16).toUpperCase();
-  if (hex.length === 1) {
+let hex = c.toString(16).toUpperCase();
+if (hex.length === 1) {
     hex = "0" + hex;
-  }
+}
 
-  return "%" + hex;
+return "%" + hex;
 }
 
 function utf8PercentEncode(c) {
-  const buf = new Buffer(c);
+const buf = new Buffer(c);
 
-  let str = "";
+let str = "";
 
-  for (let i = 0; i < buf.length; ++i) {
+for (let i = 0; i < buf.length; ++i) {
     str += percentEncode(buf[i]);
-  }
+}
 
-  return str;
+return str;
 }
 
 function utf8PercentDecode(str) {
-  const input = new Buffer(str);
-  const output = [];
-  for (let i = 0; i < input.length; ++i) {
+const input = new Buffer(str);
+const output = [];
+for (let i = 0; i < input.length; ++i) {
     if (input[i] !== 37) {
-      output.push(input[i]);
+    output.push(input[i]);
     } else if (input[i] === 37 && isASCIIHex(input[i + 1]) && isASCIIHex(input[i + 2])) {
-      output.push(parseInt(input.slice(i + 1, i + 3).toString(), 16));
-      i += 2;
+    output.push(parseInt(input.slice(i + 1, i + 3).toString(), 16));
+    i += 2;
     } else {
-      output.push(input[i]);
+    output.push(input[i]);
     }
-  }
-  return new Buffer(output).toString();
+}
+return new Buffer(output).toString();
 }
 
 function isC0ControlPercentEncode(c) {
-  return c <= 0x1F || c > 0x7E;
+return c <= 0x1F || c > 0x7E;
 }
 
 const extraPathPercentEncodeSet = new Set([32, 34, 35, 60, 62, 63, 96, 123, 125]);
 function isPathPercentEncode(c) {
-  return isC0ControlPercentEncode(c) || extraPathPercentEncodeSet.has(c);
+return isC0ControlPercentEncode(c) || extraPathPercentEncodeSet.has(c);
 }
 
 const extraUserinfoPercentEncodeSet =
-  new Set([47, 58, 59, 61, 64, 91, 92, 93, 94, 124]);
+new Set([47, 58, 59, 61, 64, 91, 92, 93, 94, 124]);
 function isUserinfoPercentEncode(c) {
-  return isPathPercentEncode(c) || extraUserinfoPercentEncodeSet.has(c);
+return isPathPercentEncode(c) || extraUserinfoPercentEncodeSet.has(c);
 }
 
 function percentEncodeChar(c, encodeSetPredicate) {
-  const cStr = String.fromCodePoint(c);
+const cStr = String.fromCodePoint(c);
 
-  if (encodeSetPredicate(c)) {
+if (encodeSetPredicate(c)) {
     return utf8PercentEncode(cStr);
-  }
+}
 
-  return cStr;
+return cStr;
 }
 
 function parseIPv4Number(input) {
-  let R = 10;
+let R = 10;
 
-  if (input.length >= 2 && input.charAt(0) === "0" && input.charAt(1).toLowerCase() === "x") {
+if (input.length >= 2 && input.charAt(0) === "0" && input.charAt(1).toLowerCase() === "x") {
     input = input.substring(2);
     R = 16;
-  } else if (input.length >= 2 && input.charAt(0) === "0") {
+} else if (input.length >= 2 && input.charAt(0) === "0") {
     input = input.substring(1);
     R = 8;
-  }
+}
 
-  if (input === "") {
+if (input === "") {
     return 0;
-  }
+}
 
-  const regex = R === 10 ? /[^0-9]/ : (R === 16 ? /[^0-9A-Fa-f]/ : /[^0-7]/);
-  if (regex.test(input)) {
+const regex = R === 10 ? /[^0-9]/ : (R === 16 ? /[^0-9A-Fa-f]/ : /[^0-7]/);
+if (regex.test(input)) {
     return failure;
-  }
+}
 
-  return parseInt(input, R);
+return parseInt(input, R);
 }
 
 function parseIPv4(input) {
-  const parts = input.split(".");
-  if (parts[parts.length - 1] === "") {
+const parts = input.split(".");
+if (parts[parts.length - 1] === "") {
     if (parts.length > 1) {
-      parts.pop();
+    parts.pop();
     }
-  }
+}
 
-  if (parts.length > 4) {
+if (parts.length > 4) {
     return input;
-  }
+}
 
-  const numbers = [];
-  for (const part of parts) {
+const numbers = [];
+for (const part of parts) {
     if (part === "") {
-      return input;
+    return input;
     }
     const n = parseIPv4Number(part);
     if (n === failure) {
-      return input;
+    return input;
     }
 
     numbers.push(n);
-  }
+}
 
-  for (let i = 0; i < numbers.length - 1; ++i) {
+for (let i = 0; i < numbers.length - 1; ++i) {
     if (numbers[i] > 255) {
-      return failure;
-    }
-  }
-  if (numbers[numbers.length - 1] >= Math.pow(256, 5 - numbers.length)) {
     return failure;
-  }
+    }
+}
+if (numbers[numbers.length - 1] >= Math.pow(256, 5 - numbers.length)) {
+    return failure;
+}
 
-  let ipv4 = numbers.pop();
-  let counter = 0;
+let ipv4 = numbers.pop();
+let counter = 0;
 
-  for (const n of numbers) {
+for (const n of numbers) {
     ipv4 += n * Math.pow(256, 3 - counter);
     ++counter;
-  }
+}
 
-  return ipv4;
+return ipv4;
 }
 
 function serializeIPv4(address) {
-  let output = "";
-  let n = address;
+let output = "";
+let n = address;
 
-  for (let i = 1; i <= 4; ++i) {
+for (let i = 1; i <= 4; ++i) {
     output = String(n % 256) + output;
     if (i !== 4) {
-      output = "." + output;
+    output = "." + output;
     }
     n = Math.floor(n / 256);
-  }
+}
 
-  return output;
+return output;
 }
 
 function parseIPv6(input) {
-  const address = [0, 0, 0, 0, 0, 0, 0, 0];
-  let pieceIndex = 0;
-  let compress = null;
-  let pointer = 0;
+const address = [0, 0, 0, 0, 0, 0, 0, 0];
+let pieceIndex = 0;
+let compress = null;
+let pointer = 0;
 
-  input = punycode.ucs2.decode(input);
+input = punycode.ucs2.decode(input);
 
-  if (input[pointer] === 58) {
+if (input[pointer] === 58) {
     if (input[pointer + 1] !== 58) {
-      return failure;
+    return failure;
     }
 
     pointer += 2;
     ++pieceIndex;
     compress = pieceIndex;
-  }
+}
 
-  while (pointer < input.length) {
+while (pointer < input.length) {
     if (pieceIndex === 8) {
-      return failure;
+    return failure;
     }
 
     if (input[pointer] === 58) {
-      if (compress !== null) {
+    if (compress !== null) {
         return failure;
-      }
-      ++pointer;
-      ++pieceIndex;
-      compress = pieceIndex;
-      continue;
+    }
+    ++pointer;
+    ++pieceIndex;
+    compress = pieceIndex;
+    continue;
     }
 
     let value = 0;
     let length = 0;
 
     while (length < 4 && isASCIIHex(input[pointer])) {
-      value = value * 0x10 + parseInt(at(input, pointer), 16);
-      ++pointer;
-      ++length;
+    value = value * 0x10 + parseInt(at(input, pointer), 16);
+    ++pointer;
+    ++length;
     }
 
     if (input[pointer] === 46) {
-      if (length === 0) {
+    if (length === 0) {
         return failure;
-      }
+    }
 
-      pointer -= length;
+    pointer -= length;
 
-      if (pieceIndex > 6) {
+    if (pieceIndex > 6) {
         return failure;
-      }
+    }
 
-      let numbersSeen = 0;
+    let numbersSeen = 0;
 
-      while (input[pointer] !== undefined) {
+    while (input[pointer] !== undefined) {
         let ipv4Piece = null;
 
         if (numbersSeen > 0) {
-          if (input[pointer] === 46 && numbersSeen < 4) {
+        if (input[pointer] === 46 && numbersSeen < 4) {
             ++pointer;
-          } else {
+        } else {
             return failure;
-          }
+        }
         }
 
         if (!isASCIIDigit(input[pointer])) {
-          return failure;
+        return failure;
         }
 
         while (isASCIIDigit(input[pointer])) {
-          const number = parseInt(at(input, pointer));
-          if (ipv4Piece === null) {
+        const number = parseInt(at(input, pointer));
+        if (ipv4Piece === null) {
             ipv4Piece = number;
-          } else if (ipv4Piece === 0) {
+        } else if (ipv4Piece === 0) {
             return failure;
-          } else {
+        } else {
             ipv4Piece = ipv4Piece * 10 + number;
-          }
-          if (ipv4Piece > 255) {
+        }
+        if (ipv4Piece > 255) {
             return failure;
-          }
-          ++pointer;
+        }
+        ++pointer;
         }
 
         address[pieceIndex] = address[pieceIndex] * 0x100 + ipv4Piece;
@@ -27340,387 +27354,387 @@ function parseIPv6(input) {
         ++numbersSeen;
 
         if (numbersSeen === 2 || numbersSeen === 4) {
-          ++pieceIndex;
+        ++pieceIndex;
         }
-      }
+    }
 
-      if (numbersSeen !== 4) {
+    if (numbersSeen !== 4) {
         return failure;
-      }
+    }
 
-      break;
+    break;
     } else if (input[pointer] === 58) {
-      ++pointer;
-      if (input[pointer] === undefined) {
+    ++pointer;
+    if (input[pointer] === undefined) {
         return failure;
-      }
+    }
     } else if (input[pointer] !== undefined) {
-      return failure;
+    return failure;
     }
 
     address[pieceIndex] = value;
     ++pieceIndex;
-  }
+}
 
-  if (compress !== null) {
+if (compress !== null) {
     let swaps = pieceIndex - compress;
     pieceIndex = 7;
     while (pieceIndex !== 0 && swaps > 0) {
-      const temp = address[compress + swaps - 1];
-      address[compress + swaps - 1] = address[pieceIndex];
-      address[pieceIndex] = temp;
-      --pieceIndex;
-      --swaps;
+    const temp = address[compress + swaps - 1];
+    address[compress + swaps - 1] = address[pieceIndex];
+    address[pieceIndex] = temp;
+    --pieceIndex;
+    --swaps;
     }
-  } else if (compress === null && pieceIndex !== 8) {
+} else if (compress === null && pieceIndex !== 8) {
     return failure;
-  }
+}
 
-  return address;
+return address;
 }
 
 function serializeIPv6(address) {
-  let output = "";
-  const seqResult = findLongestZeroSequence(address);
-  const compress = seqResult.idx;
-  let ignore0 = false;
+let output = "";
+const seqResult = findLongestZeroSequence(address);
+const compress = seqResult.idx;
+let ignore0 = false;
 
-  for (let pieceIndex = 0; pieceIndex <= 7; ++pieceIndex) {
+for (let pieceIndex = 0; pieceIndex <= 7; ++pieceIndex) {
     if (ignore0 && address[pieceIndex] === 0) {
-      continue;
+    continue;
     } else if (ignore0) {
-      ignore0 = false;
+    ignore0 = false;
     }
 
     if (compress === pieceIndex) {
-      const separator = pieceIndex === 0 ? "::" : ":";
-      output += separator;
-      ignore0 = true;
-      continue;
+    const separator = pieceIndex === 0 ? "::" : ":";
+    output += separator;
+    ignore0 = true;
+    continue;
     }
 
     output += address[pieceIndex].toString(16);
 
     if (pieceIndex !== 7) {
-      output += ":";
+    output += ":";
     }
-  }
+}
 
-  return output;
+return output;
 }
 
 function parseHost(input, isSpecialArg) {
-  if (input[0] === "[") {
+if (input[0] === "[") {
     if (input[input.length - 1] !== "]") {
-      return failure;
+    return failure;
     }
 
     return parseIPv6(input.substring(1, input.length - 1));
-  }
+}
 
-  if (!isSpecialArg) {
+if (!isSpecialArg) {
     return parseOpaqueHost(input);
-  }
+}
 
-  const domain = utf8PercentDecode(input);
-  const asciiDomain = tr46.toASCII(domain, false, tr46.PROCESSING_OPTIONS.NONTRANSITIONAL, false);
-  if (asciiDomain === null) {
+const domain = utf8PercentDecode(input);
+const asciiDomain = tr46.toASCII(domain, false, tr46.PROCESSING_OPTIONS.NONTRANSITIONAL, false);
+if (asciiDomain === null) {
     return failure;
-  }
+}
 
-  if (containsForbiddenHostCodePoint(asciiDomain)) {
+if (containsForbiddenHostCodePoint(asciiDomain)) {
     return failure;
-  }
+}
 
-  const ipv4Host = parseIPv4(asciiDomain);
-  if (typeof ipv4Host === "number" || ipv4Host === failure) {
+const ipv4Host = parseIPv4(asciiDomain);
+if (typeof ipv4Host === "number" || ipv4Host === failure) {
     return ipv4Host;
-  }
+}
 
-  return asciiDomain;
+return asciiDomain;
 }
 
 function parseOpaqueHost(input) {
-  if (containsForbiddenHostCodePointExcludingPercent(input)) {
+if (containsForbiddenHostCodePointExcludingPercent(input)) {
     return failure;
-  }
+}
 
-  let output = "";
-  const decoded = punycode.ucs2.decode(input);
-  for (let i = 0; i < decoded.length; ++i) {
+let output = "";
+const decoded = punycode.ucs2.decode(input);
+for (let i = 0; i < decoded.length; ++i) {
     output += percentEncodeChar(decoded[i], isC0ControlPercentEncode);
-  }
-  return output;
+}
+return output;
 }
 
 function findLongestZeroSequence(arr) {
-  let maxIdx = null;
-  let maxLen = 1; // only find elements > 1
-  let currStart = null;
-  let currLen = 0;
+let maxIdx = null;
+let maxLen = 1; // only find elements > 1
+let currStart = null;
+let currLen = 0;
 
-  for (let i = 0; i < arr.length; ++i) {
+for (let i = 0; i < arr.length; ++i) {
     if (arr[i] !== 0) {
-      if (currLen > maxLen) {
+    if (currLen > maxLen) {
         maxIdx = currStart;
         maxLen = currLen;
-      }
-
-      currStart = null;
-      currLen = 0;
-    } else {
-      if (currStart === null) {
-        currStart = i;
-      }
-      ++currLen;
     }
-  }
 
-  // if trailing zeros
-  if (currLen > maxLen) {
+    currStart = null;
+    currLen = 0;
+    } else {
+    if (currStart === null) {
+        currStart = i;
+    }
+    ++currLen;
+    }
+}
+
+// if trailing zeros
+if (currLen > maxLen) {
     maxIdx = currStart;
     maxLen = currLen;
-  }
+}
 
-  return {
+return {
     idx: maxIdx,
     len: maxLen
-  };
+};
 }
 
 function serializeHost(host) {
-  if (typeof host === "number") {
+if (typeof host === "number") {
     return serializeIPv4(host);
-  }
+}
 
-  // IPv6 serializer
-  if (host instanceof Array) {
+// IPv6 serializer
+if (host instanceof Array) {
     return "[" + serializeIPv6(host) + "]";
-  }
+}
 
-  return host;
+return host;
 }
 
 function trimControlChars(url) {
-  return url.replace(/^[\u0000-\u001F\u0020]+|[\u0000-\u001F\u0020]+$/g, "");
+return url.replace(/^[\u0000-\u001F\u0020]+|[\u0000-\u001F\u0020]+$/g, "");
 }
 
 function trimTabAndNewline(url) {
-  return url.replace(/\u0009|\u000A|\u000D/g, "");
+return url.replace(/\u0009|\u000A|\u000D/g, "");
 }
 
 function shortenPath(url) {
-  const path = url.path;
-  if (path.length === 0) {
+const path = url.path;
+if (path.length === 0) {
     return;
-  }
-  if (url.scheme === "file" && path.length === 1 && isNormalizedWindowsDriveLetter(path[0])) {
+}
+if (url.scheme === "file" && path.length === 1 && isNormalizedWindowsDriveLetter(path[0])) {
     return;
-  }
+}
 
-  path.pop();
+path.pop();
 }
 
 function includesCredentials(url) {
-  return url.username !== "" || url.password !== "";
+return url.username !== "" || url.password !== "";
 }
 
 function cannotHaveAUsernamePasswordPort(url) {
-  return url.host === null || url.host === "" || url.cannotBeABaseURL || url.scheme === "file";
+return url.host === null || url.host === "" || url.cannotBeABaseURL || url.scheme === "file";
 }
 
 function isNormalizedWindowsDriveLetter(string) {
-  return /^[A-Za-z]:$/.test(string);
+return /^[A-Za-z]:$/.test(string);
 }
 
 function URLStateMachine(input, base, encodingOverride, url, stateOverride) {
-  this.pointer = 0;
-  this.input = input;
-  this.base = base || null;
-  this.encodingOverride = encodingOverride || "utf-8";
-  this.stateOverride = stateOverride;
-  this.url = url;
-  this.failure = false;
-  this.parseError = false;
+this.pointer = 0;
+this.input = input;
+this.base = base || null;
+this.encodingOverride = encodingOverride || "utf-8";
+this.stateOverride = stateOverride;
+this.url = url;
+this.failure = false;
+this.parseError = false;
 
-  if (!this.url) {
+if (!this.url) {
     this.url = {
-      scheme: "",
-      username: "",
-      password: "",
-      host: null,
-      port: null,
-      path: [],
-      query: null,
-      fragment: null,
+    scheme: "",
+    username: "",
+    password: "",
+    host: null,
+    port: null,
+    path: [],
+    query: null,
+    fragment: null,
 
-      cannotBeABaseURL: false
+    cannotBeABaseURL: false
     };
 
     const res = trimControlChars(this.input);
     if (res !== this.input) {
-      this.parseError = true;
+    this.parseError = true;
     }
     this.input = res;
-  }
+}
 
-  const res = trimTabAndNewline(this.input);
-  if (res !== this.input) {
+const res = trimTabAndNewline(this.input);
+if (res !== this.input) {
     this.parseError = true;
-  }
-  this.input = res;
+}
+this.input = res;
 
-  this.state = stateOverride || "scheme start";
+this.state = stateOverride || "scheme start";
 
-  this.buffer = "";
-  this.atFlag = false;
-  this.arrFlag = false;
-  this.passwordTokenSeenFlag = false;
+this.buffer = "";
+this.atFlag = false;
+this.arrFlag = false;
+this.passwordTokenSeenFlag = false;
 
-  this.input = punycode.ucs2.decode(this.input);
+this.input = punycode.ucs2.decode(this.input);
 
-  for (; this.pointer <= this.input.length; ++this.pointer) {
+for (; this.pointer <= this.input.length; ++this.pointer) {
     const c = this.input[this.pointer];
     const cStr = isNaN(c) ? undefined : String.fromCodePoint(c);
 
     // exec state machine
     const ret = this["parse " + this.state](c, cStr);
     if (!ret) {
-      break; // terminate algorithm
+    break; // terminate algorithm
     } else if (ret === failure) {
-      this.failure = true;
-      break;
+    this.failure = true;
+    break;
     }
-  }
+}
 }
 
 URLStateMachine.prototype["parse scheme start"] = function parseSchemeStart(c, cStr) {
-  if (isASCIIAlpha(c)) {
+if (isASCIIAlpha(c)) {
     this.buffer += cStr.toLowerCase();
     this.state = "scheme";
-  } else if (!this.stateOverride) {
+} else if (!this.stateOverride) {
     this.state = "no scheme";
     --this.pointer;
-  } else {
+} else {
     this.parseError = true;
     return failure;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse scheme"] = function parseScheme(c, cStr) {
-  if (isASCIIAlphanumeric(c) || c === 43 || c === 45 || c === 46) {
+if (isASCIIAlphanumeric(c) || c === 43 || c === 45 || c === 46) {
     this.buffer += cStr.toLowerCase();
-  } else if (c === 58) {
+} else if (c === 58) {
     if (this.stateOverride) {
-      if (isSpecial(this.url) && !isSpecialScheme(this.buffer)) {
+    if (isSpecial(this.url) && !isSpecialScheme(this.buffer)) {
         return false;
-      }
+    }
 
-      if (!isSpecial(this.url) && isSpecialScheme(this.buffer)) {
+    if (!isSpecial(this.url) && isSpecialScheme(this.buffer)) {
         return false;
-      }
+    }
 
-      if ((includesCredentials(this.url) || this.url.port !== null) && this.buffer === "file") {
+    if ((includesCredentials(this.url) || this.url.port !== null) && this.buffer === "file") {
         return false;
-      }
+    }
 
-      if (this.url.scheme === "file" && (this.url.host === "" || this.url.host === null)) {
+    if (this.url.scheme === "file" && (this.url.host === "" || this.url.host === null)) {
         return false;
-      }
+    }
     }
     this.url.scheme = this.buffer;
     this.buffer = "";
     if (this.stateOverride) {
-      return false;
+    return false;
     }
     if (this.url.scheme === "file") {
-      if (this.input[this.pointer + 1] !== 47 || this.input[this.pointer + 2] !== 47) {
+    if (this.input[this.pointer + 1] !== 47 || this.input[this.pointer + 2] !== 47) {
         this.parseError = true;
-      }
-      this.state = "file";
-    } else if (isSpecial(this.url) && this.base !== null && this.base.scheme === this.url.scheme) {
-      this.state = "special relative or authority";
-    } else if (isSpecial(this.url)) {
-      this.state = "special authority slashes";
-    } else if (this.input[this.pointer + 1] === 47) {
-      this.state = "path or authority";
-      ++this.pointer;
-    } else {
-      this.url.cannotBeABaseURL = true;
-      this.url.path.push("");
-      this.state = "cannot-be-a-base-URL path";
     }
-  } else if (!this.stateOverride) {
+    this.state = "file";
+    } else if (isSpecial(this.url) && this.base !== null && this.base.scheme === this.url.scheme) {
+    this.state = "special relative or authority";
+    } else if (isSpecial(this.url)) {
+    this.state = "special authority slashes";
+    } else if (this.input[this.pointer + 1] === 47) {
+    this.state = "path or authority";
+    ++this.pointer;
+    } else {
+    this.url.cannotBeABaseURL = true;
+    this.url.path.push("");
+    this.state = "cannot-be-a-base-URL path";
+    }
+} else if (!this.stateOverride) {
     this.buffer = "";
     this.state = "no scheme";
     this.pointer = -1;
-  } else {
+} else {
     this.parseError = true;
     return failure;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse no scheme"] = function parseNoScheme(c) {
-  if (this.base === null || (this.base.cannotBeABaseURL && c !== 35)) {
+if (this.base === null || (this.base.cannotBeABaseURL && c !== 35)) {
     return failure;
-  } else if (this.base.cannotBeABaseURL && c === 35) {
+} else if (this.base.cannotBeABaseURL && c === 35) {
     this.url.scheme = this.base.scheme;
     this.url.path = this.base.path.slice();
     this.url.query = this.base.query;
     this.url.fragment = "";
     this.url.cannotBeABaseURL = true;
     this.state = "fragment";
-  } else if (this.base.scheme === "file") {
+} else if (this.base.scheme === "file") {
     this.state = "file";
     --this.pointer;
-  } else {
+} else {
     this.state = "relative";
     --this.pointer;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse special relative or authority"] = function parseSpecialRelativeOrAuthority(c) {
-  if (c === 47 && this.input[this.pointer + 1] === 47) {
+if (c === 47 && this.input[this.pointer + 1] === 47) {
     this.state = "special authority ignore slashes";
     ++this.pointer;
-  } else {
+} else {
     this.parseError = true;
     this.state = "relative";
     --this.pointer;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse path or authority"] = function parsePathOrAuthority(c) {
-  if (c === 47) {
+if (c === 47) {
     this.state = "authority";
-  } else {
+} else {
     this.state = "path";
     --this.pointer;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse relative"] = function parseRelative(c) {
-  this.url.scheme = this.base.scheme;
-  if (isNaN(c)) {
+this.url.scheme = this.base.scheme;
+if (isNaN(c)) {
     this.url.username = this.base.username;
     this.url.password = this.base.password;
     this.url.host = this.base.host;
     this.url.port = this.base.port;
     this.url.path = this.base.path.slice();
     this.url.query = this.base.query;
-  } else if (c === 47) {
+} else if (c === 47) {
     this.state = "relative slash";
-  } else if (c === 63) {
+} else if (c === 63) {
     this.url.username = this.base.username;
     this.url.password = this.base.password;
     this.url.host = this.base.host;
@@ -27728,7 +27742,7 @@ URLStateMachine.prototype["parse relative"] = function parseRelative(c) {
     this.url.path = this.base.path.slice();
     this.url.query = "";
     this.state = "query";
-  } else if (c === 35) {
+} else if (c === 35) {
     this.url.username = this.base.username;
     this.url.password = this.base.password;
     this.url.host = this.base.host;
@@ -27737,10 +27751,10 @@ URLStateMachine.prototype["parse relative"] = function parseRelative(c) {
     this.url.query = this.base.query;
     this.url.fragment = "";
     this.state = "fragment";
-  } else if (isSpecial(this.url) && c === 92) {
+} else if (isSpecial(this.url) && c === 92) {
     this.parseError = true;
     this.state = "relative slash";
-  } else {
+} else {
     this.url.username = this.base.username;
     this.url.password = this.base.password;
     this.url.host = this.base.host;
@@ -27749,559 +27763,559 @@ URLStateMachine.prototype["parse relative"] = function parseRelative(c) {
 
     this.state = "path";
     --this.pointer;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse relative slash"] = function parseRelativeSlash(c) {
-  if (isSpecial(this.url) && (c === 47 || c === 92)) {
+if (isSpecial(this.url) && (c === 47 || c === 92)) {
     if (c === 92) {
-      this.parseError = true;
+    this.parseError = true;
     }
     this.state = "special authority ignore slashes";
-  } else if (c === 47) {
+} else if (c === 47) {
     this.state = "authority";
-  } else {
+} else {
     this.url.username = this.base.username;
     this.url.password = this.base.password;
     this.url.host = this.base.host;
     this.url.port = this.base.port;
     this.state = "path";
     --this.pointer;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse special authority slashes"] = function parseSpecialAuthoritySlashes(c) {
-  if (c === 47 && this.input[this.pointer + 1] === 47) {
+if (c === 47 && this.input[this.pointer + 1] === 47) {
     this.state = "special authority ignore slashes";
     ++this.pointer;
-  } else {
+} else {
     this.parseError = true;
     this.state = "special authority ignore slashes";
     --this.pointer;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse special authority ignore slashes"] = function parseSpecialAuthorityIgnoreSlashes(c) {
-  if (c !== 47 && c !== 92) {
+if (c !== 47 && c !== 92) {
     this.state = "authority";
     --this.pointer;
-  } else {
+} else {
     this.parseError = true;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse authority"] = function parseAuthority(c, cStr) {
-  if (c === 64) {
+if (c === 64) {
     this.parseError = true;
     if (this.atFlag) {
-      this.buffer = "%40" + this.buffer;
+    this.buffer = "%40" + this.buffer;
     }
     this.atFlag = true;
 
     // careful, this is based on buffer and has its own pointer (this.pointer != pointer) and inner chars
     const len = countSymbols(this.buffer);
     for (let pointer = 0; pointer < len; ++pointer) {
-      const codePoint = this.buffer.codePointAt(pointer);
+    const codePoint = this.buffer.codePointAt(pointer);
 
-      if (codePoint === 58 && !this.passwordTokenSeenFlag) {
+    if (codePoint === 58 && !this.passwordTokenSeenFlag) {
         this.passwordTokenSeenFlag = true;
         continue;
-      }
-      const encodedCodePoints = percentEncodeChar(codePoint, isUserinfoPercentEncode);
-      if (this.passwordTokenSeenFlag) {
+    }
+    const encodedCodePoints = percentEncodeChar(codePoint, isUserinfoPercentEncode);
+    if (this.passwordTokenSeenFlag) {
         this.url.password += encodedCodePoints;
-      } else {
+    } else {
         this.url.username += encodedCodePoints;
-      }
+    }
     }
     this.buffer = "";
-  } else if (isNaN(c) || c === 47 || c === 63 || c === 35 ||
-             (isSpecial(this.url) && c === 92)) {
+} else if (isNaN(c) || c === 47 || c === 63 || c === 35 ||
+            (isSpecial(this.url) && c === 92)) {
     if (this.atFlag && this.buffer === "") {
-      this.parseError = true;
-      return failure;
+    this.parseError = true;
+    return failure;
     }
     this.pointer -= countSymbols(this.buffer) + 1;
     this.buffer = "";
     this.state = "host";
-  } else {
+} else {
     this.buffer += cStr;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse hostname"] =
 URLStateMachine.prototype["parse host"] = function parseHostName(c, cStr) {
-  if (this.stateOverride && this.url.scheme === "file") {
+if (this.stateOverride && this.url.scheme === "file") {
     --this.pointer;
     this.state = "file host";
-  } else if (c === 58 && !this.arrFlag) {
+} else if (c === 58 && !this.arrFlag) {
     if (this.buffer === "") {
-      this.parseError = true;
-      return failure;
+    this.parseError = true;
+    return failure;
     }
 
     const host = parseHost(this.buffer, isSpecial(this.url));
     if (host === failure) {
-      return failure;
+    return failure;
     }
 
     this.url.host = host;
     this.buffer = "";
     this.state = "port";
     if (this.stateOverride === "hostname") {
-      return false;
+    return false;
     }
-  } else if (isNaN(c) || c === 47 || c === 63 || c === 35 ||
-             (isSpecial(this.url) && c === 92)) {
+} else if (isNaN(c) || c === 47 || c === 63 || c === 35 ||
+            (isSpecial(this.url) && c === 92)) {
     --this.pointer;
     if (isSpecial(this.url) && this.buffer === "") {
-      this.parseError = true;
-      return failure;
+    this.parseError = true;
+    return failure;
     } else if (this.stateOverride && this.buffer === "" &&
-               (includesCredentials(this.url) || this.url.port !== null)) {
-      this.parseError = true;
-      return false;
+                (includesCredentials(this.url) || this.url.port !== null)) {
+    this.parseError = true;
+    return false;
     }
 
     const host = parseHost(this.buffer, isSpecial(this.url));
     if (host === failure) {
-      return failure;
+    return failure;
     }
 
     this.url.host = host;
     this.buffer = "";
     this.state = "path start";
     if (this.stateOverride) {
-      return false;
+    return false;
     }
-  } else {
+} else {
     if (c === 91) {
-      this.arrFlag = true;
+    this.arrFlag = true;
     } else if (c === 93) {
-      this.arrFlag = false;
+    this.arrFlag = false;
     }
     this.buffer += cStr;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse port"] = function parsePort(c, cStr) {
-  if (isASCIIDigit(c)) {
+if (isASCIIDigit(c)) {
     this.buffer += cStr;
-  } else if (isNaN(c) || c === 47 || c === 63 || c === 35 ||
-             (isSpecial(this.url) && c === 92) ||
-             this.stateOverride) {
+} else if (isNaN(c) || c === 47 || c === 63 || c === 35 ||
+            (isSpecial(this.url) && c === 92) ||
+            this.stateOverride) {
     if (this.buffer !== "") {
-      const port = parseInt(this.buffer);
-      if (port > Math.pow(2, 16) - 1) {
+    const port = parseInt(this.buffer);
+    if (port > Math.pow(2, 16) - 1) {
         this.parseError = true;
         return failure;
-      }
-      this.url.port = port === defaultPort(this.url.scheme) ? null : port;
-      this.buffer = "";
+    }
+    this.url.port = port === defaultPort(this.url.scheme) ? null : port;
+    this.buffer = "";
     }
     if (this.stateOverride) {
-      return false;
+    return false;
     }
     this.state = "path start";
     --this.pointer;
-  } else {
+} else {
     this.parseError = true;
     return failure;
-  }
+}
 
-  return true;
+return true;
 };
 
 const fileOtherwiseCodePoints = new Set([47, 92, 63, 35]);
 
 URLStateMachine.prototype["parse file"] = function parseFile(c) {
-  this.url.scheme = "file";
+this.url.scheme = "file";
 
-  if (c === 47 || c === 92) {
+if (c === 47 || c === 92) {
     if (c === 92) {
-      this.parseError = true;
+    this.parseError = true;
     }
     this.state = "file slash";
-  } else if (this.base !== null && this.base.scheme === "file") {
+} else if (this.base !== null && this.base.scheme === "file") {
     if (isNaN(c)) {
-      this.url.host = this.base.host;
-      this.url.path = this.base.path.slice();
-      this.url.query = this.base.query;
+    this.url.host = this.base.host;
+    this.url.path = this.base.path.slice();
+    this.url.query = this.base.query;
     } else if (c === 63) {
-      this.url.host = this.base.host;
-      this.url.path = this.base.path.slice();
-      this.url.query = "";
-      this.state = "query";
+    this.url.host = this.base.host;
+    this.url.path = this.base.path.slice();
+    this.url.query = "";
+    this.state = "query";
     } else if (c === 35) {
-      this.url.host = this.base.host;
-      this.url.path = this.base.path.slice();
-      this.url.query = this.base.query;
-      this.url.fragment = "";
-      this.state = "fragment";
+    this.url.host = this.base.host;
+    this.url.path = this.base.path.slice();
+    this.url.query = this.base.query;
+    this.url.fragment = "";
+    this.state = "fragment";
     } else {
-      if (this.input.length - this.pointer - 1 === 0 || // remaining consists of 0 code points
-          !isWindowsDriveLetterCodePoints(c, this.input[this.pointer + 1]) ||
-          (this.input.length - this.pointer - 1 >= 2 && // remaining has at least 2 code points
-           !fileOtherwiseCodePoints.has(this.input[this.pointer + 2]))) {
+    if (this.input.length - this.pointer - 1 === 0 || // remaining consists of 0 code points
+        !isWindowsDriveLetterCodePoints(c, this.input[this.pointer + 1]) ||
+        (this.input.length - this.pointer - 1 >= 2 && // remaining has at least 2 code points
+            !fileOtherwiseCodePoints.has(this.input[this.pointer + 2]))) {
         this.url.host = this.base.host;
         this.url.path = this.base.path.slice();
         shortenPath(this.url);
-      } else {
+    } else {
         this.parseError = true;
-      }
-
-      this.state = "path";
-      --this.pointer;
     }
-  } else {
+
     this.state = "path";
     --this.pointer;
-  }
+    }
+} else {
+    this.state = "path";
+    --this.pointer;
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse file slash"] = function parseFileSlash(c) {
-  if (c === 47 || c === 92) {
+if (c === 47 || c === 92) {
     if (c === 92) {
-      this.parseError = true;
+    this.parseError = true;
     }
     this.state = "file host";
-  } else {
+} else {
     if (this.base !== null && this.base.scheme === "file") {
-      if (isNormalizedWindowsDriveLetterString(this.base.path[0])) {
+    if (isNormalizedWindowsDriveLetterString(this.base.path[0])) {
         this.url.path.push(this.base.path[0]);
-      } else {
+    } else {
         this.url.host = this.base.host;
-      }
+    }
     }
     this.state = "path";
     --this.pointer;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse file host"] = function parseFileHost(c, cStr) {
-  if (isNaN(c) || c === 47 || c === 92 || c === 63 || c === 35) {
+if (isNaN(c) || c === 47 || c === 92 || c === 63 || c === 35) {
     --this.pointer;
     if (!this.stateOverride && isWindowsDriveLetterString(this.buffer)) {
-      this.parseError = true;
-      this.state = "path";
+    this.parseError = true;
+    this.state = "path";
     } else if (this.buffer === "") {
-      this.url.host = "";
-      if (this.stateOverride) {
+    this.url.host = "";
+    if (this.stateOverride) {
         return false;
-      }
-      this.state = "path start";
-    } else {
-      let host = parseHost(this.buffer, isSpecial(this.url));
-      if (host === failure) {
-        return failure;
-      }
-      if (host === "localhost") {
-        host = "";
-      }
-      this.url.host = host;
-
-      if (this.stateOverride) {
-        return false;
-      }
-
-      this.buffer = "";
-      this.state = "path start";
     }
-  } else {
-    this.buffer += cStr;
-  }
+    this.state = "path start";
+    } else {
+    let host = parseHost(this.buffer, isSpecial(this.url));
+    if (host === failure) {
+        return failure;
+    }
+    if (host === "localhost") {
+        host = "";
+    }
+    this.url.host = host;
 
-  return true;
+    if (this.stateOverride) {
+        return false;
+    }
+
+    this.buffer = "";
+    this.state = "path start";
+    }
+} else {
+    this.buffer += cStr;
+}
+
+return true;
 };
 
 URLStateMachine.prototype["parse path start"] = function parsePathStart(c) {
-  if (isSpecial(this.url)) {
+if (isSpecial(this.url)) {
     if (c === 92) {
-      this.parseError = true;
+    this.parseError = true;
     }
     this.state = "path";
 
     if (c !== 47 && c !== 92) {
-      --this.pointer;
+    --this.pointer;
     }
-  } else if (!this.stateOverride && c === 63) {
+} else if (!this.stateOverride && c === 63) {
     this.url.query = "";
     this.state = "query";
-  } else if (!this.stateOverride && c === 35) {
+} else if (!this.stateOverride && c === 35) {
     this.url.fragment = "";
     this.state = "fragment";
-  } else if (c !== undefined) {
+} else if (c !== undefined) {
     this.state = "path";
     if (c !== 47) {
-      --this.pointer;
+    --this.pointer;
     }
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse path"] = function parsePath(c) {
-  if (isNaN(c) || c === 47 || (isSpecial(this.url) && c === 92) ||
-      (!this.stateOverride && (c === 63 || c === 35))) {
+if (isNaN(c) || c === 47 || (isSpecial(this.url) && c === 92) ||
+    (!this.stateOverride && (c === 63 || c === 35))) {
     if (isSpecial(this.url) && c === 92) {
-      this.parseError = true;
+    this.parseError = true;
     }
 
     if (isDoubleDot(this.buffer)) {
-      shortenPath(this.url);
-      if (c !== 47 && !(isSpecial(this.url) && c === 92)) {
+    shortenPath(this.url);
+    if (c !== 47 && !(isSpecial(this.url) && c === 92)) {
         this.url.path.push("");
-      }
+    }
     } else if (isSingleDot(this.buffer) && c !== 47 &&
-               !(isSpecial(this.url) && c === 92)) {
-      this.url.path.push("");
+                !(isSpecial(this.url) && c === 92)) {
+    this.url.path.push("");
     } else if (!isSingleDot(this.buffer)) {
-      if (this.url.scheme === "file" && this.url.path.length === 0 && isWindowsDriveLetterString(this.buffer)) {
+    if (this.url.scheme === "file" && this.url.path.length === 0 && isWindowsDriveLetterString(this.buffer)) {
         if (this.url.host !== "" && this.url.host !== null) {
-          this.parseError = true;
-          this.url.host = "";
+        this.parseError = true;
+        this.url.host = "";
         }
         this.buffer = this.buffer[0] + ":";
-      }
-      this.url.path.push(this.buffer);
+    }
+    this.url.path.push(this.buffer);
     }
     this.buffer = "";
     if (this.url.scheme === "file" && (c === undefined || c === 63 || c === 35)) {
-      while (this.url.path.length > 1 && this.url.path[0] === "") {
+    while (this.url.path.length > 1 && this.url.path[0] === "") {
         this.parseError = true;
         this.url.path.shift();
-      }
+    }
     }
     if (c === 63) {
-      this.url.query = "";
-      this.state = "query";
+    this.url.query = "";
+    this.state = "query";
     }
     if (c === 35) {
-      this.url.fragment = "";
-      this.state = "fragment";
+    this.url.fragment = "";
+    this.state = "fragment";
     }
-  } else {
+} else {
     // TODO: If c is not a URL code point and not "%", parse error.
 
     if (c === 37 &&
-      (!isASCIIHex(this.input[this.pointer + 1]) ||
+    (!isASCIIHex(this.input[this.pointer + 1]) ||
         !isASCIIHex(this.input[this.pointer + 2]))) {
-      this.parseError = true;
+    this.parseError = true;
     }
 
     this.buffer += percentEncodeChar(c, isPathPercentEncode);
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse cannot-be-a-base-URL path"] = function parseCannotBeABaseURLPath(c) {
-  if (c === 63) {
+if (c === 63) {
     this.url.query = "";
     this.state = "query";
-  } else if (c === 35) {
+} else if (c === 35) {
     this.url.fragment = "";
     this.state = "fragment";
-  } else {
+} else {
     // TODO: Add: not a URL code point
     if (!isNaN(c) && c !== 37) {
-      this.parseError = true;
+    this.parseError = true;
     }
 
     if (c === 37 &&
         (!isASCIIHex(this.input[this.pointer + 1]) ||
-         !isASCIIHex(this.input[this.pointer + 2]))) {
-      this.parseError = true;
+        !isASCIIHex(this.input[this.pointer + 2]))) {
+    this.parseError = true;
     }
 
     if (!isNaN(c)) {
-      this.url.path[0] = this.url.path[0] + percentEncodeChar(c, isC0ControlPercentEncode);
+    this.url.path[0] = this.url.path[0] + percentEncodeChar(c, isC0ControlPercentEncode);
     }
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse query"] = function parseQuery(c, cStr) {
-  if (isNaN(c) || (!this.stateOverride && c === 35)) {
+if (isNaN(c) || (!this.stateOverride && c === 35)) {
     if (!isSpecial(this.url) || this.url.scheme === "ws" || this.url.scheme === "wss") {
-      this.encodingOverride = "utf-8";
+    this.encodingOverride = "utf-8";
     }
 
     const buffer = new Buffer(this.buffer); // TODO: Use encoding override instead
     for (let i = 0; i < buffer.length; ++i) {
-      if (buffer[i] < 0x21 || buffer[i] > 0x7E || buffer[i] === 0x22 || buffer[i] === 0x23 ||
-          buffer[i] === 0x3C || buffer[i] === 0x3E) {
+    if (buffer[i] < 0x21 || buffer[i] > 0x7E || buffer[i] === 0x22 || buffer[i] === 0x23 ||
+        buffer[i] === 0x3C || buffer[i] === 0x3E) {
         this.url.query += percentEncode(buffer[i]);
-      } else {
+    } else {
         this.url.query += String.fromCodePoint(buffer[i]);
-      }
+    }
     }
 
     this.buffer = "";
     if (c === 35) {
-      this.url.fragment = "";
-      this.state = "fragment";
+    this.url.fragment = "";
+    this.state = "fragment";
     }
-  } else {
+} else {
     // TODO: If c is not a URL code point and not "%", parse error.
     if (c === 37 &&
-      (!isASCIIHex(this.input[this.pointer + 1]) ||
+    (!isASCIIHex(this.input[this.pointer + 1]) ||
         !isASCIIHex(this.input[this.pointer + 2]))) {
-      this.parseError = true;
+    this.parseError = true;
     }
 
     this.buffer += cStr;
-  }
+}
 
-  return true;
+return true;
 };
 
 URLStateMachine.prototype["parse fragment"] = function parseFragment(c) {
-  if (isNaN(c)) { // do nothing
-  } else if (c === 0x0) {
+if (isNaN(c)) { // do nothing
+} else if (c === 0x0) {
     this.parseError = true;
-  } else {
+} else {
     // TODO: If c is not a URL code point and not "%", parse error.
     if (c === 37 &&
-      (!isASCIIHex(this.input[this.pointer + 1]) ||
+    (!isASCIIHex(this.input[this.pointer + 1]) ||
         !isASCIIHex(this.input[this.pointer + 2]))) {
-      this.parseError = true;
+    this.parseError = true;
     }
 
     this.url.fragment += percentEncodeChar(c, isC0ControlPercentEncode);
-  }
+}
 
-  return true;
+return true;
 };
 
 function serializeURL(url, excludeFragment) {
-  let output = url.scheme + ":";
-  if (url.host !== null) {
+let output = url.scheme + ":";
+if (url.host !== null) {
     output += "//";
 
     if (url.username !== "" || url.password !== "") {
-      output += url.username;
-      if (url.password !== "") {
+    output += url.username;
+    if (url.password !== "") {
         output += ":" + url.password;
-      }
-      output += "@";
+    }
+    output += "@";
     }
 
     output += serializeHost(url.host);
 
     if (url.port !== null) {
-      output += ":" + url.port;
+    output += ":" + url.port;
     }
-  } else if (url.host === null && url.scheme === "file") {
+} else if (url.host === null && url.scheme === "file") {
     output += "//";
-  }
+}
 
-  if (url.cannotBeABaseURL) {
+if (url.cannotBeABaseURL) {
     output += url.path[0];
-  } else {
+} else {
     for (const string of url.path) {
-      output += "/" + string;
+    output += "/" + string;
     }
-  }
+}
 
-  if (url.query !== null) {
+if (url.query !== null) {
     output += "?" + url.query;
-  }
+}
 
-  if (!excludeFragment && url.fragment !== null) {
+if (!excludeFragment && url.fragment !== null) {
     output += "#" + url.fragment;
-  }
+}
 
-  return output;
+return output;
 }
 
 function serializeOrigin(tuple) {
-  let result = tuple.scheme + "://";
-  result += serializeHost(tuple.host);
+let result = tuple.scheme + "://";
+result += serializeHost(tuple.host);
 
-  if (tuple.port !== null) {
+if (tuple.port !== null) {
     result += ":" + tuple.port;
-  }
+}
 
-  return result;
+return result;
 }
 
 module.exports.serializeURL = serializeURL;
 
 module.exports.serializeURLOrigin = function (url) {
-  // https://url.spec.whatwg.org/#concept-url-origin
-  switch (url.scheme) {
+// https://url.spec.whatwg.org/#concept-url-origin
+switch (url.scheme) {
     case "blob":
-      try {
+    try {
         return module.exports.serializeURLOrigin(module.exports.parseURL(url.path[0]));
-      } catch (e) {
+    } catch (e) {
         // serializing an opaque origin returns "null"
         return "null";
-      }
+    }
     case "ftp":
     case "gopher":
     case "http":
     case "https":
     case "ws":
     case "wss":
-      return serializeOrigin({
+    return serializeOrigin({
         scheme: url.scheme,
         host: url.host,
         port: url.port
-      });
+    });
     case "file":
-      // spec says "exercise to the reader", chrome says "file://"
-      return "file://";
+    // spec says "exercise to the reader", chrome says "file://"
+    return "file://";
     default:
-      // serializing an opaque origin returns "null"
-      return "null";
-  }
+    // serializing an opaque origin returns "null"
+    return "null";
+}
 };
 
 module.exports.basicURLParse = function (input, options) {
-  if (options === undefined) {
+if (options === undefined) {
     options = {};
-  }
+}
 
-  const usm = new URLStateMachine(input, options.baseURL, options.encodingOverride, options.url, options.stateOverride);
-  if (usm.failure) {
+const usm = new URLStateMachine(input, options.baseURL, options.encodingOverride, options.url, options.stateOverride);
+if (usm.failure) {
     return "failure";
-  }
+}
 
-  return usm.url;
+return usm.url;
 };
 
 module.exports.setTheUsername = function (url, username) {
-  url.username = "";
-  const decoded = punycode.ucs2.decode(username);
-  for (let i = 0; i < decoded.length; ++i) {
+url.username = "";
+const decoded = punycode.ucs2.decode(username);
+for (let i = 0; i < decoded.length; ++i) {
     url.username += percentEncodeChar(decoded[i], isUserinfoPercentEncode);
-  }
+}
 };
 
 module.exports.setThePassword = function (url, password) {
-  url.password = "";
-  const decoded = punycode.ucs2.decode(password);
-  for (let i = 0; i < decoded.length; ++i) {
+url.password = "";
+const decoded = punycode.ucs2.decode(password);
+for (let i = 0; i < decoded.length; ++i) {
     url.password += percentEncodeChar(decoded[i], isUserinfoPercentEncode);
-  }
+}
 };
 
 module.exports.serializeHost = serializeHost;
@@ -28309,16 +28323,16 @@ module.exports.serializeHost = serializeHost;
 module.exports.cannotHaveAUsernamePasswordPort = cannotHaveAUsernamePasswordPort;
 
 module.exports.serializeInteger = function (integer) {
-  return String(integer);
+return String(integer);
 };
 
 module.exports.parseURL = function (input, options) {
-  if (options === undefined) {
+if (options === undefined) {
     options = {};
-  }
+}
 
-  // We don't handle blobs, so this just delegates:
-  return module.exports.basicURLParse(input, { baseURL: options.baseURL, encodingOverride: options.encodingOverride });
+// We don't handle blobs, so this just delegates:
+return module.exports.basicURLParse(input, { baseURL: options.baseURL, encodingOverride: options.encodingOverride });
 };
 
 
@@ -28331,21 +28345,21 @@ module.exports.parseURL = function (input, options) {
 
 
 module.exports.mixin = function mixin(target, source) {
-  const keys = Object.getOwnPropertyNames(source);
-  for (let i = 0; i < keys.length; ++i) {
+const keys = Object.getOwnPropertyNames(source);
+for (let i = 0; i < keys.length; ++i) {
     Object.defineProperty(target, keys[i], Object.getOwnPropertyDescriptor(source, keys[i]));
-  }
+}
 };
 
 module.exports.wrapperSymbol = Symbol("wrapper");
 module.exports.implSymbol = Symbol("impl");
 
 module.exports.wrapperForImpl = function (impl) {
-  return impl[module.exports.wrapperSymbol];
+return impl[module.exports.wrapperSymbol];
 };
 
 module.exports.implForWrapper = function (wrapper) {
-  return wrapper[module.exports.implSymbol];
+return wrapper[module.exports.implSymbol];
 };
 
 
@@ -28362,31 +28376,31 @@ module.exports.implForWrapper = function (wrapper) {
 // decorations and such are not lost along the way.
 module.exports = wrappy
 function wrappy (fn, cb) {
-  if (fn && cb) return wrappy(fn)(cb)
+if (fn && cb) return wrappy(fn)(cb)
 
-  if (typeof fn !== 'function')
+if (typeof fn !== 'function')
     throw new TypeError('need wrapper function')
 
-  Object.keys(fn).forEach(function (k) {
+Object.keys(fn).forEach(function (k) {
     wrapper[k] = fn[k]
-  })
+})
 
-  return wrapper
+return wrapper
 
-  function wrapper() {
+function wrapper() {
     var args = new Array(arguments.length)
     for (var i = 0; i < args.length; i++) {
-      args[i] = arguments[i]
+    args[i] = arguments[i]
     }
     var ret = fn.apply(this, args)
     var cb = args[args.length-1]
     if (typeof ret === 'function' && ret !== cb) {
-      Object.keys(cb).forEach(function (k) {
+    Object.keys(cb).forEach(function (k) {
         ret[k] = cb[k]
-      })
+    })
     }
     return ret
-  }
+}
 }
 
 
@@ -28532,7 +28546,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	var __webpack_module_cache__ = {};
-/******/ 	
+/******/
 /******/ 	// The require function
 /******/ 	function __nccwpck_require__(moduleId) {
 /******/ 		// Check if module is in cache
@@ -28546,7 +28560,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 			loaded: false,
 /******/ 			exports: {}
 /******/ 		};
-/******/ 	
+/******/
 /******/ 		// Execute the module function
 /******/ 		var threw = true;
 /******/ 		try {
@@ -28555,14 +28569,14 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
-/******/ 	
+/******/
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-/******/ 	
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/ 	
+/******/
 /************************************************************************/
 /******/ 	/* webpack/runtime/node module decorator */
 /******/ 	(() => {
@@ -28572,18 +28586,18 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 			return module;
 /******/ 		};
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/compat */
-/******/ 	
+/******/
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
-/******/ 	
+/******/
 /************************************************************************/
-/******/ 	
+/******/
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
 /******/ 	var __webpack_exports__ = __nccwpck_require__(3109);
 /******/ 	module.exports = __webpack_exports__;
-/******/ 	
+/******/
 /******/ })()
 ;

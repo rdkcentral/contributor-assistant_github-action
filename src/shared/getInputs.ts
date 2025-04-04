@@ -17,8 +17,11 @@ export const getPathToDocument = (): string =>
 export const getBranch = (): string =>
   core.getInput('branch', { required: false })
 
-export const getAllowListItem = (): string =>
+export const getUsernameAllowList = (): string =>
   core.getInput('allowlist', { required: false })
+
+export const getDomainAllowList = (): string =>
+  core.getInput('domain-allow-list', { required: false })
 
 export const getEmptyCommitFlag = (): string =>
   core.getInput('empty-commit-flag', { required: false })

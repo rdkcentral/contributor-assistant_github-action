@@ -53,6 +53,7 @@ jobs:
 
          # the followings are the optional inputs - If the optional inputs are not given, then default values will be taken
           #domain-allow-list: email domains in the allow list don't have to sign the CLA document
+          #domain-allow-list-file: same as above, value is a path to a JSON file containing the domain list
           #remote-organization-name: enter the remote organization name where the signatures should be stored (Default is storing the signatures in the same repository)
           #remote-repository-name: enter the  remote repository name where the signatures should be stored (Default is storing the signatures in the same repository)
           #create-file-commit-message: 'For example: Creating file for storing CLA Signatures'

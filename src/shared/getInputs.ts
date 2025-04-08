@@ -23,6 +23,9 @@ export const getUsernameAllowList = (): string =>
 export const getDomainAllowList = (): string =>
   core.getInput('domain-allow-list', { required: false })
 
+export const getDomainsFile = (): string =>
+  core.getInput('domain-allow-list-file', { required: false })
+
 export const getEmptyCommitFlag = (): string =>
   core.getInput('empty-commit-flag', { required: false })
 

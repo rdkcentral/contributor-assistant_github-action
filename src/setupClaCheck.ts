@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
 import { checkAllowList } from './checkAllowList'
+import {updateStatus} from "./setStatus"
 import getCommitters from './graphql'
 import {
   ClafileContentAndSha,
@@ -45,14 +46,23 @@ export async function setupClaCheck() {
       committerMap.notSigned.length === 0
     ) {
       core.info(`All contributors have signed the CLA 📝 ✅ `)
+      await updateStatus("success", `All contributors have signed the CLA`)
       return reRunLastWorkFlowIfRequired()
     } else {
       core.setFailed(
         `Committers of Pull Request number ${context.issue.number} have to sign the CLA 📝`
       )
+      await updateStatus(
+        "failure",
+        `Committers of Pull Request number ${context.issue.number} have to sign the CLA`
+      )
     }
   } catch (err) {
-    core.setFailed(`Could not update the JSON file: ${err.message}`)
+    core.info(JSON.stringify(err))
+    await updateStatus(
+      "error",
+      `Could not update the JSON file: ${err.message}`
+    )
   }
 }
 

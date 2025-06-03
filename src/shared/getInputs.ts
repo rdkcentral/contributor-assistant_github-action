@@ -52,3 +52,6 @@ export const lockPullRequestAfterMerge = (): string =>
 
 export const suggestRecheck = (): string =>
   core.getInput('suggest-recheck', { required: false })
+
+export const getStatusContext = (): string =>
+  core.getInput('status-context', { required: false })

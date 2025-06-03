@@ -47,6 +47,9 @@ inputs:
   suggest-recheck:
     description: "Controls whether or not the action's comment should suggest that users comment `recheck`."
     default: "true"
+  status-context:
+    description: "Provide a status context script which will be used when manually setting a PR status."
+    default: "CLA Assistant Lite"
 runs:
   using: "node20"
   main: 'dist/index.js'

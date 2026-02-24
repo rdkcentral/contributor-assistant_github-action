@@ -1041,14 +1041,14 @@ function createFailureSummary(committerMap) {
         const docUrl = input.getPathToDocument();
         yield core.summary
             .addHeading('❌ CLA Signature Required')
-            .addRaw(`**${committerMap.notSigned.length}** of **${totalCount}** contributors need to sign the CLA.`)
+            .addRaw(`<strong>${committerMap.notSigned.length}</strong> of <strong>${totalCount}</strong> contributors need to sign the CLA.`)
             .addBreak()
             .addHeading('Unsigned Contributors', 3)
-            .addList(committerMap.notSigned.map(c => `**@${c.name}**${c.email ? ` (${c.email})` : ''}`))
+            .addList(committerMap.notSigned.map(c => `<strong>@${c.name}</strong>${c.email ? ` (${c.email})` : ''}`))
             .addBreak()
-            .addRaw(`📝 [View CLA Document](${docUrl})`)
+            .addRaw(`📝 <a href="${docUrl}">View CLA Document</a>`)
             .addBreak()
-            .addRaw('**To sign:** Comment on this PR with "I have read the CLA Document and I hereby sign the CLA"')
+            .addRaw('<strong>To sign:</strong> Comment on this PR with "I have read the CLA Document and I hereby sign the CLA"')
             .write();
         // Add annotations for each unsigned contributor
         committerMap.notSigned.forEach(c => {

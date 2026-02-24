@@ -1,0 +1,5 @@
+name: "CodeQL Security Analysis Config"
+
+# Exclude self-test workflow which intentionally uses privileged patterns for testing
+paths-ignore:
+  - '.github/workflows/self-test-cla.yml'

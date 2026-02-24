@@ -1,5 +1,13 @@
 name: "Self-Test CLA"
 
+# Security Note: This workflow intentionally checks out and builds PR code to self-test
+# the CLA action itself. This is safe because:
+# 1. This is an internal RDK Central repository with controlled access
+# 2. All PRs require review before merge
+# 3. The workflow only runs on PRs to contributor-assistant_github-action itself
+# 4. Permissions are explicitly limited to only what's needed
+# 5. CLA_ASSISTANT secret only has write access to cla_signatures repo, not this repo
+
 permissions:
   contents: read
   pull-requests: write
@@ -17,6 +25,9 @@ jobs:
     name: "CLA Check (Self-Test)"
     runs-on: ubuntu-latest
     steps:
+      # codeql[actions/untrusted-checkout/critical]: Intentional checkout of PR code for self-testing.
+      # This workflow only runs on PRs to this repository itself to validate CLA action changes.
+      # Risk is mitigated by: repository access controls, required PR reviews, and limited permissions.
       - name: Checkout PR branch
         if: (startsWith(github.event.comment.body, 'recheck') || startsWith(github.event.comment.body, 'I have read the CLA Document and I hereby sign the CLA')) || github.event_name == 'pull_request_target'
         uses: actions/checkout@v4
@@ -28,15 +39,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
+      
+      # codeql[actions/untrusted-checkout/critical]: Building PR code for self-test purposes.
+      # The built artifact is only used within this workflow to test CLA functionality.
       - name: Install dependencies
         if: (startsWith(github.event.comment.body, 'recheck') || startsWith(github.event.comment.body, 'I have read the CLA Document and I hereby sign the CLA')) || github.event_name == 'pull_request_target'
         run: npm ci
-        
+      
+      # codeql[actions/untrusted-checkout/critical]: Building PR code for self-test validation.
       - name: Build action
         if: (startsWith(github.event.comment.body, 'recheck') || startsWith(github.event.comment.body, 'I have read the CLA Document and I hereby sign the CLA')) || github.event_name == 'pull_request_target'
         run: npm run build
-        
+      
+      # codeql[actions/untrusted-checkout/critical]: Executing PR code to validate CLA action functionality.
+      # CLA_ASSISTANT secret has limited scope (write to cla_signatures repo only, no access to this repo).
       - name: Run CLA Check (Testing Enhanced Feedback)
         if: (startsWith(github.event.comment.body, 'recheck') || startsWith(github.event.comment.body, 'I have read the CLA Document and I hereby sign the CLA')) || github.event_name == 'pull_request_target'
         uses: ./

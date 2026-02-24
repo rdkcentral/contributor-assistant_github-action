@@ -54,7 +54,7 @@ Pick a low-traffic repo for testing (or create one):
    # Change the uses line in the cla.yml
    # FROM:
    uses: rdkcentral/cmf-actions/.github/workflows/cla.yml@v1
-   
+
    # TO (temporarily):
    uses: rdkcentral/contributor-assistant_github-action/.github/workflows/self-test-cla.yml@feat/enhanced-check-run-feedback
    ```

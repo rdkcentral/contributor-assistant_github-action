@@ -63,7 +63,7 @@ export async function setupClaCheck() {
 
 async function createSuccessSummary(committerMap: CommitterMap): Promise<void> {
   const totalCount = (committerMap.signed?.length || 0) + (committerMap.notSigned?.length || 0) + (committerMap.unknown?.length || 0)
-  
+
   await core.summary
     .addHeading('✅ All Contributors Signed')
     .addRaw(`All ${totalCount} contributor(s) have signed the CLA.`)
@@ -78,7 +78,7 @@ async function createSuccessSummary(committerMap: CommitterMap): Promise<void> {
 async function createFailureSummary(committerMap: CommitterMap): Promise<void> {
   const totalCount = (committerMap.signed?.length || 0) + committerMap.notSigned.length + (committerMap.unknown?.length || 0)
   const docUrl = input.getPathToDocument()
-  
+
   await core.summary
     .addHeading('❌ CLA Signature Required')
     .addRaw(`<strong>${committerMap.notSigned.length}</strong> of <strong>${totalCount}</strong> contributors need to sign the CLA.`)
@@ -90,14 +90,14 @@ async function createFailureSummary(committerMap: CommitterMap): Promise<void> {
     .addBreak()
     .addRaw('<strong>To sign:</strong> Comment on this PR with "I have read the CLA Document and I hereby sign the CLA"')
     .write()
-  
+
   // Add annotations for each unsigned contributor
   committerMap.notSigned.forEach(c => {
     core.warning(`@${c.name}${c.email ? ` (${c.email})` : ''} has not signed the CLA`, {
       title: '📝 CLA Signature Required'
     })
   })
-  
+
   // Add info about unknown users if any
   if (committerMap.unknown && committerMap.unknown.length > 0) {
     committerMap.unknown.forEach(c => {

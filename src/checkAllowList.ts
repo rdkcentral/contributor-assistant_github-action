@@ -5,11 +5,11 @@ import * as input from './shared/getInputs'
 import { getFileContent } from './persistence/persistence'
 
 
-const usernameAllowListPatterns: string[] = input.getUsernameAllowList().split(',')
-const domainAllowList: string[] = input.getDomainAllowList().split(',')
-
-
-function isUserNotInAllowList(committer: CommittersDetails): boolean {
+function isUserNotInAllowList(
+    committer: CommittersDetails,
+    usernameAllowListPatterns: string[],
+    domainAllowList: string[]
+): boolean {
 
     for(let pattern of domainAllowList) {
         pattern = pattern.trim()
@@ -23,7 +23,8 @@ function isUserNotInAllowList(committer: CommittersDetails): boolean {
     return usernameAllowListPatterns.filter(function (pattern) {
         pattern = pattern.trim()
         if (pattern.includes('*')) {
-            const regex = _.escapeRegExp(pattern).split('\\*').join('.*')
+            // Escape regex special chars, replace \* with .*, and anchor properly
+            const regex = '^' + _.escapeRegExp(pattern).split('\\*').join('.*') + '$'
 
             return new RegExp(regex).test(committer.name)
         }
@@ -32,6 +33,10 @@ function isUserNotInAllowList(committer: CommittersDetails): boolean {
 }
 
 export async function checkAllowList(committers: CommittersDetails[]): Promise<CommittersDetails[]> {
+    // Load allowlists at runtime (not module-load time) for testability
+    const usernameAllowListPatterns: string[] = input.getUsernameAllowList().split(',')
+    const domainAllowList: string[] = input.getDomainAllowList().split(',')
+
     const domainsFile: string = input.getDomainsFile()
 
     if(domainsFile) {
@@ -54,6 +59,6 @@ export async function checkAllowList(committers: CommittersDetails[]): Promise<C
         }
     }
 
-    const committersAfterAllowListCheck: CommittersDetails[] = committers.filter(committer => committer && !(isUserNotInAllowList !== undefined && isUserNotInAllowList(committer)))
+    const committersAfterAllowListCheck: CommittersDetails[] = committers.filter(committer => committer && !(isUserNotInAllowList !== undefined && isUserNotInAllowList(committer, usernameAllowListPatterns, domainAllowList)))
     return committersAfterAllowListCheck
 }

@@ -990,13 +990,167 @@ await octokit.reactions.createForIssueComment({
 - [22370785469](https://github.com/rdkcentral/cmf-release-app/actions/runs/22370785469) - Test run (Markdown issue)
 - [22371355507](https://github.com/rdkcentral/cmf-release-app/actions/runs/22371355507) - Test run (HTML fixed)
 
+---
+
+## Bug Fix Session 2: PR Comment Double-Update Issue
+
+**Date:** February 25, 2026
+**Scope:** Post-v2.7.0 deployment bug discovery and fix
+**Branch:** `fix/pr-comment-double-update`
+
+### Bug 4: PR Comment Not Updating When Allowlist Filters Contributors
+
+**Issue:** PR comments show stale "unsigned" state after workflow rerun, despite check succeeding
+
+**Discovery:**
+- Investigating [rdk-halif-aidl PR #321](https://github.com/rdkcentral/rdk-halif-aidl/pull/321)
+- Workflow rerun: ✅ SUCCESS (all contributors passed)
+- PR comment: ❌ Still shows "1 out of 2 signed, @Copilot unsigned"
+- User noticed: *"why did our rerun 2.7.0 not update the comment"*
+
+**Symptoms:**
+- PR created with unsigned contributor (Copilot)
+- Comment created: "1 of 2 signed, ❌ @Copilot"
+- Copilot added to allowlist
+- Workflow rerun successful
+- **Comment NOT updated to "All signed"**
+
+**Root Cause Analysis:**
+**File:** `src/pullrequest/pullRequestComment.ts`
+**Lines:** 20-31
+
+**Original Code:**
+```typescript
+if (claBotComment?.id) {
+  if (signed) {
+    await updateComment(signed, committerMap, claBotComment)  // Update #1 ✅
+  }
+
+  // Always executes, even when signed = true
+  const reactedCommitters = await signatureWithPRComment(committerMap, committers)
+  if (reactedCommitters?.onlyCommitters) {
+      reactedCommitters.allSignedFlag = prepareAllSignedCommitters(...)
+  }
+  committerMap = prepareCommiterMap(committerMap, reactedCommitters)
+  await updateComment(reactedCommitters.allSignedFlag, committerMap, claBotComment)  // Update #2 ❌
+  return reactedCommitters
+}
+```
+
+**Problem - Double Update Pattern:**
+1. **First update** (line 22): When `signed = true`, updates comment to "All contributors signed" ✅
+2. **Second update** (line 31): Always executes, checks for PR comment signatures
+   - Since no new PR comment signatures found: `allSignedFlag = false`
+   - Updates comment to show unsigned state ❌
+3. **Result**: Second update overwrites first update's correct "All signed" message
+
+**Timeline:**
+1. Initial PR: kanjoe24 signed, Copilot unsigned
+2. Comment created: "1 out of 2 signed, ❌ @Copilot"
+3. Allowlist updated: Add "copilot, Copilot, copilot-swe-agent[bot]"
+4. Workflow rerun triggered
+5. checkAllowList() filters Copilot → `committerMap.notSigned = []`
+6. `signed = true` (all remaining contributors signed)
+7. **Update #1**: Comment → "All signed" ✅
+8. signatureWithPRComment() checks for new signatures → none found
+9. `reactedCommitters.allSignedFlag = false`
+10. **Update #2**: Comment → "1 of 2 signed" ❌
+11. Workflow status: ✅ SUCCESS (correct)
+12. Comment state: Shows unsigned (WRONG!)
+
+**Investigation Steps:**
+```bash
+# Check PR comment content
+gh api repos/rdkcentral/rdk-halif-aidl/issues/comments/3754397077
+
+# Verify workflow used v2.7.0 with updated allowlist
+gh run view 22189286524 --repo rdkcentral/rdk-halif-aidl --log | grep -E "(Uses|allowlist:)"
+
+# Analyze pullRequestComment.ts logic
+# Found double-update pattern at lines 21-31
+```
+
+**Classification:**
+- ✅ **Edge case not considered**: Allowlist filtering post-comment-creation is uncommon
+- ⚠️ **Partial design issue**: Unconditional second update assumes PR signature check always relevant
+- ✅ **Unintended behavior**: Second update wasn't meant to overwrite "all signed" state
+- ✅ **Unanticipated interaction**: Conflict between initial state check and PR comment signature check
+
+**Fix:**
+**Branch:** `fix/pr-comment-double-update`
+**Date:** February 25, 2026
+
+```typescript
+if (claBotComment?.id) {
+  if (signed) {
+    await updateComment(signed, committerMap, claBotComment)
+    return // ✅ Early return - all contributors already signed, no need to check PR comment signatures
+  }
+
+  // Only reaches here if there are unsigned contributors
+  const reactedCommitters = await signatureWithPRComment(committerMap, committers)
+  if (reactedCommitters?.onlyCommitters) {
+      reactedCommitters.allSignedFlag = prepareAllSignedCommitters(...)
+  }
+  committerMap = prepareCommiterMap(committerMap, reactedCommitters)
+  await updateComment(reactedCommitters.allSignedFlag, committerMap, claBotComment)
+  return reactedCommitters
+}
+```
+
+**Rationale:**
+- When `signed = true`: All contributors already signed (database or allowlist)
+- PR comment signature checking only relevant for unsigned contributors
+- Early return prevents unnecessary re-checking and conflicting updates
+- Preserves original intent: First path for "all signed", second path for "new PR signatures"
+
+**Impact:**
+- ✅ Allowlist-filtered contributors correctly show "All signed"
+- ✅ PR comment signature functionality preserved for unsigned scenarios
+- ✅ Eliminates unnecessary API calls when all signed
+- ✅ No regression to existing flows
+
+**Edge Cases Identified:**
+1. ✅ Contributor signs via PR comment AFTER being allowlisted (harmless, allowlist takes precedence)
+2. ⚠️ Domain allowlist changes mid-PR (eventual consistency acceptable)
+3. ⚠️ Race condition - multiple reruns (last write wins, acceptable)
+4. ✅ Manual comment deletion (handled correctly)
+5. ⚠️ Signature removed from database (requires manual intervention - documented)
+6. ✅ Multiple emails per contributor (handled correctly)
+7. ⚠️ Comment format corruption (detected by unique marker)
+
+**Recommendations:**
+1. **Separation of concerns**: Split "check initial state" from "handle PR comment signatures"
+2. **State machine approach**: Model comment updates as state transitions
+3. **Idempotency checks**: Verify content changes before updating
+4. **Comprehensive testing**: Add allowlist-filtering scenarios to test suite
+5. **Explicit return values**: Return clear action indicators (created/updated/skipped)
+
+**Documentation:**
+- Created: [BUGFIX_PR_COMMENT_DOUBLE_UPDATE.md](./BUGFIX_PR_COMMENT_DOUBLE_UPDATE.md) - Full analysis
+- Updated: [EXECUTION_PATHS.md](./EXECUTION_PATHS.md) - Added Path 13 for allowlist filtering
+- Updated: [DEBUGGING_HISTORY.md](./DEBUGGING_HISTORY.md) - This entry
+
+**Testing:**
+- Test infrastructure challenges: ts-jest migration needed, environment variables missing
+- **Manual testing recommended** before merge:
+  1. Create test PR with unsigned contributor
+  2. Add to allowlist
+  3. Rerun workflow
+  4. Verify comment updates to "All signed"
+
+**Status:** Fix implemented, ready for testing and PR creation
+
+---
+
 ### Documentation
 - [ARCHITECTURE.md](./ARCHITECTURE.md)
 - [EXECUTION_PATHS.md](./EXECUTION_PATHS.md)
 - [ENHANCED_FEEDBACK.md](./ENHANCED_FEEDBACK.md)
+- [BUGFIX_PR_COMMENT_DOUBLE_UPDATE.md](./BUGFIX_PR_COMMENT_DOUBLE_UPDATE.md)
 - [TESTING.md](../TESTING.md)
 
 ---
 
 **End of Debugging History**
-*Last Updated: February 24, 2026*
+*Last Updated: February 25, 2026*

@@ -461,6 +461,42 @@ See: [rdkcentral/cmf-release-app#27](https://github.com/rdkcentral/cmf-release-a
 7. 💬 PR comment updated with progress
 8. ✅ Final signature triggers rerun → Success
 
+### Path 13: Allowlist Filtering After Comment Creation (Bug Fix in v2.7.1+)
+
+**Scenario**: Contributors filtered by allowlist *after* PR comment created
+
+```mermaid
+graph TD
+    A[PR Created] --> B[2 Contributors: kanjoe24 signed, Copilot unsigned]
+    B --> C[Comment Created: 1 of 2 signed, ❌ Copilot]
+    C --> D[Allowlist Updated: Add Copilot]
+    D --> E[Workflow Rerun Triggered]
+    E --> F[checkAllowList filters Copilot]
+    F --> G{committerMap.notSigned.length = 0?}
+    G -->|Yes| H[signed = true]
+    H --> I[Update Comment: All signed ✅]
+    I --> J[Early Return - NO second update]
+    J --> K[Check Status: SUCCESS]
+```
+
+**Before Fix (v2.7.0 bug)**:
+1. First update: Comment → "All signed" ✅
+2. Check PR comment signatures: None found
+3. `reactedCommitters.allSignedFlag = false`
+4. Second update: Comment → "1 of 2 signed, ❌ Copilot" ❌ (WRONG!)
+5. **Result**: Comment shows stale unsigned state despite workflow success
+
+**After Fix (v2.7.1+)**:
+1. First update: Comment → "All signed" ✅
+2. **Early return** - Skip PR comment signature check
+3. **Result**: Comment correctly shows all signed ✓
+
+**Example**: [rdk-halif-aidl PR #321](https://github.com/rdkcentral/rdk-halif-aidl/pull/321) exposed this bug
+
+**Fix**: Added early return in `prCommentSetup()` when `signed = true`
+
+See: [BUGFIX_PR_COMMENT_DOUBLE_UPDATE.md](./BUGFIX_PR_COMMENT_DOUBLE_UPDATE.md) for full analysis
+
 ### Validation Checklist
 - [ ] Job summary renders HTML correctly (bold, links)
 - [ ] Warning annotations appear on Files Changed tab
@@ -470,6 +506,7 @@ See: [rdkcentral/cmf-release-app#27](https://github.com/rdkcentral/cmf-release-a
 - [ ] Workflow rerun triggered on final signature
 - [ ] Check status updates from failure to success
 - [ ] No duplicate status checks ("Signature / Check" removed)
+- [ ] **PR comment updates correctly when allowlist filters contributors** (v2.7.1+)
 
 ## Next Steps
 - See [ENHANCED_FEEDBACK.md](./ENHANCED_FEEDBACK.md) for v2.7.0 improvements

@@ -3,13 +3,11 @@
     "target": "es6",
     "module": "commonjs",
     "outDir": "./lib",
-    "useUnknownInCatchVariables": false,
+    "useUnknownInCatchVariables":false,
+    "rootDir": "./src",
     "strict": true,
     "noImplicitAny": false,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "types": ["node", "jest"]
+    "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
   },
-  "exclude": ["node_modules", "dist", "lib"]
+  "exclude": ["node_modules", "**/*.test.ts"]
 }

@@ -684,14 +684,14 @@ const committers: CommittersDetails[] = [
 
       // user@github.com should be filtered (exact match)
       expect(result.find(c => c.email === 'user@github.com')).toBeUndefined()
-      
+
       // CURRENT BEHAVIOR: endsWith allows these (may be security issue)
       // user@evil.github.com ends with @github.com (subdomain)
       expect(result.find(c => c.email === 'user@evil.github.com')).toBeUndefined()
-      
+
       // user@github.com.evil.com ends with @github.com (look-alike domain - SECURITY CONCERN)
       expect(result.find(c => c.email === 'user@github.com.evil.com')).toBeUndefined()
-      
+
       // user@example.com should remain (not in allowlist)
       expect(result.find(c => c.email === 'user@example.com')).toBeDefined()
     })

@@ -23,7 +23,8 @@ function isUserNotInAllowList(
     return usernameAllowListPatterns.filter(function (pattern) {
         pattern = pattern.trim()
         if (pattern.includes('*')) {
-            const regex = _.escapeRegExp(pattern).split('\\*').join('.*')
+            // Escape regex special chars, replace \* with .*, and anchor properly
+            const regex = '^' + _.escapeRegExp(pattern).split('\\*').join('.*') + '$'
 
             return new RegExp(regex).test(committer.name)
         }

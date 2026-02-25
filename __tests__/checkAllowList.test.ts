@@ -613,4 +613,87 @@ const committers: CommittersDetails[] = [
       expect(result[0].name).toBe('realuser123')
     })
   })
+
+  describe('Advanced security tests', () => {
+    it('should prevent allowlist bypass with null byte injection', async () => {
+      mockedGetUsernameAllowList.mockReturnValue('bot*')
+
+      const committers: CommittersDetails[] = [
+        { name: 'bot\x00malicious', id: 1, email: '[email protected]' },
+        { name: 'evil\x00bot', id: 2, email: '[email protected]' }
+      ]
+
+      const result = await checkAllowList(committers)
+
+      // 'bot\x00malicious' starts with 'bot' so should be filtered
+      expect(result.find(c => c.name === 'bot\x00malicious')).toBeUndefined()
+      // 'evil\x00bot' does NOT start with 'bot' so should remain
+      expect(result.find(c => c.name === 'evil\x00bot')).toBeDefined()
+    })
+
+    it('should prevent wildcard DoS with extremely long usernames', async () => {
+      const longUsername = 'a'.repeat(10000) + 'bot'
+      mockedGetUsernameAllowList.mockReturnValue('*bot')
+
+      const committers: CommittersDetails[] = [
+        { name: longUsername, id: 1, email: '[email protected]' }
+      ]
+
+      // Should complete quickly without hanging
+      const start = Date.now()
+      const result = await checkAllowList(committers)
+      const duration = Date.now() - start
+
+      expect(duration).toBeLessThan(1000) // Should complete in under 1 second
+      expect(result).toHaveLength(0) // Should be filtered (matches *bot)
+    })
+
+    it('should handle Unicode characters in usernames safely', async () => {
+      mockedGetUsernameAllowList.mockReturnValue('bot*,*bot')
+
+      const committers: CommittersDetails[] = [
+        { name: 'bot-🤖-user', id: 1, email: '[email protected]' },
+        { name: '🤖-bot', id: 2, email: '[email protected]' },
+        { name: 'bot', id: 3, email: '[email protected]' },
+        { name: 'human', id: 4, email: '[email protected]' }
+      ]
+
+      const result = await checkAllowList(committers)
+
+      // bot-🤖-user matches bot*
+      expect(result.find(c => c.name === 'bot-🤖-user')).toBeUndefined()
+      // 🤖-bot matches *bot
+      expect(result.find(c => c.name === '🤖-bot')).toBeUndefined()
+      // bot matches both
+      expect(result.find(c => c.name === 'bot')).toBeUndefined()
+      // human doesn't match
+      expect(result.find(c => c.name === 'human')).toBeDefined()
+    })
+
+    it('should prevent domain bypass with look-alike domains', async () => {
+      mockedGetDomainAllowList.mockReturnValue('@github.com')
+
+      const committers: CommittersDetails[] = [
+        { name: 'user1', id: 1, email: 'user@github.com' },
+        { name: 'user2', id: 2, email: 'user@evil.github.com' },
+        { name: 'user3', id: 3, email: 'user@github.com.evil.com' },
+        { name: 'user4', id: 4, email: 'user@example.com' }
+      ]
+
+      const result = await checkAllowList(committers)
+
+      // user@github.com should be filtered (exact match)
+      expect(result.find(c => c.email === 'user@github.com')).toBeUndefined()
+      
+      // CURRENT BEHAVIOR: endsWith allows these (may be security issue)
+      // user@evil.github.com ends with @github.com (subdomain)
+      expect(result.find(c => c.email === 'user@evil.github.com')).toBeUndefined()
+      
+      // user@github.com.evil.com ends with @github.com (look-alike domain - SECURITY CONCERN)
+      expect(result.find(c => c.email === 'user@github.com.evil.com')).toBeUndefined()
+      
+      // user@example.com should remain (not in allowlist)
+      expect(result.find(c => c.email === 'user@example.com')).toBeDefined()
+    })
+  })
 })

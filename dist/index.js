@@ -43,9 +43,7 @@ exports.checkAllowList = void 0;
 const _ = __importStar(__nccwpck_require__(2356));
 const input = __importStar(__nccwpck_require__(7189));
 const persistence_1 = __nccwpck_require__(9947);
-const usernameAllowListPatterns = input.getUsernameAllowList().split(',');
-const domainAllowList = input.getDomainAllowList().split(',');
-function isUserNotInAllowList(committer) {
+function isUserNotInAllowList(committer, usernameAllowListPatterns, domainAllowList) {
     for (let pattern of domainAllowList) {
         pattern = pattern.trim();
         if (!pattern)
@@ -67,6 +65,9 @@ function isUserNotInAllowList(committer) {
 }
 function checkAllowList(committers) {
     return __awaiter(this, void 0, void 0, function* () {
+        // Load allowlists at runtime (not module-load time) for testability
+        const usernameAllowListPatterns = input.getUsernameAllowList().split(',');
+        const domainAllowList = input.getDomainAllowList().split(',');
         const domainsFile = input.getDomainsFile();
         if (domainsFile) {
             try {
@@ -83,7 +84,7 @@ function checkAllowList(committers) {
                 }
             }
         }
-        const committersAfterAllowListCheck = committers.filter(committer => committer && !(isUserNotInAllowList !== undefined && isUserNotInAllowList(committer)));
+        const committersAfterAllowListCheck = committers.filter(committer => committer && !(isUserNotInAllowList !== undefined && isUserNotInAllowList(committer, usernameAllowListPatterns, domainAllowList)));
         return committersAfterAllowListCheck;
     });
 }
@@ -589,6 +590,7 @@ function prCommentSetup(committerMap, committers) {
             else if (claBotComment === null || claBotComment === void 0 ? void 0 : claBotComment.id) {
                 if (signed) {
                     yield updateComment(signed, committerMap, claBotComment);
+                    return; // Early return - all contributors already signed, no need to check PR comment signatures
                 }
                 // reacted committers are contributors who have newly signed by posting the Pull Request comment
                 const reactedCommitters = yield (0, signatureComment_1.default)(committerMap, committers);
@@ -1116,8 +1118,8 @@ function createClaFileAndPRComment(committers, committerMap) {
 }
 function prepareCommiterMap(committers, claFileContent) {
     let committerMap = getInitialCommittersMap();
-    committerMap.notSigned = committers.filter(committer => !(claFileContent === null || claFileContent === void 0 ? void 0 : claFileContent.signedContributors.some(cla => committer.id === cla.id)));
-    committerMap.signed = committers.filter(committer => claFileContent === null || claFileContent === void 0 ? void 0 : claFileContent.signedContributors.some(cla => committer.id === cla.id));
+    committerMap.notSigned = committers.filter(committer => !((claFileContent === null || claFileContent === void 0 ? void 0 : claFileContent.signedContributors) || []).some(cla => committer.id === cla.id));
+    committerMap.signed = committers.filter(committer => ((claFileContent === null || claFileContent === void 0 ? void 0 : claFileContent.signedContributors) || []).some(cla => committer.id === cla.id));
     committers.map(committer => {
         if (!committer.id) {
             committerMap.unknown.push(committer);

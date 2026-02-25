@@ -733,7 +733,7 @@ function dco(signed, committerMap) {
         text += `**${committerMap.signed.length}** out of **${committerMap.signed.length + committerMap.notSigned.length}** committers have signed the DCO.`;
         committerMap.signed.forEach(signedCommitter => { text += `<br/>:white_check_mark: [${signedCommitter.name}](https://github.com/${signedCommitter.name})`; });
         committerMap.notSigned.forEach(unsignedCommitter => {
-            text += `<br/>:x: @${unsignedCommitter.name}`;
+            text += `<br/>:x: \`@${unsignedCommitter.name}\``;
         });
         text += '<br/>';
     }
@@ -770,7 +770,7 @@ function cla(signed, committerMap) {
         text += `**${committerMap.signed.length}** out of **${committerMap.signed.length + committerMap.notSigned.length}** committers have signed the CLA.`;
         committerMap.signed.forEach(signedCommitter => { text += `<br/>:white_check_mark: [${signedCommitter.name}](https://github.com/${signedCommitter.name})`; });
         committerMap.notSigned.forEach(unsignedCommitter => {
-            text += `<br/>:x: @${unsignedCommitter.name}`;
+            text += `<br/>:x: \`@${unsignedCommitter.name}\``;
         });
         text += '<br/>';
     }

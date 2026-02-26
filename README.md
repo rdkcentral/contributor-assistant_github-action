@@ -178,25 +178,25 @@ This PAT should have repo scope and is only required if you have configured to s
         </a>
     </td>
     <td align="center">
+        <a href="https://github.com/Alan-Ryan">
+            <img src="https://avatars.githubusercontent.com/u/20208488?v=4" width="100;" alt="Alan-Ryan"/>
+            <br />
+            <sub><b>Alan Ryan</b></sub>
+        </a>
+    </td>
+    <td align="center">
         <a href="https://github.com/Writhe">
             <img src="https://avatars.githubusercontent.com/u/2022097?v=4" width="100;" alt="Writhe"/>
             <br />
             <sub><b>Filip Moroz</b></sub>
         </a>
-    </td>
+    </td></tr>
+<tr>
     <td align="center">
         <a href="https://github.com/mmv08">
             <img src="https://avatars.githubusercontent.com/u/16622558?v=4" width="100;" alt="mmv08"/>
             <br />
             <sub><b>Mikhail</b></sub>
-        </a>
-    </td></tr>
-<tr>
-    <td align="center">
-        <a href="https://github.com/Alan-Ryan">
-            <img src="https://avatars.githubusercontent.com/u/20208488?v=4" width="100;" alt="Alan-Ryan"/>
-            <br />
-            <sub><b>Alan Ryan</b></sub>
         </a>
     </td>
     <td align="center">

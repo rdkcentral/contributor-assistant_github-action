@@ -52,5 +52,5 @@ inputs:
     default: ""
     deprecationMessage: "The status-context input is deprecated and no longer used. The action now uses GitHub Actions Check Runs which provide better feedback through job summaries and annotations. Please remove this input from your workflow."
 runs:
-  using: "node20"
+  using: "node24"
   main: 'dist/index.js'

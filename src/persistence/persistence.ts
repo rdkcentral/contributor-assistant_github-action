@@ -6,7 +6,9 @@ import { getDefaultOctokitClient, getPATOctokit } from '../octokit'
 
 import * as input from '../shared/getInputs'
 
-export async function getFileContent(path=input.getPathToSignatures()): Promise<any> {
+export async function getFileContent(
+  path = input.getPathToSignatures()
+): Promise<any> {
   const octokitInstance: InstanceType<typeof GitHub> =
     isRemoteRepoOrOrgConfigured() ? getPATOctokit() : getDefaultOctokitClient()
 

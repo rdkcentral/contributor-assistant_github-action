@@ -44,7 +44,7 @@ exports.checkAllowList = checkAllowList;
 const _ = __importStar(__nccwpck_require__(2356));
 const input = __importStar(__nccwpck_require__(7189));
 const persistence_1 = __nccwpck_require__(9947);
-function isUserNotInAllowList(committer, usernameAllowListPatterns, domainAllowList) {
+function isUserInAllowList(committer, usernameAllowListPatterns, domainAllowList) {
     for (let pattern of domainAllowList) {
         pattern = pattern.trim();
         if (!pattern)
@@ -55,7 +55,7 @@ function isUserNotInAllowList(committer, usernameAllowListPatterns, domainAllowL
             return true;
         }
     }
-    return usernameAllowListPatterns.filter(function (pattern) {
+    return (usernameAllowListPatterns.filter(function (pattern) {
         pattern = pattern.trim();
         if (pattern.includes('*')) {
             // Escape regex special chars, replace \* with .*, and anchor properly
@@ -63,11 +63,13 @@ function isUserNotInAllowList(committer, usernameAllowListPatterns, domainAllowL
             return new RegExp(regex).test(committer.name);
         }
         return pattern === committer.name;
-    }).length > 0;
+    }).length > 0);
 }
 async function checkAllowList(committers) {
     // Load allowlists at runtime (not module-load time) for testability
-    const usernameAllowListPatterns = input.getUsernameAllowList().split(',');
+    const usernameAllowListPatterns = input
+        .getUsernameAllowList()
+        .split(',');
     const domainAllowList = input.getDomainAllowList().split(',');
     const domainsFile = input.getDomainsFile();
     if (domainsFile) {
@@ -80,13 +82,14 @@ async function checkAllowList(committers) {
             }
         }
         catch (error) {
-            if (error.status != "404") {
+            if (error.status != '404') {
                 throw new Error(`Could not retrieve whitelisted email domains. Status: ${error.status || 'unknown'}`);
             }
         }
     }
-    const committersAfterAllowListCheck = committers.filter(committer => committer && !(isUserNotInAllowList !== undefined && isUserNotInAllowList(committer, usernameAllowListPatterns, domainAllowList)));
-    return committersAfterAllowListCheck;
+    const remainingCommitters = committers.filter(committer => committer &&
+        !isUserInAllowList(committer, usernameAllowListPatterns, domainAllowList));
+    return remainingCommitters;
 }
 
 
@@ -156,13 +159,16 @@ async function getCommitters() {
                 email: edge.node.commit.author.email || '',
                 pullRequestNo: github_1.context.issue.number
             };
-            if (committers.length === 0 || committers.map((c) => {
-                return c.name;
-            }).indexOf(user.name) < 0) {
+            if (committers.length === 0 ||
+                committers
+                    .map(c => {
+                    return c.name;
+                })
+                    .indexOf(user.name) < 0) {
                 committers.push(user);
             }
         });
-        filteredCommitters = committers.filter((committer) => {
+        filteredCommitters = committers.filter(committer => {
             return committer.id !== 41898282;
         });
         return filteredCommitters;
@@ -171,7 +177,10 @@ async function getCommitters() {
         throw new Error(`graphql call to get the committers details failed: ${e}`);
     }
 }
-const extractUserFromCommit = (commit) => commit.author.user || commit.committer.user || commit.author || commit.committer;
+const extractUserFromCommit = commit => commit.author.user ||
+    commit.committer.user ||
+    commit.author ||
+    commit.committer;
 
 
 /***/ }),
@@ -576,24 +585,36 @@ async function prCommentSetup(committerMap, committers) {
     }
 }
 async function createComment(signed, committerMap) {
-    await octokit_1.octokit.issues.createComment({
+    await octokit_1.octokit.issues
+        .createComment({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
         issue_number: github_1.context.issue.number,
         body: (0, pullRequestCommentContent_1.commentContent)(signed, committerMap)
-    }).catch(error => { throw new Error(`Error occured when creating a pull request comment: ${error.message}`); });
+    })
+        .catch(error => {
+        throw new Error(`Error occured when creating a pull request comment: ${error.message}`);
+    });
 }
 async function updateComment(signed, committerMap, claBotComment) {
-    await octokit_1.octokit.issues.updateComment({
+    await octokit_1.octokit.issues
+        .updateComment({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
         comment_id: claBotComment.id,
         body: (0, pullRequestCommentContent_1.commentContent)(signed, committerMap)
-    }).catch(error => { throw new Error(`Error occured when updating the pull request comment: ${error.message}`); });
+    })
+        .catch(error => {
+        throw new Error(`Error occured when updating the pull request comment: ${error.message}`);
+    });
 }
 async function getComment() {
     try {
-        const response = await octokit_1.octokit.issues.listComments({ owner: github_1.context.repo.owner, repo: github_1.context.repo.repo, issue_number: github_1.context.issue.number });
+        const response = await octokit_1.octokit.issues.listComments({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            issue_number: github_1.context.issue.number
+        });
         //TODO: check the below regex
         // using a `string` true or false purposely as github action input cannot have a boolean value
         if ((0, getInputs_1.getUseDcoFlag)() === 'true') {
@@ -616,12 +637,15 @@ function prepareAllSignedCommitters(committerMap, signedInPrCommitters, committe
     let allSignedCommitters = [];
     /*
      * 1) already signed committers in the file 2) signed committers in the PR comment
-    */
+     */
     const ids = new Set(signedInPrCommitters.map(committer => committer.id));
-    allSignedCommitters = [...signedInPrCommitters, ...committerMap.signed.filter(signedCommitter => !ids.has(signedCommitter.id))];
+    allSignedCommitters = [
+        ...signedInPrCommitters,
+        ...committerMap.signed.filter(signedCommitter => !ids.has(signedCommitter.id))
+    ];
     /*
-    * checking if all the unsigned committers have reacted to the PR comment (this is needed for changing the content of the PR comment to "All committers have signed the CLA")
-    */
+     * checking if all the unsigned committers have reacted to the PR comment (this is needed for changing the content of the PR comment to "All committers have signed the CLA")
+     */
     let allSignedFlag = committers.every(committer => allSignedCommitters.some(reactedCommitter => committer.id === reactedCommitter.id));
     return allSignedFlag;
 }
@@ -682,7 +706,8 @@ function commentContent(signed, committerMap) {
 }
 function dco(signed, committerMap) {
     if (signed) {
-        const line1 = input.getCustomAllSignedPrComment() || `All contributors have signed the DCO  ✍️ ✅`;
+        const line1 = input.getCustomAllSignedPrComment() ||
+            `All contributors have signed the DCO  ✍️ ✅`;
         const text = `${line1}<br/><sub>Posted by the ****DCO Assistant Lite bot****.</sub>`;
         return text;
     }
@@ -691,35 +716,44 @@ function dco(signed, committerMap) {
         committersCount = committerMap.signed.length + committerMap.notSigned.length;
     }
     let you = committersCount > 1 ? `you all` : `you`;
-    let lineOne = (input.getCustomNotSignedPrComment() || `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Developer Certificate of Origin](${input.getPathToDocument()}) before we can accept your contribution. You can sign the DCO by just posting a Pull Request Comment same as the below format.<br/>`).replace('$you', you);
+    let lineOne = (input.getCustomNotSignedPrComment() ||
+        `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Developer Certificate of Origin](${input.getPathToDocument()}) before we can accept your contribution. You can sign the DCO by just posting a Pull Request Comment same as the below format.<br/>`).replace('$you', you);
     let text = `${lineOne}
    - - -
-   ${input.getCustomPrSignComment() || "I have read the DCO Document and I hereby sign the DCO"}
+   ${input.getCustomPrSignComment() || 'I have read the DCO Document and I hereby sign the DCO'}
    - - -
    `;
-    if (committersCount > 1 && committerMap && committerMap.signed && committerMap.notSigned) {
+    if (committersCount > 1 &&
+        committerMap &&
+        committerMap.signed &&
+        committerMap.notSigned) {
         text += `**${committerMap.signed.length}** out of **${committerMap.signed.length + committerMap.notSigned.length}** committers have signed the DCO.`;
-        committerMap.signed.forEach(signedCommitter => { text += `<br/>:white_check_mark: [${signedCommitter.name}](https://github.com/${signedCommitter.name})`; });
+        committerMap.signed.forEach(signedCommitter => {
+            text += `<br/>:white_check_mark: [${signedCommitter.name}](https://github.com/${signedCommitter.name})`;
+        });
         committerMap.notSigned.forEach(unsignedCommitter => {
             text += `<br/>:x: \`${unsignedCommitter.name}\``;
         });
         text += '<br/>';
     }
     if (committerMap && committerMap.unknown && committerMap.unknown.length > 0) {
-        let seem = committerMap.unknown.length > 1 ? "seem" : "seems";
+        let seem = committerMap.unknown.length > 1 ? 'seem' : 'seems';
         let committerNames = committerMap.unknown.map(committer => committer.name);
-        text += `**${committerNames.join(", ")}** ${seem} not to be a GitHub user.`;
-        text += ' You need a GitHub account to be able to sign the DCO. If you have already a GitHub account, please [add the email address used for this commit to your account](https://help.github.com/articles/why-are-my-commits-linked-to-the-wrong-user/#commits-are-not-linked-to-any-user).<br/>';
+        text += `**${committerNames.join(', ')}** ${seem} not to be a GitHub user.`;
+        text +=
+            ' You need a GitHub account to be able to sign the DCO. If you have already a GitHub account, please [add the email address used for this commit to your account](https://help.github.com/articles/why-are-my-commits-linked-to-the-wrong-user/#commits-are-not-linked-to-any-user).<br/>';
     }
     if (input.suggestRecheck() == 'true') {
-        text += '<sub>You can retrigger this bot by commenting **recheck** in this Pull Request. </sub>';
+        text +=
+            '<sub>You can retrigger this bot by commenting **recheck** in this Pull Request. </sub>';
     }
     text += '<sub>Posted by the ****DCO Assistant Lite bot****.</sub>';
     return text;
 }
 function cla(signed, committerMap) {
     if (signed) {
-        const line1 = input.getCustomAllSignedPrComment() || `All contributors have signed the CLA  ✍️ ✅`;
+        const line1 = input.getCustomAllSignedPrComment() ||
+            `All contributors have signed the CLA  ✍️ ✅`;
         const text = `${line1}<br/><sub>Posted by the ****CLA Assistant Lite bot****.</sub>`;
         return text;
     }
@@ -728,28 +762,36 @@ function cla(signed, committerMap) {
         committersCount = committerMap.signed.length + committerMap.notSigned.length;
     }
     let you = committersCount > 1 ? `you all` : `you`;
-    let lineOne = (input.getCustomNotSignedPrComment() || `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Contributor License Agreement](${input.getPathToDocument()}) before we can accept your contribution. You can sign the CLA by just posting a Pull Request Comment same as the below format.<br/>`).replace('$you', you);
+    let lineOne = (input.getCustomNotSignedPrComment() ||
+        `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Contributor License Agreement](${input.getPathToDocument()}) before we can accept your contribution. You can sign the CLA by just posting a Pull Request Comment same as the below format.<br/>`).replace('$you', you);
     let text = `${lineOne}
    - - -
    ${(0, pr_sign_comment_1.getPrSignComment)()}
    - - -
    `;
-    if (committersCount > 1 && committerMap && committerMap.signed && committerMap.notSigned) {
+    if (committersCount > 1 &&
+        committerMap &&
+        committerMap.signed &&
+        committerMap.notSigned) {
         text += `**${committerMap.signed.length}** out of **${committerMap.signed.length + committerMap.notSigned.length}** committers have signed the CLA.`;
-        committerMap.signed.forEach(signedCommitter => { text += `<br/>:white_check_mark: [${signedCommitter.name}](https://github.com/${signedCommitter.name})`; });
+        committerMap.signed.forEach(signedCommitter => {
+            text += `<br/>:white_check_mark: [${signedCommitter.name}](https://github.com/${signedCommitter.name})`;
+        });
         committerMap.notSigned.forEach(unsignedCommitter => {
             text += `<br/>:x: \`${unsignedCommitter.name}\``;
         });
         text += '<br/>';
     }
     if (committerMap && committerMap.unknown && committerMap.unknown.length > 0) {
-        let seem = committerMap.unknown.length > 1 ? "seem" : "seems";
+        let seem = committerMap.unknown.length > 1 ? 'seem' : 'seems';
         let committerNames = committerMap.unknown.map(committer => committer.name);
-        text += `**${committerNames.join(", ")}** ${seem} not to be a GitHub user.`;
-        text += ' You need a GitHub account to be able to sign the CLA. If you have already a GitHub account, please [add the email address used for this commit to your account](https://help.github.com/articles/why-are-my-commits-linked-to-the-wrong-user/#commits-are-not-linked-to-any-user).<br/>';
+        text += `**${committerNames.join(', ')}** ${seem} not to be a GitHub user.`;
+        text +=
+            ' You need a GitHub account to be able to sign the CLA. If you have already a GitHub account, please [add the email address used for this commit to your account](https://help.github.com/articles/why-are-my-commits-linked-to-the-wrong-user/#commits-are-not-linked-to-any-user).<br/>';
     }
     if (input.suggestRecheck() == 'true') {
-        text += '<sub>You can retrigger this bot by commenting **recheck** in this Pull Request. </sub>';
+        text +=
+            '<sub>You can retrigger this bot by commenting **recheck** in this Pull Request. </sub>';
     }
     text += '<sub>Posted by the **CLA Assistant Lite bot**.</sub>';
     return text;
@@ -839,7 +881,7 @@ async function signatureWithPRComment(committerMap, committers) {
     });
     let listOfPRComments = [];
     let filteredListOfPRComments = [];
-    prResponse?.data.map((prComment) => {
+    prResponse?.data.map(prComment => {
         listOfPRComments.push({
             name: prComment.user.login,
             id: prComment.user.id,
@@ -851,7 +893,7 @@ async function signatureWithPRComment(committerMap, committers) {
         });
     });
     listOfPRComments.map(comment => {
-        if (isCommentSignedByUser(comment.body || "", comment.name)) {
+        if (isCommentSignedByUser(comment.body || '', comment.name)) {
             filteredListOfPRComments.push(comment);
         }
     });
@@ -859,12 +901,12 @@ async function signatureWithPRComment(committerMap, committers) {
         delete filteredListOfPRComments[i].body;
     }
     /*
-    *checking if the reacted committers are not the signed committers(not in the storage file) and filtering only the unsigned committers
-    */
+     *checking if the reacted committers are not the signed committers(not in the storage file) and filtering only the unsigned committers
+     */
     const newSigned = filteredListOfPRComments.filter(commentedCommitter => committerMap.notSigned.some(notSignedCommitter => commentedCommitter.id === notSignedCommitter.id));
     /*
-    * checking if the commented users are only the contributors who has committed in the same PR (This is needed for the PR Comment and changing the status to success when all the contributors has reacted to the PR)
-    */
+     * checking if the commented users are only the contributors who has committed in the same PR (This is needed for the PR Comment and changing the status to success when all the contributors has reacted to the PR)
+     */
     const onlyCommitters = committers.filter(committer => filteredListOfPRComments.some(commentedCommitter => committer.id == commentedCommitter.id));
     const commentedCommitterMap = {
         newSigned,
@@ -877,15 +919,15 @@ function isCommentSignedByUser(comment, commentAuthor) {
     if (commentAuthor === 'github-actions[bot]') {
         return false;
     }
-    if ((0, getInputs_1.getCustomPrSignComment)() !== "") {
+    if ((0, getInputs_1.getCustomPrSignComment)() !== '') {
         return (0, getInputs_1.getCustomPrSignComment)().toLowerCase() === comment;
     }
     // using a `string` true or false purposely as github action input cannot have a boolean value
     switch ((0, getInputs_1.getUseDcoFlag)()) {
         case 'true':
-            return comment.match(/^.*i \s*have \s*read \s*the \s*dco \s*document \s*and \s*i \s*hereby \s*sign \s*the \s*dco.*$/) !== null;
+            return (comment.match(/^.*i \s*have \s*read \s*the \s*dco \s*document \s*and \s*i \s*hereby \s*sign \s*the \s*dco.*$/) !== null);
         case 'false':
-            return comment.match(/^.*i \s*have \s*read \s*the \s*cla \s*document \s*and \s*i \s*hereby \s*sign \s*the \s*cla.*$/) !== null;
+            return (comment.match(/^.*i \s*have \s*read \s*the \s*cla \s*document \s*and \s*i \s*hereby \s*sign \s*the \s*cla.*$/) !== null);
         default:
             return false;
     }
@@ -976,19 +1018,26 @@ async function setupClaCheck() {
     }
 }
 async function createSuccessSummary(committerMap) {
-    const totalCount = (committerMap.signed?.length || 0) + (committerMap.notSigned?.length || 0) + (committerMap.unknown?.length || 0);
+    const totalCount = (committerMap.signed?.length || 0) +
+        (committerMap.notSigned?.length || 0) +
+        (committerMap.unknown?.length || 0);
     await core.summary
         .addHeading('✅ All Contributors Signed')
         .addRaw(`All ${totalCount} contributor(s) have signed the CLA.`)
         .addBreak()
         .addTable([
-        [{ data: 'Contributor', header: true }, { data: 'Status', header: true }],
+        [
+            { data: 'Contributor', header: true },
+            { data: 'Status', header: true }
+        ],
         ...(committerMap.signed || []).map(c => [c.name, '✅ Signed'])
     ])
         .write();
 }
 async function createFailureSummary(committerMap) {
-    const totalCount = (committerMap.signed?.length || 0) + committerMap.notSigned.length + (committerMap.unknown?.length || 0);
+    const totalCount = (committerMap.signed?.length || 0) +
+        committerMap.notSigned.length +
+        (committerMap.unknown?.length || 0);
     const docUrl = input.getPathToDocument();
     await core.summary
         .addHeading('❌ CLA Signature Required')
@@ -1030,7 +1079,7 @@ async function getCLAFileContentandSHA(committers, committerMap) {
         result = await (0, persistence_1.getFileContent)();
     }
     catch (error) {
-        if (error.status === "404") {
+        if (error.status === '404') {
             return createClaFileAndPRComment(committers, committerMap);
         }
         else {
@@ -1204,7 +1253,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getPrSignComment = getPrSignComment;
 const input = __importStar(__nccwpck_require__(7189));
 function getPrSignComment() {
-    return input.getCustomPrSignComment() || "I have read the CLA Document and I hereby sign the CLA";
+    return (input.getCustomPrSignComment() ||
+        'I have read the CLA Document and I hereby sign the CLA');
 }
 
 

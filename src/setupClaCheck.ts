@@ -62,48 +62,71 @@ export async function setupClaCheck() {
 }
 
 async function createSuccessSummary(committerMap: CommitterMap): Promise<void> {
-  const totalCount = (committerMap.signed?.length || 0) + (committerMap.notSigned?.length || 0) + (committerMap.unknown?.length || 0)
+  const totalCount =
+    (committerMap.signed?.length || 0) +
+    (committerMap.notSigned?.length || 0) +
+    (committerMap.unknown?.length || 0)
 
   await core.summary
     .addHeading('✅ All Contributors Signed')
     .addRaw(`All ${totalCount} contributor(s) have signed the CLA.`)
     .addBreak()
     .addTable([
-      [{data: 'Contributor', header: true}, {data: 'Status', header: true}],
+      [
+        { data: 'Contributor', header: true },
+        { data: 'Status', header: true }
+      ],
       ...(committerMap.signed || []).map(c => [c.name, '✅ Signed'])
     ])
     .write()
 }
 
 async function createFailureSummary(committerMap: CommitterMap): Promise<void> {
-  const totalCount = (committerMap.signed?.length || 0) + committerMap.notSigned.length + (committerMap.unknown?.length || 0)
+  const totalCount =
+    (committerMap.signed?.length || 0) +
+    committerMap.notSigned.length +
+    (committerMap.unknown?.length || 0)
   const docUrl = input.getPathToDocument()
 
   await core.summary
     .addHeading('❌ CLA Signature Required')
-    .addRaw(`<strong>${committerMap.notSigned.length}</strong> of <strong>${totalCount}</strong> contributors need to sign the CLA.`)
+    .addRaw(
+      `<strong>${committerMap.notSigned.length}</strong> of <strong>${totalCount}</strong> contributors need to sign the CLA.`
+    )
     .addBreak()
     .addHeading('Unsigned Contributors', 3)
-    .addList(committerMap.notSigned.map(c => `<strong>@${c.name}</strong>${c.email ? ` (${c.email})` : ''}`))
+    .addList(
+      committerMap.notSigned.map(
+        c => `<strong>@${c.name}</strong>${c.email ? ` (${c.email})` : ''}`
+      )
+    )
     .addBreak()
     .addRaw(`📝 <a href="${docUrl}">View CLA Document</a>`)
     .addBreak()
-    .addRaw('<strong>To sign:</strong> Comment on this PR with "I have read the CLA Document and I hereby sign the CLA"')
+    .addRaw(
+      '<strong>To sign:</strong> Comment on this PR with "I have read the CLA Document and I hereby sign the CLA"'
+    )
     .write()
 
   // Add annotations for each unsigned contributor
   committerMap.notSigned.forEach(c => {
-    core.warning(`@${c.name}${c.email ? ` (${c.email})` : ''} has not signed the CLA`, {
-      title: '📝 CLA Signature Required'
-    })
+    core.warning(
+      `@${c.name}${c.email ? ` (${c.email})` : ''} has not signed the CLA`,
+      {
+        title: '📝 CLA Signature Required'
+      }
+    )
   })
 
   // Add info about unknown users if any
   if (committerMap.unknown && committerMap.unknown.length > 0) {
     committerMap.unknown.forEach(c => {
-      core.notice(`@${c.name} appears to be committing without a linked GitHub account`, {
-        title: '⚠️ Unknown GitHub User'
-      })
+      core.notice(
+        `@${c.name} appears to be committing without a linked GitHub account`,
+        {
+          title: '⚠️ Unknown GitHub User'
+        }
+      )
     })
   }
 }
@@ -125,7 +148,7 @@ async function getCLAFileContentandSHA(
   try {
     result = await getFileContent()
   } catch (error) {
-    if (error.status === "404") {
+    if (error.status === '404') {
       return createClaFileAndPRComment(committers, committerMap)
     } else {
       throw new Error(
@@ -179,10 +202,14 @@ function prepareCommiterMap(
 
   committerMap.notSigned = committers.filter(
     committer =>
-      !(claFileContent?.signedContributors || []).some(cla => committer.id === cla.id)
+      !(claFileContent?.signedContributors || []).some(
+        cla => committer.id === cla.id
+      )
   )
   committerMap.signed = committers.filter(committer =>
-    (claFileContent?.signedContributors || []).some(cla => committer.id === cla.id)
+    (claFileContent?.signedContributors || []).some(
+      cla => committer.id === cla.id
+    )
   )
   committers.map(committer => {
     if (!committer.id) {

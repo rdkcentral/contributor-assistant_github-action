@@ -1,10 +1,10 @@
-import { checkAllowList } from '../src/checkAllowList'
-import * as input from '../src/shared/getInputs'
-import { CommittersDetails } from '../src/interfaces'
-import { getFileContent } from '../src/persistence/persistence'
+import { checkAllowList } from './checkAllowList'
+import * as input from './shared/getInputs'
+import { CommittersDetails } from './interfaces'
+import { getFileContent } from './persistence/persistence'
 
-jest.mock('../src/shared/getInputs')
-jest.mock('../src/persistence/persistence')
+jest.mock('./shared/getInputs')
+jest.mock('./persistence/persistence')
 
 const mockedGetUsernameAllowList = jest.mocked(input.getUsernameAllowList)
 const mockedGetDomainAllowList = jest.mocked(input.getDomainAllowList)
@@ -44,14 +44,14 @@ describe('checkAllowList', () => {
 
       const result = await checkAllowList(committers)
 
-      // Only lowercase 'copilot' should remain (not in allowlist)
-      // Uppercase 'Copilot' should be filtered (in allowlist)
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('copilot')
     })
 
     it('should handle multiple exact matches', async () => {
-      mockedGetUsernameAllowList.mockReturnValue('dependabot, semantic-release-bot, copilot')
+      mockedGetUsernameAllowList.mockReturnValue(
+        'dependabot, semantic-release-bot, copilot'
+      )
 
       const committers: CommittersDetails[] = [
         { name: 'dependabot', id: 1, email: '[email protected]' },
@@ -93,7 +93,6 @@ describe('checkAllowList', () => {
 
       const result = await checkAllowList(committers)
 
-      // Only exact 'bot' should be filtered
       expect(result).toHaveLength(2)
       expect(result.map(c => c.name)).toEqual(['bot-user', 'my-bot'])
     })
@@ -113,8 +112,6 @@ describe('checkAllowList', () => {
 
       const result = await checkAllowList(committers)
 
-      // Should filter: dependabot, dependabot[bot], dependabot-preview
-      // Should keep: my-dependabot (doesn't start with dependabot), real-user
       expect(result).toHaveLength(2)
       expect(result.map(c => c.name)).toEqual(['my-dependabot', 'real-user'])
     })
@@ -132,8 +129,6 @@ describe('checkAllowList', () => {
 
       const result = await checkAllowList(committers)
 
-      // Should filter: my-bot, another-bot
-      // Should keep: bot, bot-user, real-user
       expect(result).toHaveLength(3)
       expect(result.map(c => c.name)).toEqual(['bot', 'bot-user', 'real-user'])
     })
@@ -150,8 +145,6 @@ describe('checkAllowList', () => {
 
       const result = await checkAllowList(committers)
 
-      // Should filter: github-copilot[bot], github-actions[bot]
-      // Should keep: github-bot (doesn't end with [bot]), real-user
       expect(result).toHaveLength(2)
       expect(result.map(c => c.name)).toEqual(['github-bot', 'real-user'])
     })
@@ -168,13 +161,14 @@ describe('checkAllowList', () => {
 
       const result = await checkAllowList(committers)
 
-      // Should filter all with 'bot' in them
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('real-user')
     })
 
     it('should handle multiple wildcard patterns', async () => {
-      mockedGetUsernameAllowList.mockReturnValue('dependabot*, *[bot], semantic-*')
+      mockedGetUsernameAllowList.mockReturnValue(
+        'dependabot*, *[bot], semantic-*'
+      )
 
       const committers: CommittersDetails[] = [
         { name: 'dependabot', id: 1, email: '[email protected]' },
@@ -196,14 +190,12 @@ describe('checkAllowList', () => {
       const committers: CommittersDetails[] = [
         { name: 'bot.name', id: 1, email: '[email protected]' },
         { name: 'bot.name-test', id: 2, email: '[email protected]' },
-        { name: 'botXname', id: 3, email: '[email protected]' }, // should not match (. should be literal)
+        { name: 'botXname', id: 3, email: '[email protected]' },
         { name: 'real-user', id: 4, email: '[email protected]' }
       ]
 
       const result = await checkAllowList(committers)
 
-      // Should filter: bot.name, bot.name-test
-      // Should keep: botXname (. is literal, not regex wildcard), real-user
       expect(result).toHaveLength(2)
       expect(result.map(c => c.name)).toEqual(['botXname', 'real-user'])
     })
@@ -214,9 +206,9 @@ describe('checkAllowList', () => {
       mockedGetDomainAllowList.mockReturnValue('@example.com')
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2, email: '[email protected]' },
-        { name: 'user3', id: 3, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@example.com' },
+        { name: 'user2', id: 2, email: 'user2@test.org' },
+        { name: 'user3', id: 3, email: 'user3@another.net' }
       ]
 
       const result = await checkAllowList(committers)
@@ -229,8 +221,8 @@ describe('checkAllowList', () => {
       mockedGetDomainAllowList.mockReturnValue('example.com')
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@example.com' },
+        { name: 'user2', id: 2, email: 'user2@test.org' }
       ]
 
       const result = await checkAllowList(committers)
@@ -240,13 +232,15 @@ describe('checkAllowList', () => {
     })
 
     it('should handle multiple email domains', async () => {
-      mockedGetDomainAllowList.mockReturnValue('@example.com, @test.org, @bot.io')
+      mockedGetDomainAllowList.mockReturnValue(
+        '@example.com, @test.org, @bot.io'
+      )
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2, email: '[email protected]' },
-        { name: 'user3', id: 3, email: '[email protected]' },
-        { name: 'user4', id: 4, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@example.com' },
+        { name: 'user2', id: 2, email: 'user2@test.org' },
+        { name: 'user3', id: 3, email: 'user3@bot.io' },
+        { name: 'user4', id: 4, email: 'user4@keep.me' }
       ]
 
       const result = await checkAllowList(committers)
@@ -259,61 +253,73 @@ describe('checkAllowList', () => {
       mockedGetDomainAllowList.mockReturnValue('@example.com')
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2 }, // no email
-        { name: 'user3', id: 3, email: undefined } // undefined email
+        { name: 'user1', id: 1, email: 'user1@example.com' },
+        { name: 'user2', id: 2 },
+        { name: 'user3', id: 3, email: undefined }
       ]
 
       const result = await checkAllowList(committers)
 
-      // user1 filtered by domain, user2 and user3 kept (no email to check)
       expect(result).toHaveLength(2)
       expect(result.map(c => c.name)).toEqual(['user2', 'user3'])
     })
 
-    it('should match subdomain emails correctly', async () => {
+    it('should not match subdomain emails', async () => {
       mockedGetDomainAllowList.mockReturnValue('@example.com')
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2, email: '[email protected]' },
-        { name: 'user3', id: 3, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@example.com' },
+        { name: 'user2', id: 2, email: 'user2@sub.example.com' },
+        { name: 'user3', id: 3, email: 'user3@users.noreply.example.com' }
       ]
 
       const result = await checkAllowList(committers)
 
-      // All should be filtered (all end with @example.com or subdomain)
-      expect(result).toHaveLength(0)
+      expect(result).toHaveLength(2)
+      expect(result.map(c => c.name)).toEqual(['user2', 'user3'])
     })
 
     it('should not match partial domain names', async () => {
       mockedGetDomainAllowList.mockReturnValue('@example.com')
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2, email: '[email protected]' }, // should NOT match
-        { name: 'user3', id: 3, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@example.com' },
+        { name: 'user2', id: 2, email: 'user2@example.company' },
+        { name: 'user3', id: 3, email: 'user3@anotherexample.com' }
       ]
 
       const result = await checkAllowList(committers)
 
-      // user1 and user3 filtered, user2 kept (different domain)
-      expect(result).toHaveLength(1)
-      expect(result[0].name).toBe('user2')
+      expect(result).toHaveLength(2)
+      expect(result.map(c => c.name)).toEqual(['user2', 'user3'])
     })
 
     it('should skip empty domain patterns', async () => {
       mockedGetDomainAllowList.mockReturnValue('  , @example.com ,  ')
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@example.com' },
+        { name: 'user2', id: 2, email: 'user2@test.org' }
       ]
 
       const result = await checkAllowList(committers)
 
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('user2')
+    })
+
+    it('should treat uppercase domains as distinct values', async () => {
+      mockedGetDomainAllowList.mockReturnValue('@example.com')
+
+      const committers: CommittersDetails[] = [
+        { name: 'lowercase-user', id: 1, email: 'user@example.com' },
+        { name: 'uppercase-user', id: 2, email: 'user@EXAMPLE.COM' }
+      ]
+
+      const result = await checkAllowList(committers)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].name).toBe('uppercase-user')
     })
   })
 
@@ -323,15 +329,14 @@ describe('checkAllowList', () => {
       mockedGetDomainAllowList.mockReturnValue('@bot.example.com')
 
       const committers: CommittersDetails[] = [
-        { name: 'dependabot', id: 1, email: '[email protected]' },
-        { name: 'copilot-agent', id: 2, email: '[email protected]' },
-        { name: 'bot-service', id: 3, email: '[email protected]' },
-        { name: 'real-user', id: 4, email: '[email protected]' }
+        { name: 'dependabot', id: 1, email: 'dependabot@github.com' },
+        { name: 'copilot-agent', id: 2, email: 'copilot-agent@github.com' },
+        { name: 'bot-service', id: 3, email: 'bot-service@bot.example.com' },
+        { name: 'real-user', id: 4, email: 'real-user@users.example.com' }
       ]
 
       const result = await checkAllowList(committers)
 
-      // dependabot, copilot-agent, bot-service all filtered
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('real-user')
     })
@@ -341,9 +346,9 @@ describe('checkAllowList', () => {
       mockedGetDomainAllowList.mockReturnValue('@automated.com')
 
       const committers: CommittersDetails[] = [
-        { name: 'bot-user', id: 1, email: '[email protected]' }, // username match
-        { name: 'real-user', id: 2, email: '[email protected]' }, // email match
-        { name: 'another-user', id: 3, email: '[email protected]' } // no match
+        { name: 'bot-user', id: 1, email: 'bot-user@people.dev' },
+        { name: 'real-user', id: 2, email: 'real-user@automated.com' },
+        { name: 'another-user', id: 3, email: 'another-user@people.dev' }
       ]
 
       const result = await checkAllowList(committers)
@@ -364,9 +369,9 @@ describe('checkAllowList', () => {
       } as any)
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2, email: '[email protected]' },
-        { name: 'user3', id: 3, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@loaded-domain.com' },
+        { name: 'user2', id: 2, email: 'user2@another.org' },
+        { name: 'user3', id: 3, email: 'user3@keep.me' }
       ]
 
       const result = await checkAllowList(committers)
@@ -387,9 +392,9 @@ describe('checkAllowList', () => {
       } as any)
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2, email: '[email protected]' },
-        { name: 'user3', id: 3, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@input-domain.com' },
+        { name: 'user2', id: 2, email: 'user2@file-domain.org' },
+        { name: 'user3', id: 3, email: 'user3@keep.me' }
       ]
 
       const result = await checkAllowList(committers)
@@ -403,10 +408,9 @@ describe('checkAllowList', () => {
       mockedGetFileContent.mockRejectedValue({ status: '404' })
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@keep.me' }
       ]
 
-      // Should not throw, just continue without file domains
       const result = await checkAllowList(committers)
 
       expect(result).toHaveLength(1)
@@ -418,10 +422,12 @@ describe('checkAllowList', () => {
       mockedGetFileContent.mockRejectedValue({ status: '500' })
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@keep.me' }
       ]
 
-      await expect(checkAllowList(committers)).rejects.toThrow('Could not retrieve whitelisted email domains')
+      await expect(checkAllowList(committers)).rejects.toThrow(
+        'Could not retrieve whitelisted email domains'
+      )
     })
 
     it('should handle invalid JSON in domain file', async () => {
@@ -433,30 +439,27 @@ describe('checkAllowList', () => {
       } as any)
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@keep.me' }
       ]
 
-      // Should throw on invalid JSON
       await expect(checkAllowList(committers)).rejects.toThrow()
     })
 
     it('should handle non-array domain file content', async () => {
       mockedGetDomainsFile.mockReturnValue('domains.json')
-      const fileContent = JSON.stringify({ domains: ['@example.com'] }) // object instead of array
+      const fileContent = JSON.stringify({ domains: ['@example.com'] })
       mockedGetFileContent.mockResolvedValue({
         data: {
           content: Buffer.from(fileContent).toString('base64')
         }
       } as any)
-const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2, email: '[email protected]' }
+      const committers: CommittersDetails[] = [
+        { name: 'user1', id: 1, email: 'user1@keep.me' },
+        { name: 'user2', id: 2, email: 'user2@another.dev' }
       ]
 
-      // Should not throw, but also should not add non-array content
       const result = await checkAllowList(committers)
 
-      // Both should remain (no domains loaded from file)
       expect(result).toHaveLength(2)
     })
   })
@@ -467,13 +470,12 @@ const committers: CommittersDetails[] = [
       mockedGetDomainAllowList.mockReturnValue('')
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2, email: '[email protected]' }
+        { name: 'user1', id: 1, email: 'user1@example.com' },
+        { name: 'user2', id: 2, email: 'user2@test.org' }
       ]
 
       const result = await checkAllowList(committers)
 
-      // All should remain (no filters)
       expect(result).toHaveLength(2)
     })
 
@@ -490,61 +492,54 @@ const committers: CommittersDetails[] = [
 
       const result = await checkAllowList(committers)
 
-      // null and undefined filtered out, 'bot' filtered, user1 and user2 remain
       expect(result).toHaveLength(2)
       expect(result.map(c => c.name)).toEqual(['user1', 'user2'])
     })
 
-    it('should not allow regex injection via username patterns', async () => {
-      // Attempt to inject regex that would match everything
+    it('should handle literal wildcard-like usernames safely', async () => {
       mockedGetUsernameAllowList.mockReturnValue('.*')
 
       const committers: CommittersDetails[] = [
-        { name: 'user1', id: 1, email: '[email protected]' },
-        { name: 'user2', id: 2, email: '[email protected]' },
-        { name: '.*', id: 3, email: '[email protected]' } // literal '.*'
+        { name: 'user1', id: 1, email: 'user1@example.com' },
+        { name: 'user2', id: 2, email: 'user2@test.org' },
+        { name: '.*', id: 3, email: 'literal@tokens.dev' }
       ]
 
       const result = await checkAllowList(committers)
 
-      // Only literal '.*' should be filtered (treated as wildcard pattern that matches anything with . and anything after)
-      // Because of lodash escapeRegExp, it should match strings containing literal dot-star
-      // Actually with wildcards, .* becomes \.* -> .* regex, which matches everything
-      // So this tests that even malicious patterns are escaped properly
-      // But since * is special, it becomes .* in regex, matching everything
-      // This is expected wildcard behavior, not a vulnerability
-      // Let me test a different injection attempt
       expect(result.length).toBeLessThanOrEqual(3)
     })
 
     it('should handle special regex characters in exact match mode', async () => {
-      // These should be treated as literal characters
-      mockedGetUsernameAllowList.mockReturnValue('user.name, user[bot], user$123, user^test')
+      mockedGetUsernameAllowList.mockReturnValue(
+        'user.name, user[bot], user$123, user^test'
+      )
 
       const committers: CommittersDetails[] = [
-        { name: 'user.name', id: 1, email: '[email protected]' },
-        { name: 'userXname', id: 2, email: '[email protected]' }, // should NOT match user.name
-        { name: 'user[bot]', id: 3, email: '[email protected]' },
-        { name: 'user$123', id: 4, email: '[email protected]' },
-        { name: 'user^test', id: 5, email: '[email protected]' },
-        { name: 'normal-user', id: 6, email: '[email protected]' }
+        { name: 'user.name', id: 1, email: 'user.name@example.com' },
+        { name: 'userXname', id: 2, email: 'userxname@example.com' },
+        { name: 'user[bot]', id: 3, email: 'userbot@example.com' },
+        { name: 'user$123', id: 4, email: 'user123@example.com' },
+        { name: 'user^test', id: 5, email: 'usertest@example.com' },
+        { name: 'normal-user', id: 6, email: 'normal-user@example.com' }
       ]
 
       const result = await checkAllowList(committers)
 
-      // All special char users filtered (exact match), userXname and normal-user remain
       expect(result).toHaveLength(2)
       expect(result.map(c => c.name)).toEqual(['userXname', 'normal-user'])
     })
 
     it('should handle very long allowlists without performance issues', async () => {
-      const longList = Array.from({ length: 1000 }, (_, i) => `bot-${i}`).join(',')
+      const longList = Array.from({ length: 1000 }, (_, i) => `bot-${i}`).join(
+        ','
+      )
       mockedGetUsernameAllowList.mockReturnValue(longList)
 
       const committers: CommittersDetails[] = [
-        { name: 'bot-500', id: 1, email: '[email protected]' },
-        { name: 'real-user', id: 2, email: '[email protected]' },
-        { name: 'bot-999', id: 3, email: '[email protected]' }
+        { name: 'bot-500', id: 1, email: 'bot-500@example.com' },
+        { name: 'real-user', id: 2, email: 'real-user@example.com' },
+        { name: 'bot-999', id: 3, email: 'bot-999@example.com' }
       ]
 
       const start = Date.now()
@@ -553,20 +548,19 @@ const committers: CommittersDetails[] = [
 
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('real-user')
-      expect(duration).toBeLessThan(1000) // Should complete in < 1 second
+      expect(duration).toBeLessThan(1000)
     })
 
     it('should handle empty username but valid email', async () => {
       mockedGetDomainAllowList.mockReturnValue('@bot.example.com')
 
       const committers: CommittersDetails[] = [
-        { name: '', id: 1, email: '[email protected]' },
-        { name: 'user', id: 2, email: '[email protected]' }
+        { name: '', id: 1, email: 'service@bot.example.com' },
+        { name: 'user', id: 2, email: 'user@people.dev' }
       ]
 
       const result = await checkAllowList(committers)
 
-      // Empty name with bot email should be filtered
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('user')
     })
@@ -574,7 +568,9 @@ const committers: CommittersDetails[] = [
 
   describe('Real-world scenarios from rdkcentral', () => {
     it('should handle copilot variants correctly', async () => {
-      mockedGetUsernameAllowList.mockReturnValue('copilot, Copilot, github-copilot[bot], github-copilot, copilot[bot], copilot-swe-agent[bot]')
+      mockedGetUsernameAllowList.mockReturnValue(
+        'copilot, Copilot, github-copilot[bot], github-copilot, copilot[bot], copilot-swe-agent[bot]'
+      )
 
       const committers: CommittersDetails[] = [
         { name: 'copilot', id: 1, email: '[email protected]' },
@@ -587,13 +583,14 @@ const committers: CommittersDetails[] = [
 
       const result = await checkAllowList(committers)
 
-      // Only TB-1993 should remain
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('TB-1993')
     })
 
     it('should handle rdkcentral allowlist pattern', async () => {
-      mockedGetUsernameAllowList.mockReturnValue('dependabot*, dependabot[bot], dependabot, semantic-release-bot, rdkcm-rdke, rdkcm-bot, copilot, Copilot, github-copilot[bot], github-copilot, copilot[bot], copilot-swe-agent[bot]')
+      mockedGetUsernameAllowList.mockReturnValue(
+        'dependabot*, dependabot[bot], dependabot, semantic-release-bot, rdkcm-rdke, rdkcm-bot, copilot, Copilot, github-copilot[bot], github-copilot, copilot[bot], copilot-swe-agent[bot]'
+      )
 
       const committers: CommittersDetails[] = [
         { name: 'dependabot', id: 1, email: '[email protected]' },
@@ -608,7 +605,6 @@ const committers: CommittersDetails[] = [
 
       const result = await checkAllowList(committers)
 
-      // Only realuser123 should remain
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('realuser123')
     })
@@ -625,9 +621,7 @@ const committers: CommittersDetails[] = [
 
       const result = await checkAllowList(committers)
 
-      // 'bot\x00malicious' starts with 'bot' so should be filtered
       expect(result.find(c => c.name === 'bot\x00malicious')).toBeUndefined()
-      // 'evil\x00bot' does NOT start with 'bot' so should remain
       expect(result.find(c => c.name === 'evil\x00bot')).toBeDefined()
     })
 
@@ -639,13 +633,12 @@ const committers: CommittersDetails[] = [
         { name: longUsername, id: 1, email: '[email protected]' }
       ]
 
-      // Should complete quickly without hanging
       const start = Date.now()
       const result = await checkAllowList(committers)
       const duration = Date.now() - start
 
-      expect(duration).toBeLessThan(1000) // Should complete in under 1 second
-      expect(result).toHaveLength(0) // Should be filtered (matches *bot)
+      expect(duration).toBeLessThan(1000)
+      expect(result).toHaveLength(0)
     })
 
     it('should handle Unicode characters in usernames safely', async () => {
@@ -660,13 +653,9 @@ const committers: CommittersDetails[] = [
 
       const result = await checkAllowList(committers)
 
-      // bot-🤖-user matches bot*
       expect(result.find(c => c.name === 'bot-🤖-user')).toBeUndefined()
-      // 🤖-bot matches *bot
       expect(result.find(c => c.name === '🤖-bot')).toBeUndefined()
-      // bot matches both
       expect(result.find(c => c.name === 'bot')).toBeUndefined()
-      // human doesn't match
       expect(result.find(c => c.name === 'human')).toBeDefined()
     })
 
@@ -682,18 +671,68 @@ const committers: CommittersDetails[] = [
 
       const result = await checkAllowList(committers)
 
-      // user@github.com should be filtered (exact match)
       expect(result.find(c => c.email === 'user@github.com')).toBeUndefined()
-
-      // CURRENT BEHAVIOR: endsWith allows these (may be security issue)
-      // user@evil.github.com ends with @github.com (subdomain)
-      expect(result.find(c => c.email === 'user@evil.github.com')).toBeUndefined()
-
-      // user@github.com.evil.com ends with @github.com (look-alike domain - SECURITY CONCERN)
-      expect(result.find(c => c.email === 'user@github.com.evil.com')).toBeUndefined()
-
-      // user@example.com should remain (not in allowlist)
+      expect(result.find(c => c.email === 'user@evil.github.com')).toBeDefined()
+      expect(
+        result.find(c => c.email === 'user@github.com.evil.com')
+      ).toBeDefined()
       expect(result.find(c => c.email === 'user@example.com')).toBeDefined()
+    })
+
+    it('should keep GitHub privacy emails when only @github.com is allowlisted', async () => {
+      mockedGetDomainAllowList.mockReturnValue('@github.com')
+
+      const committers: CommittersDetails[] = [
+        { name: 'actions-user', id: 65916846, email: 'action@github.com' },
+        {
+          name: 'regular-user',
+          id: 12345,
+          email: '12345+regular-user@users.noreply.github.com'
+        },
+        {
+          name: 'another-user',
+          id: 67890,
+          email: '67890+another-user@users.noreply.github.com'
+        },
+        { name: 'evil-user', id: 99999, email: 'user@evil.github.com' }
+      ]
+
+      const result = await checkAllowList(committers)
+
+      expect(result.find(c => c.name === 'actions-user')).toBeUndefined()
+      expect(result.find(c => c.name === 'regular-user')).toBeDefined()
+      expect(result.find(c => c.name === 'regular-user')?.email).toBe(
+        '12345+regular-user@users.noreply.github.com'
+      )
+      expect(result.find(c => c.name === 'another-user')).toBeDefined()
+      expect(result.find(c => c.name === 'evil-user')).toBeDefined()
+    })
+
+    it('should filter exact RDK CI domains and keep subdomains', async () => {
+      mockedGetDomainAllowList.mockReturnValue('@code.rdkcentral.com')
+
+      const committers: CommittersDetails[] = [
+        {
+          name: 'rdkcmf-jenkins',
+          id: 19492671,
+          email: 'github@code.rdkcentral.com'
+        },
+        {
+          name: 'rdkcmf-jenkins-alt',
+          id: 19492672,
+          email: 'jenkins@code.rdkcentral.com'
+        },
+        { name: 'regular-user', id: 12345, email: 'regular-user@example.com' },
+        { name: 'evil-user', id: 99999, email: 'user@evil.code.rdkcentral.com' }
+      ]
+
+      const result = await checkAllowList(committers)
+
+      expect(
+        result.filter(c => c.email?.endsWith('@code.rdkcentral.com'))
+      ).toHaveLength(0)
+      expect(result.find(c => c.name === 'regular-user')).toBeDefined()
+      expect(result.find(c => c.name === 'evil-user')).toBeDefined()
     })
   })
 })

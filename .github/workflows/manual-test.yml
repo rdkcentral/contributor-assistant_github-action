@@ -33,24 +33,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        
+
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: '24.x'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build action
         run: npm run build
-        
+
       - name: Display test scenario
         run: |
           echo "Testing scenario: ${{ inputs.test_scenario }}"
           echo "PR number: ${{ inputs.pr_number || 'Using workflow context' }}"
           echo "Test repo: ${{ inputs.test_repo }}"
-          
+
       - name: Run CLA check
         uses: ./
         env:

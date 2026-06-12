@@ -119,7 +119,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -127,7 +129,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       await setupClaCheck()
 
       // Should succeed
-      expect(mockedInfo).toHaveBeenCalledWith(expect.stringContaining('All contributors have signed'))
+      expect(mockedInfo).toHaveBeenCalledWith(
+        expect.stringContaining('All contributors have signed')
+      )
       expect(mockedSetFailed).not.toHaveBeenCalled()
     })
   })
@@ -147,7 +151,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -179,7 +185,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -210,7 +218,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -223,7 +233,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       if (mockedSetFailed.mock.calls.length > 0) {
         console.log('Failure message:', mockedSetFailed.mock.calls[0][0])
       }
-      expect(mockedInfo).toHaveBeenCalledWith(expect.stringContaining('All contributors have signed'))
+      expect(mockedInfo).toHaveBeenCalledWith(
+        expect.stringContaining('All contributors have signed')
+      )
       expect(mockedSetFailed).not.toHaveBeenCalled()
     })
   })
@@ -247,7 +259,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -255,7 +269,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       await setupClaCheck()
 
       // Should succeed
-      expect(mockedInfo).toHaveBeenCalledWith(expect.stringContaining('All contributors have signed'))
+      expect(mockedInfo).toHaveBeenCalledWith(
+        expect.stringContaining('All contributors have signed')
+      )
       expect(mockedSetFailed).not.toHaveBeenCalled()
     })
   })
@@ -279,7 +295,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -310,7 +328,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -345,7 +365,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -353,7 +375,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       await setupClaCheck()
 
       // Should succeed
-      expect(mockedInfo).toHaveBeenCalledWith(expect.stringContaining('All contributors have signed'))
+      expect(mockedInfo).toHaveBeenCalledWith(
+        expect.stringContaining('All contributors have signed')
+      )
       expect(mockedSetFailed).not.toHaveBeenCalled()
     })
   })
@@ -378,7 +402,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -409,11 +435,15 @@ describe('CLA Validation - Full Integration Flow', () => {
         ]
       }
 
-      mockedGetDomainAllowList.mockReturnValue('@bot.example.com, @automation.io')
+      mockedGetDomainAllowList.mockReturnValue(
+        '@bot.example.com, @automation.io'
+      )
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -421,7 +451,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       await setupClaCheck()
 
       // Should succeed
-      expect(mockedInfo).toHaveBeenCalledWith(expect.stringContaining('All contributors have signed'))
+      expect(mockedInfo).toHaveBeenCalledWith(
+        expect.stringContaining('All contributors have signed')
+      )
       expect(mockedSetFailed).not.toHaveBeenCalled()
     })
   })
@@ -442,7 +474,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -479,7 +513,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -487,7 +523,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       await setupClaCheck()
 
       // Should succeed - dependabot and ci-bot filtered by username, bot-service by domain
-      expect(mockedInfo).toHaveBeenCalledWith(expect.stringContaining('All contributors have signed'))
+      expect(mockedInfo).toHaveBeenCalledWith(
+        expect.stringContaining('All contributors have signed')
+      )
       expect(mockedSetFailed).not.toHaveBeenCalled()
     })
 
@@ -511,7 +549,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -537,7 +577,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -545,7 +587,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       await setupClaCheck()
 
       // Should succeed - no one to check
-      expect(mockedInfo).toHaveBeenCalledWith(expect.stringContaining('All contributors have signed'))
+      expect(mockedInfo).toHaveBeenCalledWith(
+        expect.stringContaining('All contributors have signed')
+      )
       expect(mockedSetFailed).not.toHaveBeenCalled()
     })
 
@@ -564,7 +608,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -572,7 +618,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       await setupClaCheck()
 
       // Should succeed - all filtered by allowlist
-      expect(mockedInfo).toHaveBeenCalledWith(expect.stringContaining('All contributors have signed'))
+      expect(mockedInfo).toHaveBeenCalledWith(
+        expect.stringContaining('All contributors have signed')
+      )
       expect(mockedSetFailed).not.toHaveBeenCalled()
     })
 
@@ -584,14 +632,16 @@ describe('CLA Validation - Full Integration Flow', () => {
       const signaturesFile = {
         signedContributors: [
           { name: 'user1', id: 101, created_at: '2026-01-01' },
-          { name: 'user1', id: 101, created_at: '2026-01-02' }, // Duplicate
+          { name: 'user1', id: 101, created_at: '2026-01-02' } // Duplicate
         ]
       }
 
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -599,7 +649,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       await setupClaCheck()
 
       // Should still succeed - user is signed (duplicates don't matter)
-      expect(mockedInfo).toHaveBeenCalledWith(expect.stringContaining('All contributors have signed'))
+      expect(mockedInfo).toHaveBeenCalledWith(
+        expect.stringContaining('All contributors have signed')
+      )
       expect(mockedSetFailed).not.toHaveBeenCalled()
     })
 
@@ -617,7 +669,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)
@@ -625,7 +679,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       await setupClaCheck()
 
       // Should succeed - matched by ID
-      expect(mockedInfo).toHaveBeenCalledWith(expect.stringContaining('All contributors have signed'))
+      expect(mockedInfo).toHaveBeenCalledWith(
+        expect.stringContaining('All contributors have signed')
+      )
       expect(mockedSetFailed).not.toHaveBeenCalled()
     })
 
@@ -639,7 +695,9 @@ describe('CLA Validation - Full Integration Flow', () => {
       mockedGetCommitters.mockResolvedValue(committers)
       mockedGetFileContent.mockResolvedValue({
         data: {
-          content: Buffer.from(JSON.stringify(signaturesFile)).toString('base64'),
+          content: Buffer.from(JSON.stringify(signaturesFile)).toString(
+            'base64'
+          ),
           sha: 'file-sha-123'
         }
       } as any)

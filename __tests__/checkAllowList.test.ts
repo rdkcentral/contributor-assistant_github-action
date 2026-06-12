@@ -1,10 +1,10 @@
-import { checkAllowList } from './checkAllowList'
-import * as input from './shared/getInputs'
-import { CommittersDetails } from './interfaces'
-import { getFileContent } from './persistence/persistence'
+import { checkAllowList } from '../src/checkAllowList'
+import * as input from '../src/shared/getInputs'
+import { CommittersDetails } from '../src/interfaces'
+import { getFileContent } from '../src/persistence/persistence'
 
-jest.mock('./shared/getInputs')
-jest.mock('./persistence/persistence')
+jest.mock('../src/shared/getInputs')
+jest.mock('../src/persistence/persistence')
 
 const mockedGetUsernameAllowList = jest.mocked(input.getUsernameAllowList)
 const mockedGetDomainAllowList = jest.mocked(input.getDomainAllowList)

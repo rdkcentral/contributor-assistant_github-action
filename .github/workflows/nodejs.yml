@@ -1,33 +1,84 @@
-name: build
+name: CI
 
 on:
   push:
-   branches:
-    - '*'
-   tags:
-    - '*'
+    branches:
+      - '*'
+    tags:
+      - '*'
   pull_request:
-   branches:
-   - master
+    branches:
+      - master
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  static-checks:
+    name: Static checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Set up Node.js 24.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint --if-present
+      - name: Type check
+        run: npx tsc --noEmit
+
+  unit-tests:
+    name: Unit tests (Node ${{ matrix.node-version }})
+    needs: static-checks
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [20.x, 24.x]
+        node-version: [22.x, 24.x]
     steps:
-    - name: "Checkout repository"
-      uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: Npm install
-      run: npm ci
-    - name: Npm build
-      run: npm run build --if-present
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Unit tests
+        run: npm test -- --runInBand --watchAll=false
 
+  bundle:
+    name: Bundle action
+    needs: static-checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Set up Node.js 24.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist-node24
+          path: dist
+          if-no-files-found: error
+          retention-days: 7

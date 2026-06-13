@@ -4,61 +4,69 @@ import * as _ from 'lodash'
 import * as input from './shared/getInputs'
 import { getFileContent } from './persistence/persistence'
 
-
-function isUserNotInAllowList(
-    committer: CommittersDetails,
-    usernameAllowListPatterns: string[],
-    domainAllowList: string[]
+function isUserInAllowList(
+  committer: CommittersDetails,
+  usernameAllowListPatterns: string[],
+  domainAllowList: string[]
 ): boolean {
-
-    for(let pattern of domainAllowList) {
-        pattern = pattern.trim()
-        if(!pattern) continue
-        if(!pattern.startsWith('@')) pattern = '@' + pattern
-       if(committer.email && committer.email.endsWith(pattern)) {
-            return true
-        }
+  for (let pattern of domainAllowList) {
+    pattern = pattern.trim()
+    if (!pattern) continue
+    if (!pattern.startsWith('@')) pattern = '@' + pattern
+    if (committer.email && committer.email.endsWith(pattern)) {
+      return true
     }
+  }
 
-    return usernameAllowListPatterns.filter(function (pattern) {
-        pattern = pattern.trim()
-        if (pattern.includes('*')) {
-            // Escape regex special chars, replace \* with .*, and anchor properly
-            const regex = '^' + _.escapeRegExp(pattern).split('\\*').join('.*') + '$'
+  return (
+    usernameAllowListPatterns.filter(function (pattern) {
+      pattern = pattern.trim()
+      if (pattern.includes('*')) {
+        // Escape regex special chars, replace \* with .*, and anchor properly
+        const regex =
+          '^' + _.escapeRegExp(pattern).split('\\*').join('.*') + '$'
 
-            return new RegExp(regex).test(committer.name)
-        }
-        return pattern === committer.name
+        return new RegExp(regex).test(committer.name)
+      }
+      return pattern === committer.name
     }).length > 0
+  )
 }
 
-export async function checkAllowList(committers: CommittersDetails[]): Promise<CommittersDetails[]> {
-    // Load allowlists at runtime (not module-load time) for testability
-    const usernameAllowListPatterns: string[] = input.getUsernameAllowList().split(',')
-    const domainAllowList: string[] = input.getDomainAllowList().split(',')
+export async function checkAllowList(
+  committers: CommittersDetails[]
+): Promise<CommittersDetails[]> {
+  // Load allowlists at runtime (not module-load time) for testability
+  const usernameAllowListPatterns: string[] = input
+    .getUsernameAllowList()
+    .split(',')
+  const domainAllowList: string[] = input.getDomainAllowList().split(',')
 
-    const domainsFile: string = input.getDomainsFile()
+  const domainsFile: string = input.getDomainsFile()
 
-    if(domainsFile) {
-        try {
-            const result = await getFileContent(domainsFile)
-            const jsonData = Buffer.from(result.data.content, 'base64').toString()
-            let domainsFileContent = JSON.parse(jsonData)
-            if(domainsFileContent && Array.isArray(domainsFileContent)) {
-                domainAllowList.push(...domainsFileContent)
-            }
-
-        } catch (error) {
-            if (error.status != "404") {
-                throw new Error(
-                    `Could not retrieve whitelisted email domains. Status: ${
-                        error.status || 'unknown'
-                    }`
-                )
-            }
-        }
+  if (domainsFile) {
+    try {
+      const result = await getFileContent(domainsFile)
+      const jsonData = Buffer.from(result.data.content, 'base64').toString()
+      let domainsFileContent = JSON.parse(jsonData)
+      if (domainsFileContent && Array.isArray(domainsFileContent)) {
+        domainAllowList.push(...domainsFileContent)
+      }
+    } catch (error) {
+      if (error.status != '404') {
+        throw new Error(
+          `Could not retrieve whitelisted email domains. Status: ${
+            error.status || 'unknown'
+          }`
+        )
+      }
     }
+  }
 
-    const committersAfterAllowListCheck: CommittersDetails[] = committers.filter(committer => committer && !(isUserNotInAllowList !== undefined && isUserNotInAllowList(committer, usernameAllowListPatterns, domainAllowList)))
-    return committersAfterAllowListCheck
+  const remainingCommitters: CommittersDetails[] = committers.filter(
+    committer =>
+      committer &&
+      !isUserInAllowList(committer, usernameAllowListPatterns, domainAllowList)
+  )
+  return remainingCommitters
 }

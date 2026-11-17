@@ -1,15 +1,15 @@
-import {getStatusContext} from './shared/getInputs'
-import {context, getOctokit} from '@actions/github'
+import { getStatusContext } from './shared/getInputs'
+import { context, getOctokit } from '@actions/github'
 
 import * as core from '@actions/core'
 
 core.info(`Using token: ${process.env.GITHUB_TOKEN}`)
-const octokit = getOctokit(process.env.GITHUB_TOKEN || "")
+const octokit = getOctokit(process.env.GITHUB_TOKEN || '')
 const pullRequest = {
-  owner: context.payload.repository?.owner.login || "",
-  repo: context.payload.repository?.name || "",
+  owner: context.payload.repository?.owner.login || '',
+  repo: context.payload.repository?.name || '',
   pull_number: context.payload.issue?.number || 0,
-  sha: ""
+  sha: ''
 }
 
 async function setupManualStatusUpdate() {
@@ -20,7 +20,10 @@ async function setupManualStatusUpdate() {
   pullRequest.sha = response.data.head.sha
 }
 
-export async function updateStatus(state: "error" | "pending" | "success" | "failure", description: string) {
+export async function updateStatus(
+  state: 'error' | 'pending' | 'success' | 'failure',
+  description: string
+) {
   if (context.eventName != 'issue_comment') return
   await setupComplete
 
@@ -29,7 +32,7 @@ export async function updateStatus(state: "error" | "pending" | "success" | "fai
     ...pullRequest,
     context: getStatusContext(),
     state,
-    description,
+    description
   })
 }
 

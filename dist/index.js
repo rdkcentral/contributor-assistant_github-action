@@ -65,14 +65,16 @@ function isUserInAllowList(committer, usernameAllowListPatterns, domainAllowList
         return pattern === committer.name;
     }).length > 0);
 }
-async function checkAllowList(committers) {
+async function checkAllowList(committers, skipExcludeLists = false) {
     // Load allowlists at runtime (not module-load time) for testability
-    const usernameAllowListPatterns = input
-        .getUsernameAllowList()
-        .split(',');
-    const domainAllowList = input.getDomainAllowList().split(',');
+    let usernameAllowListPatterns = skipExcludeLists
+        ? []
+        : input.getUsernameAllowList().split(',');
+    let domainAllowList = skipExcludeLists
+        ? []
+        : input.getDomainAllowList().split(',');
     const domainsFile = input.getDomainsFile();
-    if (domainsFile) {
+    if (!skipExcludeLists && domainsFile) {
         try {
             const result = await (0, persistence_1.getFileContent)(domainsFile);
             const jsonData = Buffer.from(result.data.content, 'base64').toString();
@@ -982,6 +984,7 @@ exports.setupClaCheck = setupClaCheck;
 const core = __importStar(__nccwpck_require__(7484));
 const github_1 = __nccwpck_require__(3228);
 const checkAllowList_1 = __nccwpck_require__(4715);
+const pullRequestUtils_1 = __nccwpck_require__(6811);
 const graphql_1 = __importDefault(__nccwpck_require__(5777));
 const input = __importStar(__nccwpck_require__(7189));
 const persistence_1 = __nccwpck_require__(9947);
@@ -990,7 +993,9 @@ const pullRerunRunner_1 = __nccwpck_require__(8109);
 async function setupClaCheck() {
     let committerMap = getInitialCommittersMap();
     let committers = await (0, graphql_1.default)();
-    committers = await (0, checkAllowList_1.checkAllowList)(committers);
+    // Skip exclude lists if this is a fork PR
+    const isForkPR = (0, pullRequestUtils_1.isPullRequestFromFork)();
+    committers = await (0, checkAllowList_1.checkAllowList)(committers, isForkPR);
     const { claFileContent, sha } = (await getCLAFileContentandSHA(committers, committerMap));
     committerMap = prepareCommiterMap(committers, claFileContent);
     try {
@@ -1255,6 +1260,32 @@ const input = __importStar(__nccwpck_require__(7189));
 function getPrSignComment() {
     return (input.getCustomPrSignComment() ||
         'I have read the CLA Document and I hereby sign the CLA');
+}
+
+
+/***/ }),
+
+/***/ 6811:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isPullRequestFromFork = isPullRequestFromFork;
+const github_1 = __nccwpck_require__(3228);
+/**
+ * Determines if the current PR is from a fork
+ * @returns true if PR is from a fork, false otherwise
+ */
+function isPullRequestFromFork() {
+    try {
+        const isFork = github_1.context.payload.pull_request?.head?.repo?.fork ?? false;
+        return isFork;
+    }
+    catch (error) {
+        // Fallback to false if context is not available (e.g., in tests or non-PR events)
+        return false;
+    }
 }
 
 

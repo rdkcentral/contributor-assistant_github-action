@@ -3,6 +3,7 @@ import { CommittersDetails } from './interfaces'
 import * as _ from 'lodash'
 import * as input from './shared/getInputs'
 import { getFileContent } from './persistence/persistence'
+import { isPullRequestFromFork } from './shared/pullRequestUtils'
 
 function isUserInAllowList(
   committer: CommittersDetails,
@@ -34,17 +35,20 @@ function isUserInAllowList(
 }
 
 export async function checkAllowList(
-  committers: CommittersDetails[]
+  committers: CommittersDetails[],
+  skipExcludeLists: boolean = false
 ): Promise<CommittersDetails[]> {
   // Load allowlists at runtime (not module-load time) for testability
-  const usernameAllowListPatterns: string[] = input
-    .getUsernameAllowList()
-    .split(',')
-  const domainAllowList: string[] = input.getDomainAllowList().split(',')
+  let usernameAllowListPatterns: string[] = skipExcludeLists
+    ? []
+    : input.getUsernameAllowList().split(',')
+  let domainAllowList: string[] = skipExcludeLists
+    ? []
+    : input.getDomainAllowList().split(',')
 
   const domainsFile: string = input.getDomainsFile()
 
-  if (domainsFile) {
+  if (!skipExcludeLists && domainsFile) {
     try {
       const result = await getFileContent(domainsFile)
       const jsonData = Buffer.from(result.data.content, 'base64').toString()

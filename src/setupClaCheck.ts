@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
 import { checkAllowList } from './checkAllowList'
+import { isPullRequestFromFork } from './shared/pullRequestUtils'
 import getCommitters from './graphql'
 import * as input from './shared/getInputs'
 import {
@@ -21,7 +22,10 @@ export async function setupClaCheck() {
   let committerMap = getInitialCommittersMap()
 
   let committers = await getCommitters()
-  committers = await checkAllowList(committers)
+  
+  // Skip exclude lists if this is a fork PR
+  const isForkPR = isPullRequestFromFork()
+  committers = await checkAllowList(committers, isForkPR)
 
   const { claFileContent, sha } = (await getCLAFileContentandSHA(
     committers,

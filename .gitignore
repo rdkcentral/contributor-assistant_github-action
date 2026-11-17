@@ -6,3 +6,4 @@ lib
 codeql-db*
 results.sarif
 *.tsbuildinfo
+docs/
